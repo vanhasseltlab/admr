@@ -25,5 +25,7 @@
 #' @importFrom calculus gradient jacobian
 #' @importFrom stringr str_detect
 #' @importFrom readr parse_number
+#' @importFrom nloptr nloptr
+#' @importFrom optimx optimx
 ## usethis namespace: end
 NULL
