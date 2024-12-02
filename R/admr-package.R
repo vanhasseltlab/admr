@@ -27,5 +27,6 @@
 #' @importFrom readr parse_number
 #' @importFrom nloptr nloptr
 #' @importFrom optimx optimx
+#' @importFrom numDeriv hessian
 ## usethis namespace: end
 NULL

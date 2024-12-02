@@ -22,7 +22,8 @@ Imports:
         stringr,
         magrittr,
         readr,
-        nloptr
+        nloptr,
+        numDeriv
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3

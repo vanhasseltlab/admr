@@ -4,7 +4,16 @@
 \alias{fitEM}
 \title{Fitting aggregate data}
 \usage{
-fitEM(p0, opts, obs, maxiter = 100, convcrit_nll = 0.001, nomap = TRUE)
+fitEM(
+  p0,
+  opts,
+  obs,
+  maxiter = 100,
+  convcrit_nll = 0.001,
+  nomap = TRUE,
+  phase_fractions = c(0.1, 0.5, 0.4),
+  max_worse_iterations = 10
+)
 }
 \arguments{
 \item{p0}{initial parameter values}
@@ -18,6 +27,10 @@ fitEM(p0, opts, obs, maxiter = 100, convcrit_nll = 0.001, nomap = TRUE)
 \item{convcrit_nll}{convergence criterion for the negative log-likelihood}
 
 \item{nomap}{single model or multiple models}
+
+\item{phase_fractions}{vector of phase fractions}
+
+\item{max_worse_iterations}{maximum number of consecutive worse iterations before skipping a phase}
 }
 \value{
 A fitted model
@@ -25,8 +38,9 @@ A fitted model
 \description{
 \code{\link[=fitEM]{fitEM()}} implements the Expectation-Maximization(EM) algorithm for parameter
 estimation of the given aggregate data model, iterating over maximum
-likelihood updates with weighted MC updates.
+likelihood updates with weighted MC updates. This version of the function uses nloptr instead of optimx. TOL = 1e-10
 }
 \examples{
 #test
+
 }
