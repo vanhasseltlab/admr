@@ -17,7 +17,7 @@
 #' @examples
 #' #test
 
-timedEM <- function(p0,opts,obs,maxiter=100,convcrit_nll=0.001,nomap=TRUE) { # Implements the Expectation-Maximization (EM) algorithm for parameter estimation, iterating over maximum likelihood updates.
+timedEM <- function(p0,opts,obs,maxiter=100,convcrit_nll=0.0005,nomap=TRUE) { # Implements the Expectation-Maximization (EM) algorithm for parameter estimation, iterating over maximum likelihood updates.
   if (nomap) {
     opts <- opts %>% p2opts(p0) %>% obs2opts(obs)
   } else {
@@ -57,7 +57,7 @@ timedEM <- function(p0,opts,obs,maxiter=100,convcrit_nll=0.001,nomap=TRUE) { # I
       ub = p0 + 2,
       opts = list(
         algorithm = "NLOPT_LN_BOBYQA",
-        xtol_rel = 1e-10,
+        ftol_rel=sqrt(.Machine$double.eps),
         maxeval = 2000
       )
     )
@@ -86,3 +86,4 @@ timedEM <- function(p0,opts,obs,maxiter=100,convcrit_nll=0.001,nomap=TRUE) { # I
   }
   res[!is.na(res$nll),]
 }
+

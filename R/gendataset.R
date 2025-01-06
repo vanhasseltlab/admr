@@ -30,7 +30,7 @@ gendataset <- function(opts,seed=1,reserr=TRUE,nlmixrform=FALSE) {
     tibble(dv=c(t(cbind(NA,res))),time=rep(c(0,opts$xt),times=opts$nsim),
            id=rep(seq_len(opts$nsim),each=1+length(opts$xt)),
            amt=rep(c(100,rep(NA,length(opts$xt))),opts$nsim),
-           evid=101*as.integer(!is.na(amt)),
-           cmt=ifelse(is.na(amt),2,1))
+           evid=101*as.integer(!is.na(.data$amt)),
+           cmt=ifelse(is.na(.data$amt),2,1))
   }
 }

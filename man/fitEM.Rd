@@ -9,10 +9,12 @@ fitEM(
   opts,
   obs,
   maxiter = 100,
-  convcrit_nll = 0.001,
+  convcrit_nll = 1e-05,
   nomap = TRUE,
-  phase_fractions = c(0.1, 0.5, 0.4),
-  max_worse_iterations = 10
+  phase_fractions = c(0.2, 0.4, 0.2, 0.2),
+  max_worse_iterations = 10,
+  chains = 1,
+  pertubation = 0.1
 )
 }
 \arguments{
@@ -31,6 +33,10 @@ fitEM(
 \item{phase_fractions}{vector of phase fractions}
 
 \item{max_worse_iterations}{maximum number of consecutive worse iterations before skipping a phase}
+
+\item{chains}{number of chains}
+
+\item{pertubation}{pertubation factor for the initial parameter values of each chain}
 }
 \value{
 A fitted model

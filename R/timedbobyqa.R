@@ -15,9 +15,9 @@
 #' #test
 
 timedbobyqa <- function(p0, opts, obs) {
-  res <- tibble(p=vector("list",5e3),nll=NA,time=Sys.time(),iter=NA)
+  res <- tibble(p=vector("list",1e4),nll=NA,time=Sys.time(),iter=NA)
   i <- 1
-  fitfun <-   fitfun <- genfitfunc(opts,obs)
+  fitfun <- genfitfunc(opts,obs)
   fitfun2 <- function(p) {
     nllNow <- fitfun(p)
     res$p[[i]] <<- p
@@ -27,9 +27,16 @@ timedbobyqa <- function(p0, opts, obs) {
     i <<- i+1
     nllNow
   }
-  est <- nloptr::nloptr(p0,fitfun2,lb=p0-3,ub=p0+3,opts=list("algorithm"="NLOPT_LN_BOBYQA", "ftol_rel"=sqrt(.Machine$double.eps),
-                                                             maxeval = 2000,                    # max number of evaluations
-                                                             check_derivatives = F))
+  est <- nloptr::nloptr(p0,
+                        fitfun2,
+                        lb=p0-2,
+                        ub=p0+2,
+                        opts=list(
+                          algorithm="NLOPT_LN_BOBYQA",
+                          ftol_rel=sqrt(.Machine$double.eps),
+                          maxeval = 2000,                    # max number of evaluations
+                          check_derivatives = F))
   est$solution
   res[!is.na(res$nll),]
 }
+

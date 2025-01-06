@@ -28,5 +28,6 @@
 #' @importFrom nloptr nloptr
 #' @importFrom optimx optimx
 #' @importFrom numDeriv hessian
+#' @import ggplot2
 ## usethis namespace: end
 NULL
