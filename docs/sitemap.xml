@@ -1,0 +1,23 @@
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>/404.html</loc></url>
+<url><loc>/articles/admr.html</loc></url>
+<url><loc>/articles/index.html</loc></url>
+<url><loc>/authors.html</loc></url>
+<url><loc>/index.html</loc></url>
+<url><loc>/LICENSE-text.html</loc></url>
+<url><loc>/LICENSE.html</loc></url>
+<url><loc>/news/index.html</loc></url>
+<url><loc>/reference/admr-package.html</loc></url>
+<url><loc>/reference/fitEM.html</loc></url>
+<url><loc>/reference/gendataset.html</loc></url>
+<url><loc>/reference/genfitfunc.html</loc></url>
+<url><loc>/reference/genopts.html</loc></url>
+<url><loc>/reference/index.html</loc></url>
+<url><loc>/reference/meancov.html</loc></url>
+<url><loc>/reference/plot.fitEM_result.html</loc></url>
+<url><loc>/reference/print.fitEM_result.html</loc></url>
+<url><loc>/reference/p_to_optim.html</loc></url>
+<url><loc>/reference/timedbobyqa.html</loc></url>
+<url><loc>/reference/timedEM.html</loc></url>
+</urlset>
+
