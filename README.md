@@ -1,35 +1,52 @@
-# admr: Aggregate Data Modeling in R
 
-admr (Aggregate Data Modeling in R) is an open-source R package designed to facilitate pharmacometric modeling using summary-level data. 
-It enables users to work with aggregate data, such as mean observations and variance-covariance matrices, to fit pharmacokinetic and pharmacodynamic (PK/PD) models efficiently. 
-This package implements a newly developed Expectation-Maximization (EM) algorithm to enhance computational performance and provides tools for advanced modeling applications.
+<!-- README.md is generated from README.Rmd. Please edit that file -->
 
-Features
-- Expectation-Maximization Algorithm: Efficiently fits pharmacometric models to aggregate data, improving speed and scalability compared to Monte Carlo methods.
-- Aggregate Data Flexibility: Allows for the integration of summary-level data from diverse sources, including published literature and simulated models.
-- Meta-Analysis Support: Facilitates model-based meta-analyses by enabling the combination of summary data across studies.
-- R Integration: Fully compatible with R, leveraging popular pharmacometric modeling libraries like rxode2.
-- Open-Source: Developed for accessibility and ease of use by the pharmacometric community.
+# admr
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+The goal of admr is to …
 
 ## Installation
 
-This is an *R* package. [*R*](https://www.r-project.org/) is required,
-[*RStudio*](https://www.rstudio.com/) is recommended.
+You can install the development version of admr from
+[GitHub](https://github.com/) with:
 
-As *admr* is still hosted on Github, we need to install it via 
-the [`devtools`](https://devtools.r-lib.org/) official CRAN package.
-
-```r
-devtools::install_github("hiddevandebeek/admr")
+``` r
+# install.packages("pak")
+pak::pak("hiddevandebeek/admr")
 ```
-After installing, we have to attach the package as usual:
 
-```r
+## Example
+
+This is a basic example which shows you how to solve a common problem:
+
+``` r
 library(admr)
+## basic example code
 ```
 
-## Basic Usage
-for the future
+What is special about using `README.Rmd` instead of just `README.md`?
+You can include R chunks like so:
 
-## License
-This project is licensed under the MIT License. See the LICENSE file for details.
+``` r
+summary(cars)
+#>      speed           dist       
+#>  Min.   : 4.0   Min.   :  2.00  
+#>  1st Qu.:12.0   1st Qu.: 26.00  
+#>  Median :15.0   Median : 36.00  
+#>  Mean   :15.4   Mean   : 42.98  
+#>  3rd Qu.:19.0   3rd Qu.: 56.00  
+#>  Max.   :25.0   Max.   :120.00
+```
+
+You’ll still need to render `README.Rmd` regularly, to keep `README.md`
+up-to-date. `devtools::build_readme()` is handy for this.
+
+You can also embed plots, for example:
+
+<img src="man/figures/README-pressure-1.png" width="100%" />
+
+In that case, don’t forget to commit and push the resulting figure
+files, so they display on GitHub and CRAN.

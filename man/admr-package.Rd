@@ -8,6 +8,14 @@
 \description{
 A novel method to aggregate data and model it using a non-linear estimation techniques.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/hiddevandebeek/admr}
+  \item Report bugs at \url{https://github.com/hiddevandebeek/admr/issues}
+}
+
+}
 \author{
 \itemize{
 \strong{Maintainer:} H. van de Beek \email{h.van.de.beek@lacdr.leidenuniv.nl}
