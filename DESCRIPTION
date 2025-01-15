@@ -29,7 +29,8 @@ Imports:
         readr,
         nloptr,
         numDeriv,
-        ggplot2
+        ggplot2,
+        usethis
 Suggests: 
     knitr,
     rmarkdown,
