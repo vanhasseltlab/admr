@@ -19,7 +19,8 @@ Import the `admr` and other packages:
 library(admr)
 library(rxode2)
 library(nlmixr2)
-library(tidyverse)
+library(dplyr)
+library(tidyr)
 library(mnorm)
 ```
 
