@@ -13,6 +13,11 @@ RoxygenNote: 7.3.2
 Imports:
         purrr,
         calculus,
+        rxode2,
+        MASS,
+        nlmixr2,
+        data.table,
+        dplyr,
         randtoolbox,
         optimx,
         mnorm,
