@@ -3,7 +3,7 @@ title: "examplomycin"
 output: html_document
 ---
 # Creating the examplomycin dataset
-In this vignette we will create a simulated dataset for a fictional drug called examplomycin. The dataset will contain 25 subjects with 9 timepoints each. The data will be generated using a two-compartment model with first-order absorption and elimination. The model parameters will be sampled from a multivariate normal distribution with a specified covariance matrix. The dataset will also include a random error term to simulate measurement noise. We make the dataset available as a data object in the package for use in other vignettes.
+In this vignette we will create a simulated dataset for a fictional drug called examplomycin. The dataset will contain 500 subjects with 9 timepoints each. The data will be generated using a two-compartment model with first-order absorption and elimination. The model parameters will be sampled from a multivariate normal distribution with a specified covariance matrix. The dataset will also include a random error term to simulate measurement noise. We make the dataset available as a data object in the package for use in other vignettes.
 
 ## Libraries
 We will use the following libraries to generate the data and plot the results:
@@ -32,8 +32,11 @@ generate_data <- function(n, times, seed = 1) {
     
     # Differential equations for drug amount in compartments
     d/dt(depot)    = -ka * depot
-    d/dt(central)  = ka * depot - ke * central - k12 * central + k21 * peripheral
-    d/dt(peripheral) = k12 * central - k21 * peripheral
+    d/dt(central)  = ka * depot - ke * central - 
+      k12 * central + 
+      k21 * peripheral
+    d/dt(peripheral) = k12 * central - 
+      k21 * peripheral
     
     # Concentration in the central compartment
     cp = central / v1
@@ -46,7 +49,9 @@ generate_data <- function(n, times, seed = 1) {
                        0,  1,  0,  0,  0,
                        0,  0,  1,  0,  0,
                        0,  0,  0,  1,  0,
-                       0,  0,  0,  0,  1), dimnames=list(NULL,c("eta.cl","eta.v1","eta.v2", "eta.q", "eta.ka")), nrow=5)
+                       0,  0,  0,  0,  1), 
+                     dimnames=list(NULL,c("eta.cl","eta.v1","eta.v2", "eta.q", 
+                                          "eta.ka")), nrow=5)
 
   iiv.sd <- c(0.3, 0.3, 0.3, 0.3, 0.3) ## SDs of model parameters
 
@@ -82,7 +87,7 @@ generate_data <- function(n, times, seed = 1) {
     mutate(CMT = ifelse(TIME == 0, 1, 2))
 
   # Simulate residual error and combine
-  sim$rv <- rnorm(nrow(sim), 0, 0.1)
+  sim$rv <- rnorm(nrow(sim), 0, 0.2)
   sim$DV <- round(sim$cp * (1 + sim$rv), 3)
   sim <- merge(sim, params.all)
 
@@ -94,9 +99,10 @@ generate_data <- function(n, times, seed = 1) {
 ```
 
 ## Generating the examplomycin dataset
-We will now generate the examplomycin dataset with 25 subjects and 9 timepoints each. We will use a random seed of 1 for reproducibility.
+We will now generate the examplomycin dataset with 500 subjects and 9 timepoints each. We will use a random seed of 1 for reproducibility.
 ```{r examplomycin data}
-examplomycin <- generate_data(n = 25, times = c(0.5, 1, 2, 3, 4, 6, 8, 12, 24), seed = 1)
+examplomycin <- generate_data(n = 500, times = c(.1,.25,.5,1,2,3,5,8,12), 
+                              seed = 1)
 head(examplomycin)
 ```
 ```{r saving data, include=FALSE}
@@ -118,7 +124,5 @@ ggplot(examplomycin, aes(x = TIME, y = DV, color = factor(ID))) +
   ) + # y log scale
   theme_minimal() +
   theme(legend.position = "none")  # Hide legend if too many subjects
-
-
 ```
 
