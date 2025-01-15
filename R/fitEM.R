@@ -265,6 +265,7 @@ fitEM <- function(p0, opts, obs, maxiter = 100, convcrit_nll = 0.00001, nomap = 
     -2 * final_nll + (log(opts[[1]]$n) + log(opts[[2]]$n)) * length(final_params)
   }
 
+  param_names <- names(back_transformed_params$beta)
   beta_params <- final_params[1:length(se_fixed)]
   beta_se <- se_fixed
   residual_error <- exp(final_params[length(final_params)])
@@ -279,7 +280,7 @@ fitEM <- function(p0, opts, obs, maxiter = 100, convcrit_nll = 0.00001, nomap = 
     final_params = final_params,
     transformed_params = back_transformed_params,
     param_df = tibble(
-      Parameter = c(paste0("Beta", seq_along(beta_params)), "Residual Error"),
+      Parameter = c(param_names, "Residual Error"),
       `Est.` = c(beta_params, residual_error),
       `SE` = c(beta_se, NA),
       `%RSE` = c(100 * beta_se / abs(beta_params), NA),
