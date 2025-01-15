@@ -30,7 +30,8 @@ Imports:
         nloptr,
         numDeriv,
         ggplot2,
-        usethis
+        usethis,
+        tidyr
 Suggests: 
     knitr,
     rmarkdown,
