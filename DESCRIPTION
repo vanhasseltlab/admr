@@ -31,5 +31,7 @@ Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr
-URL: https://github.com/hiddevandebeek/admr
+URL: https://hiddevandebeek.github.io/admr
 BugReports: https://github.com/hiddevandebeek/admr/issues
+Depends: 
+    R (>= 3.5)
