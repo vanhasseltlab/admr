@@ -101,7 +101,7 @@ generate_data <- function(n, times, seed = 1) {
 ## Generating the examplomycin dataset
 We will now generate the examplomycin dataset with 500 subjects and 9 timepoints each. We will use a random seed of 1 for reproducibility.
 ```{r examplomycin data}
-examplomycin <- generate_data(n = 500, times = c(.1,.25,.5,1,2,3,5,8,12), 
+examplomycin <- generate_data(n = 250, times = c(.1,.25,.5,1,2,3,5,8,12), 
                               seed = 1)
 head(examplomycin)
 ```

@@ -7,8 +7,8 @@
 #'
 #' @param f The likelihood function
 #' @param g The model function
-#' @param xt The data
-#' @param p The parameter settings
+#' @param time The time points
+#' @param init The initial parameters
 #' @param h The error function
 #' @param nsim The number of simulations
 #' @param n The number of simulations
@@ -25,9 +25,11 @@
 #' #test
 
 
-genopts <- function(f,g,xt,p,h,nsim=1,n=30,adist=NULL,
+genopts <- function(f,g,time,init,h,nsim=1,n=30,adist=NULL,
                     interact=TRUE,fo_appr=(nsim<10),biseq=NA,
                     omega_expansion=1,p_thetai=NA,single_betas=NA) {
+  xt <- time
+  p <- init
   if (is.null(n)) stop("n is null, breaking early")
   if (missing(h)) {
     h <- function(EV,p) {
@@ -62,7 +64,7 @@ genopts <- function(f,g,xt,p,h,nsim=1,n=30,adist=NULL,
     if (!is.list(adist)) adist <- list(adist)
     ai <- do.call(cbind,map(seq_along(adist),~adist[[.]](aiseq[,.])))
   }
-  list(f=f,g=g,xt=xt,p=p2,h=h,ptrans=ptrans,pderiv=pderiv,
+  list(f=f,g=g,time=time,init=p2,h=h,ptrans=ptrans,pderiv=pderiv,
        nsim=nsim,n=n,interact=interact,fo_appr=fo_appr,
        ai=ai,biseq=biseq,pt=pt,
        d_g_d_beta=d_g_d_beta,d_g_d_bi=d_g_d_bi,

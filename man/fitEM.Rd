@@ -5,7 +5,6 @@
 \title{Fitting aggregate data}
 \usage{
 fitEM(
-  p0,
   opts,
   obs,
   maxiter = 100,
@@ -18,8 +17,6 @@ fitEM(
 )
 }
 \arguments{
-\item{p0}{initial parameter values}
-
 \item{opts}{options}
 
 \item{obs}{observed data}
@@ -37,6 +34,8 @@ fitEM(
 \item{chains}{number of chains}
 
 \item{pertubation}{pertubation factor for the initial parameter values of each chain}
+
+\item{p0}{initial parameter values}
 }
 \value{
 A fitted model

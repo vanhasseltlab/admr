@@ -13,7 +13,7 @@
 
 genfitfunc <- function(opts,obs) { # Generates a fitting function for optimization, taking observed data and model options as inputs.
   ### Generate sequence of covariates ai, and initial values of random effects biseq
-  if (!(is.matrix(obs) && nrow(obs)==opts$nsim && ncol(obs)==opts$xt) && !all(names(obs)== c("E","V")))
+  if (!(is.matrix(obs) && nrow(obs)==opts$nsim && ncol(obs)==opts$time) && !all(names(obs)== c("E","V")))
     stop("obs argument should give the data in aggregate form or as an nsim x Xi matrix!")
   if (missing(obs)) {## if observed data is missing, use expected data.
     message("genfitfunc message: Obs not supplied, using expected data as obs...")

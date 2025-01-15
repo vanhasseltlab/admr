@@ -7,6 +7,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+# Example of using `admr` with `rxode2`
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -14,6 +15,8 @@ knitr::opts_chunk$set(
 )
 ```
 
+
+## Importing the data
 Import the `admr` and other packages:
 ```{r setup}
 library(admr)
@@ -43,8 +46,8 @@ head(examplomycin_aggregated)
 ```
 
 
-
-
+## Defining the RxODE model
+We will define a two-compartment model for the examplomycin dataset. The model has the following differential equations:
 ```{r}
 rxModel <- RxODE({
   # Parameters
@@ -60,7 +63,10 @@ rxModel <- RxODE({
   # Concentration in the central compartment
   cp = central / v1
 })
+```
 
+A solved model is available for the two-compartment model:
+```{r}
 rxModel <- RxODE({
   cp = linCmt(    # Solved one- or two-compartment model
     cl,           # Clearance
@@ -70,8 +76,10 @@ rxModel <- RxODE({
     ka            # Absorption rate constant
   )
 })
+```
 
-
+## Defining the prediction function
+```{r}
 predder <- function(xt, theta_i, dose = 100) {
   if (!is.matrix(theta_i) || nrow(theta_i) == 1) {
     # Create the event table for dosing and sampling
@@ -110,25 +118,28 @@ twocomp_g <- function(beta,bi=rep(0,length(beta)),ai) {
 }
 ```
 
-
+Specify the options for the `admr` function:
 ```{r}
-opts <- genopts(g=function(beta,bi=rep(0,length(beta)),ai) {beta*exp(bi)},
-                  xt=c(.1,.25,.5,1,2,3,5,8,12),
-                  p=list(beta=c(cl = 5, v1 = 10, v2 = 30,q = 10, ka = 1),Omega=omegas(.09,0,5),Sigma_prop=0.04),
-                  nsim=2500,n=500,adist=NULL,
-                  interact=TRUE,fo_appr=FALSE,biseq=NA,omega_expansion=1.2,
-                  p_thetai=function(p,origbeta,bi) {
-                    dmnorm(bi,mean=log(p$beta/origbeta),sigma=p$Omega,log=TRUE)$den
-                  },
-                  f=predder)
+opts <- genopts(time=c(.1,.25,.5,1,2,3,5,8,12),
+                init=list(beta=c(cl = 5, v1 = 10, v2 = 30,q = 10, ka = 1),Omega=omegas(.09,0,5),Sigma_prop=0.04),
+                nsim=2500,n=250, g=twocomp_g,
+                adist=NULL, interact=TRUE,fo_appr=FALSE,biseq=NA,omega_expansion=1.2,
+                p_thetai=function(p,origbeta,bi) {
+                  dmnorm(bi,mean=log(p$beta/origbeta),sigma=p$Omega,log=TRUE)$den
+                },
+                f=predder)
 
-fit <- fitEM(opts$pt, opts, examplomycin_aggregated, chains = 5)
+
 ```
+
+
+Fit the model to the examplomycin dataset:
 ```{r}
+fit <- fitEM(opts, examplomycin_aggregated, chains = 5)
 print(fit)
 ```
 
-
+Plot the results:
 ```{r}
 plot(fit)
 ```
