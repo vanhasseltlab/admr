@@ -1,7 +1,5 @@
-title: admr
 url: https://hiddevandebeek.github.io/admr/
 template:
   bootstrap: 5
   params:
     bootswatch: flatly
-

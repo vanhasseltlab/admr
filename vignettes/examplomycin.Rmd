@@ -2,8 +2,12 @@
 title: "examplomycin"
 output: html_document
 ---
+# Creating the examplomycin dataset
+In this vignette we will create a simulated dataset for a fictional drug called examplomycin. The dataset will contain 25 subjects with 9 timepoints each. The data will be generated using a two-compartment model with first-order absorption and elimination. The model parameters will be sampled from a multivariate normal distribution with a specified covariance matrix. The dataset will also include a random error term to simulate measurement noise. We make the dataset available as a data object in the package for use in other vignettes.
 
-```{r}
+## Libraries
+We will use the following libraries to generate the data and plot the results:
+```{r library import, message = FALSE, warning = FALSE}
 library(rxode2)
 library(MASS)
 library(ggplot2)
@@ -14,8 +18,9 @@ library(dplyr)
 library(ggplot2)
 ```
 
-
-```{r}
+## Data generating function
+This function generates the examplomycin dataset. It takes three arguments: `n` (number of subjects), `times` (vector of timepoints), and `seed` (random seed for reproducibility). The function first defines the two-compartment model using the `RxODE` function. It then generates the model parameters by sampling from a multivariate normal distribution with a specified covariance matrix. The function also generates the event table for the simulation, including a single dose of 100 units at time 0 and observations at the specified timepoints. The model is solved using the `rxSolve` function, and the simulated data is stored in a data frame. The function returns the simulated dataset.
+```{r data generating function}
 generate_data <- function(n, times, seed = 1) {
   set.seed(seed)
   
@@ -88,14 +93,19 @@ generate_data <- function(n, times, seed = 1) {
 }
 ```
 
-
-```{r}
-examplomycin <- generate_data(n = 25, times = c(0.5, 1, 2, 3, 4, 6, 8, 12, 24), seed = 1) # save as examplomycin.rda
-head(data)
+## Generating the examplomycin dataset
+We will now generate the examplomycin dataset with 25 subjects and 9 timepoints each. We will use a random seed of 1 for reproducibility.
+```{r examplomycin data}
+examplomycin <- generate_data(n = 25, times = c(0.5, 1, 2, 3, 4, 6, 8, 12, 24), seed = 1)
+head(examplomycin)
+```
+```{r saving data, include=FALSE}
+usethis::use_data(examplomycin, overwrite = TRUE)
 ```
 
-
-```{r}
+## Plotting the examplomycin dataset
+We will now create a concentration-time plot of the examplomycin dataset. Each line represents a different subject, and the points represent the observed concentrations at each timepoint. The color of the lines corresponds to the subject ID.
+```{r plot output, fig.alt="Line plot of examplomycin concentration over time."}
 # Basic concentration-time plot
 ggplot(examplomycin, aes(x = TIME, y = DV, color = factor(ID))) +
   geom_line(alpha = 0.7) +    # Lines connecting points
