@@ -4,6 +4,7 @@
 #'estimation of the given aggregate data model, iterating over maximum
 #'likelihood updates with weighted MC updates. This version of the function uses nloptr instead of optimx. TOL = 1e-10
 #'
+#' @param p0 initial parameter values
 #' @param opts options
 #' @param obs observed data
 #' @param maxiter maximum number of iterations
@@ -19,10 +20,9 @@
 #' #test
 #'
 
-fitEM <- function(opts, obs, maxiter = 100, convcrit_nll = 0.00001, nomap = TRUE,
+fitEM <- function(p0, opts, obs, maxiter = 100, convcrit_nll = 0.00001, nomap = TRUE,
                   phase_fractions = c(0.2, 0.4, 0.2, 0.2), max_worse_iterations = 10, chains = 1,
                   pertubation = 0.1) {
-  p0 <- opts$pt
 
   # Ensure phase_fractions sum to 1
   if (abs(sum(phase_fractions) - 1) > .Machine$double.eps^0.5) {

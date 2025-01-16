@@ -7,8 +7,8 @@
 genopts(
   f,
   g,
-  time,
-  init,
+  xt,
+  p,
   h,
   nsim = 1,
   n = 30,
@@ -25,6 +25,10 @@ genopts(
 \item{f}{The likelihood function}
 
 \item{g}{The model function}
+
+\item{xt}{The data}
+
+\item{p}{The parameter settings}
 
 \item{h}{The error function}
 
@@ -45,10 +49,6 @@ genopts(
 \item{p_thetai}{The theta matrix}
 
 \item{single_betas}{The beta matrix}
-
-\item{xt}{The data}
-
-\item{p}{The parameter settings}
 }
 \value{
 A fitted model
