@@ -7,7 +7,7 @@
 genopts(
   f,
   g,
-  xt,
+  time,
   p,
   h,
   nsim = 1,
@@ -26,7 +26,7 @@ genopts(
 
 \item{g}{The model function}
 
-\item{xt}{The data}
+\item{time}{The data}
 
 \item{p}{The parameter settings}
 

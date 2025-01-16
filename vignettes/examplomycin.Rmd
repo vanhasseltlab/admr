@@ -1,6 +1,10 @@
 ---
-title: "examplomycin"
-output: html_document
+title: "Examplomycin dataset"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{examplomycin dataset}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 # Creating the examplomycin dataset
 In this vignette we will create a simulated dataset for a fictional drug called examplomycin. The dataset will contain 500 subjects with 9 timepoints each. The data will be generated using a two-compartment model with first-order absorption and elimination. The model parameters will be sampled from a multivariate normal distribution with a specified covariance matrix. The dataset will also include a random error term to simulate measurement noise. We make the dataset available as a data object in the package for use in other vignettes.

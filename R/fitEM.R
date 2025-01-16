@@ -4,7 +4,6 @@
 #'estimation of the given aggregate data model, iterating over maximum
 #'likelihood updates with weighted MC updates. This version of the function uses nloptr instead of optimx. TOL = 1e-10
 #'
-#' @param p0 initial parameter values
 #' @param opts options
 #' @param obs observed data
 #' @param maxiter maximum number of iterations
@@ -20,9 +19,10 @@
 #' #test
 #'
 
-fitEM <- function(p0, opts, obs, maxiter = 100, convcrit_nll = 0.00001, nomap = TRUE,
+fitEM <- function(opts, obs, maxiter = 100, convcrit_nll = 0.00001, nomap = TRUE,
                   phase_fractions = c(0.2, 0.4, 0.2, 0.2), max_worse_iterations = 10, chains = 1,
                   pertubation = 0.1) {
+  init <- opts$pt
 
   # Ensure phase_fractions sum to 1
   if (abs(sum(phase_fractions) - 1) > .Machine$double.eps^0.5) {
@@ -31,8 +31,8 @@ fitEM <- function(p0, opts, obs, maxiter = 100, convcrit_nll = 0.00001, nomap = 
 
   start_time <- Sys.time()  # Start time for the entire process
 
-  perturb_p0 <- function(p0) {
-    p0 + rnorm(length(p0), mean = 0, sd = pertubation * abs(p0))  # Slight perturbation
+  perturb_init <- function(init) {
+    init + rnorm(length(init), mean = 0, sd = pertubation * abs(init))  # Slight perturbation
   }
 
   ff_nloptr <- function(params) {
@@ -52,12 +52,12 @@ fitEM <- function(p0, opts, obs, maxiter = 100, convcrit_nll = 0.00001, nomap = 
 
   for (chain in seq_len(chains)) {
     chain_start_time <- Sys.time()  # Start time for the chain
-    chain_p0 <- if (chain == 1) p0 else perturb_p0(p0)
+    chain_init <- if (chain == 1) init else perturb_init(init)
 
     if (nomap) {
-      opts <- opts %>% p2opts(chain_p0) %>% obs2opts(obs)
+      opts <- opts %>% p2opts(chain_init) %>% obs2opts(obs)
     } else {
-      opts <- map(seq_along(opts), function(i) opts[[i]] %>% p2opts(chain_p0) %>% obs2opts(obs[[i]]))
+      opts <- map(seq_along(opts), function(i) opts[[i]] %>% p2opts(chain_init) %>% obs2opts(obs[[i]]))
     }
 
     res <- tibble(
@@ -68,20 +68,20 @@ fitEM <- function(p0, opts, obs, maxiter = 100, convcrit_nll = 0.00001, nomap = 
       iteration_time = 0
     )
 
-    res$parameters[[1]] <- chain_p0
+    res$parameters[[1]] <- chain_init
 
     if (nomap) {
-      res$nll[1] <- maxfunc(opts)(chain_p0)
+      res$nll[1] <- maxfunc(opts)(chain_init)
     } else {
-      res$nll[1] <- Reduce('+', map(opts, ~ maxfunc(.)(chain_p0)))
+      res$nll[1] <- Reduce('+', map(opts, ~ maxfunc(.)(chain_init)))
     }
 
     res$approx_nll[1] <- res$nll[1]
 
     if (chain == 1) {  # Print live output for single-chain mode
-      cat(sprintf("Chain %d:\nIter | %-12s\n", chain, sprintf("NLL and Parameters (%d values)", length(p0))))
+      cat(sprintf("Chain %d:\nIter | %-12s\n", chain, sprintf("NLL and Parameters (%d values)", length(init))))
       cat(sprintf("%s\n", strrep("-", 80)))
-      cat(sprintf("%4d: %s\n", 1, paste(sprintf("%8.3f", c(res$nll[1], chain_p0)), collapse = " ")))
+      cat(sprintf("%4d: %s\n", 1, paste(sprintf("%8.3f", c(res$nll[1], chain_init)), collapse = " ")))
     }
 
     phase_params <- list(
@@ -110,7 +110,7 @@ fitEM <- function(p0, opts, obs, maxiter = 100, convcrit_nll = 0.00001, nomap = 
       }
 
       # Start each phase with the best parameters found so far
-      chain_p0 <- best_params
+      chain_init <- best_params
       phase_converged <- FALSE
       worse_counter <- 0
 
@@ -136,19 +136,19 @@ fitEM <- function(p0, opts, obs, maxiter = 100, convcrit_nll = 0.00001, nomap = 
         iter_start_time <- Sys.time()
 
         if (nomap) {
-          ff <- maxfunc(p2opts(opts, chain_p0))
+          ff <- maxfunc(p2opts(opts, chain_init))
         } else {
-          ffs <- map(opts, ~ maxfunc(p2opts(., chain_p0)))
+          ffs <- map(opts, ~ maxfunc(p2opts(., chain_init)))
           ff <- function(p) Reduce('+', map(ffs, ~ .(p)))
         }
 
         if (gradient == TRUE) {
           m0 <- nloptr::nloptr(
-            x0 = chain_p0,
+            x0 = chain_init,
             eval_f = ff_nloptr,
             eval_grad_f = grad_ff_nloptr,
-            lb = chain_p0 - current_phase$bounds,
-            ub = chain_p0 + current_phase$bounds,
+            lb = chain_init - current_phase$bounds,
+            ub = chain_init + current_phase$bounds,
             opts = list(
               algorithm = algorithm,
               ftol_rel = 1e-10,
@@ -157,10 +157,10 @@ fitEM <- function(p0, opts, obs, maxiter = 100, convcrit_nll = 0.00001, nomap = 
           )
         } else {
           m0 <- nloptr::nloptr(
-            x0 = chain_p0,
+            x0 = chain_init,
             eval_f = ff_nloptr,
-            lb = chain_p0 - current_phase$bounds,
-            ub = chain_p0 + current_phase$bounds,
+            lb = chain_init - current_phase$bounds,
+            ub = chain_init + current_phase$bounds,
             opts = list(
               algorithm = algorithm,
               ftol_rel = 1e-10,
@@ -170,13 +170,13 @@ fitEM <- function(p0, opts, obs, maxiter = 100, convcrit_nll = 0.00001, nomap = 
         }
 
         # Optimization step
-        chain_p0 <- m0$solution
-        res$parameters[[current_iter]] <- chain_p0
+        chain_init <- m0$solution
+        res$parameters[[current_iter]] <- chain_init
 
         if (nomap) {
-          res$nll[current_iter] <- maxfunc(p2opts(opts, chain_p0))(chain_p0)
+          res$nll[current_iter] <- maxfunc(p2opts(opts, chain_init))(chain_init)
         } else {
-          res$nll[current_iter] <- Reduce('+', map(opts, ~ maxfunc(p2opts(., chain_p0))(chain_p0)))
+          res$nll[current_iter] <- Reduce('+', map(opts, ~ maxfunc(p2opts(., chain_init))(chain_init)))
         }
 
         res$approx_nll[current_iter] <- m0$objective
@@ -185,11 +185,11 @@ fitEM <- function(p0, opts, obs, maxiter = 100, convcrit_nll = 0.00001, nomap = 
         # Update best parameters if a better NLL is found
         if (res$nll[current_iter] < best_nll) {
           best_nll <- res$nll[current_iter]
-          best_params <- chain_p0
+          best_params <- chain_init
         }
 
         if (chain == 1) {
-          cat(sprintf("%4d: %s\n", current_iter, paste(sprintf("%8.3f", c(res$nll[current_iter], chain_p0)), collapse = " ")))
+          cat(sprintf("%4d: %s\n", current_iter, paste(sprintf("%8.3f", c(res$nll[current_iter], chain_init)), collapse = " ")))
         }
 
         # Convergence check
@@ -443,6 +443,7 @@ plot.fitEM_result <- function(x, ...) {
     geom_hline(yintercept = min(nll_data$NLL, na.rm = TRUE), linetype = "dashed", color = "red") +
     labs(title = "NLL Convergence Trace", x = "Iteration", y = "Negative Log-Likelihood") +
     theme_minimal() +
+    scale_color_viridis_d() +
     theme(plot.title = element_text(hjust = 0.5))
 
   # Plot 2: Parameter Convergence
@@ -456,6 +457,7 @@ plot.fitEM_result <- function(x, ...) {
       y = "Parameter Value"
     ) +
     theme_minimal() +
+    scale_color_viridis_d() +
     theme(plot.title = element_text(hjust = 0.5))
 
   # Plot 3: Sensitivity Convergence

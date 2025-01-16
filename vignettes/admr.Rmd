@@ -1,5 +1,5 @@
 ---
-title: "admr"
+title: "First use case example"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{admr}
@@ -7,6 +7,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+# Example of using `admr` with `rxode2`
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -15,7 +16,7 @@ knitr::opts_chunk$set(
 ```
 
 Import the `admr` and other packages:
-```{r setup}
+```{r setup, message = FALSE, warning = FALSE}
 library(admr)
 library(rxode2)
 library(nlmixr2)
@@ -29,6 +30,7 @@ library(mnorm)
 head(examplomycin)
 ```
 
+In this scenario, we will use the `examplomycin` dataset to demonstrate how to use the `admr` package with the `rxode2` package.  We show how to manipulate the dataset to get it in the right format for the `admr` package. In future scenarios, we might not have access to an individual dataset, but this vignette demonstrates the right format.
 ```{r}
 examplomycin_wide <- examplomycin %>%
   filter(EVID != 101) %>%
@@ -44,8 +46,9 @@ head(examplomycin_aggregated)
 
 
 
-
-```{r}
+## Defining the RxODE model
+We will define a two-compartment model for the examplomycin dataset. The model has the following differential equations:
+```{r, message = FALSE, warning = FALSE}
 rxModel <- RxODE({
   # Parameters
   ke = cl / v1             # Elimination rate constant
@@ -60,7 +63,10 @@ rxModel <- RxODE({
   # Concentration in the central compartment
   cp = central / v1
 })
+```
 
+A solved model is available for the two-compartment model, speeding up the simulation process. The `linCmt` function has multiple solved models. The function takes the following arguments:
+```{r, message = FALSE, warning = FALSE}
 rxModel <- RxODE({
   cp = linCmt(    # Solved one- or two-compartment model
     cl,           # Clearance
@@ -70,14 +76,17 @@ rxModel <- RxODE({
     ka            # Absorption rate constant
   )
 })
+```
 
-
-predder <- function(xt, theta_i, dose = 100) {
+## Defining the prediction function
+This is necessary for the `admr` package to simulate the model. Tt constructs the event table for dosing and sampling, solves the RxODE model, and extracts the predicted concentrations. The function can handle both single and multiple individuals. The `twocomp_g` function is the g function for the two-compartment model.
+```{r}
+predder <- function(time, theta_i, dose = 100) {
   if (!is.matrix(theta_i) || nrow(theta_i) == 1) {
     # Create the event table for dosing and sampling
     ev <- rxode2::eventTable()
     ev$add.dosing(dose = dose, nbr.doses = 1, start.time = 0)  # Single dose
-    ev$add.sampling(xt)  # Time points to simulate
+    ev$add.sampling(time)  # Time points to simulate
     
     # Solve the RxODE model
     out <- rxSolve(rxModel, theta_i, events = ev, cores = 10)
@@ -92,13 +101,14 @@ predder <- function(xt, theta_i, dose = 100) {
     # Create the event table for dosing and sampling
     ev <- eventTable(amount.units="mg", time.units="hours")
     ev$add.dosing(dose = dose, nbr.doses = 1, start.time = 0)  # Assume same dose
-    ev$add.sampling(xt)  # Time points to simulate
+    ev$add.sampling(time)  # Time points to simulate
     
     # Solve the RxODE model for all individuals
     out <- rxSolve(rxModel, params = theta_i, events = ev, cores = 10)
     
     # Extract the predicted concentrations (cp) and format them as a matrix
-    cp_matrix <- matrix(out$cp, nrow = n_individuals, ncol = length(xt), byrow = TRUE)
+    cp_matrix <- matrix(out$cp, nrow = n_individuals, ncol = length(time), 
+                        byrow = TRUE)
     
     # Return matrix of predicted concentrations
     return(cp_matrix)
@@ -110,25 +120,30 @@ twocomp_g <- function(beta,bi=rep(0,length(beta)),ai) {
 }
 ```
 
+This opts object contains the options for the `admr` package. The `genopts` function generates the options object. IT 
 
+The `fitEM` function fits the model to the dataset.
 ```{r}
-opts <- genopts(g=function(beta,bi=rep(0,length(beta)),ai) {beta*exp(bi)},
-                  xt=c(.1,.25,.5,1,2,3,5,8,12),
-                  p=list(beta=c(cl = 5, v1 = 10, v2 = 30,q = 10, ka = 1),Omega=omegas(.09,0,5),Sigma_prop=0.04),
+opts <- genopts(time=c(.1,.25,.5,1,2,3,5,8,12),
+                  p=list(beta=c(cl = 5, v1 = 10, v2 = 30,q = 10, ka = 1),
+                  Omega=omegas(.09,0,5),Sigma_prop=0.04),
                   nsim=2500,n=500,adist=NULL,
+                  g = twocomp_g,
                   interact=TRUE,fo_appr=FALSE,biseq=NA,omega_expansion=1.2,
                   p_thetai=function(p,origbeta,bi) {
-                    dmnorm(bi,mean=log(p$beta/origbeta),sigma=p$Omega,log=TRUE)$den
-                  },
+                    dmnorm(bi,mean=log(p$beta/origbeta),
+                           sigma=p$Omega,log=TRUE)$den},
                   f=predder)
 
-fit <- fitEM(opts$pt, opts, examplomycin_aggregated, chains = 5)
+fit <- fitEM(opts, examplomycin_aggregated, chains = 5)
 ```
+
+This is the output of the `fitEM` function.
 ```{r}
 print(fit)
 ```
 
-
+The `plot` function can be used to visualize the results. It shows the convergence of the model fit and parameters by making a trace plot of the chains.
 ```{r}
 plot(fit)
 ```

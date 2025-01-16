@@ -70,7 +70,7 @@
 <h2 id="creating-the-examplomycin-dataset">Creating the examplomycin dataset<a class="anchor" aria-label="anchor" href="#creating-the-examplomycin-dataset"></a>
 </h2>
 <p>In this vignette we will create a simulated dataset for a fictional
-drug called examplomycin. The dataset will contain 25 subjects with 9
+drug called examplomycin. The dataset will contain 500 subjects with 9
 timepoints each. The data will be generated using a two-compartment
 model with first-order absorption and elimination. The model parameters
 will be sampled from a multivariate normal distribution with a specified
@@ -87,10 +87,10 @@ results:</p>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://www.stats.ox.ac.uk/pub/MASS4/" class="external-link">MASS</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://nlmixr2.org/" class="external-link">nlmixr2</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">parallel</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-datatable.com" class="external-link">data.table</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span></code></pre></div>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://usethis.r-lib.org" class="external-link">usethis</a></span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="data-generating-function">Data generating function<a class="anchor" aria-label="anchor" href="#data-generating-function"></a>
@@ -118,8 +118,11 @@ data frame. The function returns the simulated dataset.</p>
 <span>    </span>
 <span>    <span class="co"># Differential equations for drug amount in compartments</span></span>
 <span>    <span class="va">d</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/stats/TDist.html" class="external-link">dt</a></span><span class="op">(</span><span class="va">depot</span><span class="op">)</span>    <span class="op">=</span> <span class="op">-</span><span class="va">ka</span> <span class="op">*</span> <span class="va">depot</span></span>
-<span>    <span class="va">d</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/stats/TDist.html" class="external-link">dt</a></span><span class="op">(</span><span class="va">central</span><span class="op">)</span>  <span class="op">=</span> <span class="va">ka</span> <span class="op">*</span> <span class="va">depot</span> <span class="op">-</span> <span class="va">ke</span> <span class="op">*</span> <span class="va">central</span> <span class="op">-</span> <span class="va">k12</span> <span class="op">*</span> <span class="va">central</span> <span class="op">+</span> <span class="va">k21</span> <span class="op">*</span> <span class="va">peripheral</span></span>
-<span>    <span class="va">d</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/stats/TDist.html" class="external-link">dt</a></span><span class="op">(</span><span class="va">peripheral</span><span class="op">)</span> <span class="op">=</span> <span class="va">k12</span> <span class="op">*</span> <span class="va">central</span> <span class="op">-</span> <span class="va">k21</span> <span class="op">*</span> <span class="va">peripheral</span></span>
+<span>    <span class="va">d</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/stats/TDist.html" class="external-link">dt</a></span><span class="op">(</span><span class="va">central</span><span class="op">)</span>  <span class="op">=</span> <span class="va">ka</span> <span class="op">*</span> <span class="va">depot</span> <span class="op">-</span> <span class="va">ke</span> <span class="op">*</span> <span class="va">central</span> <span class="op">-</span> </span>
+<span>      <span class="va">k12</span> <span class="op">*</span> <span class="va">central</span> <span class="op">+</span> </span>
+<span>      <span class="va">k21</span> <span class="op">*</span> <span class="va">peripheral</span></span>
+<span>    <span class="va">d</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/stats/TDist.html" class="external-link">dt</a></span><span class="op">(</span><span class="va">peripheral</span><span class="op">)</span> <span class="op">=</span> <span class="va">k12</span> <span class="op">*</span> <span class="va">central</span> <span class="op">-</span> </span>
+<span>      <span class="va">k21</span> <span class="op">*</span> <span class="va">peripheral</span></span>
 <span>    </span>
 <span>    <span class="co"># Concentration in the central compartment</span></span>
 <span>    <span class="va">cp</span> <span class="op">=</span> <span class="va">central</span> <span class="op">/</span> <span class="va">v1</span></span>
@@ -132,7 +135,9 @@ data frame. The function returns the simulated dataset.</p>
 <span>                       <span class="fl">0</span>,  <span class="fl">1</span>,  <span class="fl">0</span>,  <span class="fl">0</span>,  <span class="fl">0</span>,</span>
 <span>                       <span class="fl">0</span>,  <span class="fl">0</span>,  <span class="fl">1</span>,  <span class="fl">0</span>,  <span class="fl">0</span>,</span>
 <span>                       <span class="fl">0</span>,  <span class="fl">0</span>,  <span class="fl">0</span>,  <span class="fl">1</span>,  <span class="fl">0</span>,</span>
-<span>                       <span class="fl">0</span>,  <span class="fl">0</span>,  <span class="fl">0</span>,  <span class="fl">0</span>,  <span class="fl">1</span><span class="op">)</span>, dimnames<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="cn">NULL</span>,<span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"eta.cl"</span>,<span class="st">"eta.v1"</span>,<span class="st">"eta.v2"</span>, <span class="st">"eta.q"</span>, <span class="st">"eta.ka"</span><span class="op">)</span><span class="op">)</span>, nrow<span class="op">=</span><span class="fl">5</span><span class="op">)</span></span>
+<span>                       <span class="fl">0</span>,  <span class="fl">0</span>,  <span class="fl">0</span>,  <span class="fl">0</span>,  <span class="fl">1</span><span class="op">)</span>, </span>
+<span>                     dimnames<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="cn">NULL</span>,<span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"eta.cl"</span>,<span class="st">"eta.v1"</span>,<span class="st">"eta.v2"</span>, <span class="st">"eta.q"</span>, </span>
+<span>                                          <span class="st">"eta.ka"</span><span class="op">)</span><span class="op">)</span>, nrow<span class="op">=</span><span class="fl">5</span><span class="op">)</span></span>
 <span></span>
 <span>  <span class="va">iiv.sd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.3</span>, <span class="fl">0.3</span>, <span class="fl">0.3</span>, <span class="fl">0.3</span>, <span class="fl">0.3</span><span class="op">)</span> <span class="co">## SDs of model parameters</span></span>
 <span></span>
@@ -168,7 +173,7 @@ data frame. The function returns the simulated dataset.</p>
 <span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>CMT <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">TIME</span> <span class="op">==</span> <span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span>  <span class="co"># Simulate residual error and combine</span></span>
-<span>  <span class="va">sim</span><span class="op">$</span><span class="va">rv</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">sim</span><span class="op">)</span>, <span class="fl">0</span>, <span class="fl">0.1</span><span class="op">)</span></span>
+<span>  <span class="va">sim</span><span class="op">$</span><span class="va">rv</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">sim</span><span class="op">)</span>, <span class="fl">0</span>, <span class="fl">0.2</span><span class="op">)</span></span>
 <span>  <span class="va">sim</span><span class="op">$</span><span class="va">DV</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">sim</span><span class="op">$</span><span class="va">cp</span> <span class="op">*</span> <span class="op">(</span><span class="fl">1</span> <span class="op">+</span> <span class="va">sim</span><span class="op">$</span><span class="va">rv</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span>
 <span>  <span class="va">sim</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/merge.html" class="external-link">merge</a></span><span class="op">(</span><span class="va">sim</span>, <span class="va">params.all</span><span class="op">)</span></span>
 <span></span>
@@ -181,18 +186,19 @@ data frame. The function returns the simulated dataset.</p>
 <div class="section level3">
 <h3 id="generating-the-examplomycin-dataset">Generating the examplomycin dataset<a class="anchor" aria-label="anchor" href="#generating-the-examplomycin-dataset"></a>
 </h3>
-<p>We will now generate the examplomycin dataset with 25 subjects and 9
+<p>We will now generate the examplomycin dataset with 500 subjects and 9
 timepoints each. We will use a random seed of 1 for reproducibility.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">examplomycin</span> <span class="op">&lt;-</span> <span class="fu">generate_data</span><span class="op">(</span>n <span class="op">=</span> <span class="fl">25</span>, times <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.5</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span>, <span class="fl">6</span>, <span class="fl">8</span>, <span class="fl">12</span>, <span class="fl">24</span><span class="op">)</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">examplomycin</span> <span class="op">&lt;-</span> <span class="fu">generate_data</span><span class="op">(</span>n <span class="op">=</span> <span class="fl">500</span>, times <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.1</span>,<span class="fl">.25</span>,<span class="fl">.5</span>,<span class="fl">1</span>,<span class="fl">2</span>,<span class="fl">3</span>,<span class="fl">5</span>,<span class="fl">8</span>,<span class="fl">12</span><span class="op">)</span>, </span>
+<span>                              seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">examplomycin</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##   ID TIME    DV AMT EVID CMT</span></span>
-<span><span class="co">## 1  3  0.0 0.000 100  101   1</span></span>
-<span><span class="co">## 2  3  0.5 2.613   0    0   2</span></span>
-<span><span class="co">## 3  3  1.0 2.863   0    0   2</span></span>
-<span><span class="co">## 4  3  2.0 3.328   0    0   2</span></span>
-<span><span class="co">## 5  3  3.0 1.860   0    0   2</span></span>
-<span><span class="co">## 6  3  4.0 1.563   0    0   2</span></span></code></pre>
+<pre><code><span><span class="co">##    ID TIME    DV AMT EVID CMT</span></span>
+<span><span class="co">## 1 460 0.00 0.000 100  101   1</span></span>
+<span><span class="co">## 2 460 0.10 0.752   0    0   2</span></span>
+<span><span class="co">## 3 460 0.25 1.932   0    0   2</span></span>
+<span><span class="co">## 4 460 0.50 3.694   0    0   2</span></span>
+<span><span class="co">## 5 460 1.00 3.479   0    0   2</span></span>
+<span><span class="co">## 6 460 2.00 4.003   0    0   2</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="plotting-the-examplomycin-dataset">Plotting the examplomycin dataset<a class="anchor" aria-label="anchor" href="#plotting-the-examplomycin-dataset"></a>

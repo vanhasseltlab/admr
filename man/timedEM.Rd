@@ -4,10 +4,10 @@
 \alias{timedEM}
 \title{Fitting aggregate data}
 \usage{
-timedEM(p0, opts, obs, maxiter = 100, convcrit_nll = 5e-04, nomap = TRUE)
+timedEM(init, opts, obs, maxiter = 100, convcrit_nll = 5e-04, nomap = TRUE)
 }
 \arguments{
-\item{p0}{initial parameter values}
+\item{init}{initial parameter values}
 
 \item{opts}{options}
 

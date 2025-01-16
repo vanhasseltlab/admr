@@ -5,7 +5,6 @@
 \title{Fitting aggregate data}
 \usage{
 fitEM(
-  p0,
   opts,
   obs,
   maxiter = 100,
@@ -18,8 +17,6 @@ fitEM(
 )
 }
 \arguments{
-\item{p0}{initial parameter values}
-
 \item{opts}{options}
 
 \item{obs}{observed data}

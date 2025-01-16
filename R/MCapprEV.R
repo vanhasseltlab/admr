@@ -5,7 +5,7 @@ MCapprEV <- function(opts) { # Performs a Monte Carlo approximation to compute t
   ## p is normal-scale parameters
   bi <- gen_bi(opts)
   theta_i <- g_iter(opts,bi)
-  m <- opts$f(opts$xt,theta_i)
+  m <- opts$f(opts$time,theta_i)
   if (opts$omega_expansion==1) {
     r <- meancov(m)
   } else {

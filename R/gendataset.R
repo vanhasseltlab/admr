@@ -16,9 +16,9 @@
 gendataset <- function(opts,seed=1,reserr=TRUE,nlmixrform=FALSE) {
   set.seed(seed)
   bi <- gen_bi(opts,FALSE)
-  nsimobs <- length(opts$xt)*opts$nsim
+  nsimobs <- length(opts$time)*opts$nsim
   theta_i <- g_iter(opts,bi)
-  res <- opts$f(opts$xt,theta_i)
+  res <- opts$f(opts$time,theta_i)
   if (!reserr) return(res)
   if (!is.null(opts$p$Sigma_prop))
     res <- res*(1+rnorm(nsimobs,sd=sqrt(opts$p$Sigma_prop)))
@@ -27,9 +27,9 @@ gendataset <- function(opts,seed=1,reserr=TRUE,nlmixrform=FALSE) {
   if (!nlmixrform) {
     return(res)
   } else {
-    tibble(dv=c(t(cbind(NA,res))),time=rep(c(0,opts$xt),times=opts$nsim),
-           id=rep(seq_len(opts$nsim),each=1+length(opts$xt)),
-           amt=rep(c(100,rep(NA,length(opts$xt))),opts$nsim),
+    tibble(dv=c(t(cbind(NA,res))),time=rep(c(0,opts$time),times=opts$nsim),
+           id=rep(seq_len(opts$nsim),each=1+length(opts$time)),
+           amt=rep(c(100,rep(NA,length(opts$time))),opts$nsim),
            evid=101*as.integer(!is.na(.data$amt)),
            cmt=ifelse(is.na(.data$amt),2,1))
   }
