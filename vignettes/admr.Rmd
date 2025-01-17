@@ -3,11 +3,15 @@ title: "First use case example"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{admr}
-  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  markdown: 
+    wrap: sentence
 ---
 
 # Example of using `admr` with `rxode2`
+
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
@@ -16,6 +20,7 @@ knitr::opts_chunk$set(
 ```
 
 Import the `admr` and other packages:
+
 ```{r setup, message = FALSE, warning = FALSE}
 library(admr)
 library(rxode2)
@@ -25,12 +30,14 @@ library(tidyr)
 library(mnorm)
 ```
 
-
 ```{r}
 head(examplomycin)
 ```
 
-In this scenario, we will use the `examplomycin` dataset to demonstrate how to use the `admr` package with the `rxode2` package.  We show how to manipulate the dataset to get it in the right format for the `admr` package. In future scenarios, we might not have access to an individual dataset, but this vignette demonstrates the right format.
+In this scenario, we will use the `examplomycin` dataset to demonstrate how to use the `admr` package with the `rxode2` package.
+We show how to manipulate the dataset to get it in the right format for the `admr` package.
+In future scenarios, we might not have access to an individual dataset, but this vignette demonstrates the right format.
+
 ```{r}
 examplomycin_wide <- examplomycin %>%
   filter(EVID != 101) %>%
@@ -44,10 +51,11 @@ examplomycin_aggregated <- examplomycin_wide %>%
 head(examplomycin_aggregated)
 ```
 
-
-
 ## Defining the RxODE model
-We will define a two-compartment model for the examplomycin dataset. The model has the following differential equations:
+
+We will define a two-compartment model for the examplomycin dataset.
+The model has the following differential equations:
+
 ```{r, message = FALSE, warning = FALSE}
 rxModel <- RxODE({
   # Parameters
@@ -65,7 +73,10 @@ rxModel <- RxODE({
 })
 ```
 
-A solved model is available for the two-compartment model, speeding up the simulation process. The `linCmt` function has multiple solved models. The function takes the following arguments:
+A solved model is available for the two-compartment model, speeding up the simulation process.
+The `linCmt` function has multiple solved models.
+The function takes the following arguments:
+
 ```{r, message = FALSE, warning = FALSE}
 rxModel <- RxODE({
   cp = linCmt(    # Solved one- or two-compartment model
@@ -79,23 +90,14 @@ rxModel <- RxODE({
 ```
 
 ## Defining the prediction function
-This is necessary for the `admr` package to simulate the model. Tt constructs the event table for dosing and sampling, solves the RxODE model, and extracts the predicted concentrations. The function can handle both single and multiple individuals. The `twocomp_g` function is the g function for the two-compartment model.
+
+This is necessary for the `admr` package to simulate the model.
+Tt constructs the event table for dosing and sampling, solves the RxODE model, and extracts the predicted concentrations.
+The function can handle both single and multiple individuals.
+The `twocomp_g` function is the g function for the two-compartment model.
+
 ```{r}
 predder <- function(time, theta_i, dose = 100) {
-  if (!is.matrix(theta_i) || nrow(theta_i) == 1) {
-    # Create the event table for dosing and sampling
-    ev <- rxode2::eventTable()
-    ev$add.dosing(dose = dose, nbr.doses = 1, start.time = 0)  # Single dose
-    ev$add.sampling(time)  # Time points to simulate
-    
-    # Solve the RxODE model
-    out <- rxSolve(rxModel, theta_i, events = ev, cores = 10)
-    
-    # Extract the predicted concentrations (cp)
-    return(out$cp)
-    
-  } else {
-    # Multiple individuals case
     n_individuals <- nrow(theta_i)
 
     # Create the event table for dosing and sampling
@@ -104,7 +106,7 @@ predder <- function(time, theta_i, dose = 100) {
     ev$add.sampling(time)  # Time points to simulate
     
     # Solve the RxODE model for all individuals
-    out <- rxSolve(rxModel, params = theta_i, events = ev, cores = 10)
+    out <- rxSolve(rxModel, params = theta_i, events = ev, cores = 0)
     
     # Extract the predicted concentrations (cp) and format them as a matrix
     cp_matrix <- matrix(out$cp, nrow = n_individuals, ncol = length(time), 
@@ -112,24 +114,82 @@ predder <- function(time, theta_i, dose = 100) {
     
     # Return matrix of predicted concentrations
     return(cp_matrix)
-  }
 }
+```
 
+Model g generates individual-specific parameter values theta_i based on random effects bi.
+
+```{r}
 twocomp_g <- function(beta,bi=rep(0,length(beta)),ai) {
   beta*exp(bi)
 }
 ```
 
-This opts object contains the options for the `admr` package. The `genopts` function generates the options object. IT 
+This opts object contains the options for the `admr` package.
+The `genopts` function generates the options object.
+IT
 
 The `fitEM` function fits the model to the dataset.
+Here the parameters are:
+
+1.  time:
+    -   A vector of time points for sampling predictions in the model.
+    -   These are the observation times at which the model predictions are evaluated.
+    -   Example: c(.1, .25, .5, 1, 2, 3, 5, 8, 12).
+2.  p:
+    -   Values for the population parameters (beta) and their covariance matrix (Omega).
+    
+    -   Example: list(beta = c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1), Omega = omegas(.09, 0, 5)).
+3.  nsim:
+    -   Number of Monte Carlo samples per iteration.
+
+    -   Higher values improve accuracy but increase computation time.
+
+    -   Example: 2500.
+4.  n:
+    -   Number of individuals in the dataset.
+
+    -   Example: 500.
+5.  adist:
+    -   Currently not used (future implementation).
+
+    -   Intended to define auxiliary distributions for covariates or additional random effects.
+6.  g:
+    -   The mapping function (g) that generates individual-specific parameters (theta_i) from population parameters (beta) and random effects (bi).
+
+    -   Example: twocomp_g.
+7.  interact:
+    -   Currently not used (future implementation).
+
+    -   Placeholder for handling interactions between different effects in the model.
+8.  fo_appr:
+    -   Currently not used (future implementation).
+
+    -   Placeholder for enabling the First-Order Approximation method for parameter estimation.
+9.  biseq:
+    -   Currently not used (future implementation).
+
+    -   Placeholder for pre-defined sequences of random effects (bi) for testing purposes.
+10. omega_expansion:
+    -   Factor by which the covariance matrix (Omega) is expanded during estimation to account for uncertainty.
+
+    -   Example: 2 doubles the covariance matrix values temporarily during sampling.
+11. p_thetai:
+    -   Function that calculates the log-density of the random effects (bi) under a multivariate normal distribution.
+
+    -   Used to evaluate how likely the random effects are, given the parameters and their covariance.
+12. f:
+    -   The prediction function that simulates model outputs based on individual parameters.
+
+    -   Example: predder, as specified above.
+
 ```{r}
 opts <- genopts(time=c(.1,.25,.5,1,2,3,5,8,12),
                   p=list(beta=c(cl = 5, v1 = 10, v2 = 30,q = 10, ka = 1),
                   Omega=omegas(.09,0,5),Sigma_prop=0.04),
                   nsim=2500,n=500,adist=NULL,
                   g = twocomp_g,
-                  interact=TRUE,fo_appr=FALSE,biseq=NA,omega_expansion=1.2,
+                  interact=F,fo_appr=F,biseq=NA,omega_expansion=2,
                   p_thetai=function(p,origbeta,bi) {
                     dmnorm(bi,mean=log(p$beta/origbeta),
                            sigma=p$Omega,log=TRUE)$den},
@@ -139,12 +199,14 @@ fit <- fitEM(opts, examplomycin_aggregated, chains = 5)
 ```
 
 This is the output of the `fitEM` function.
+
 ```{r}
 print(fit)
 ```
 
-The `plot` function can be used to visualize the results. It shows the convergence of the model fit and parameters by making a trace plot of the chains.
+The `plot` function can be used to visualize the results.
+It shows the convergence of the model fit and parameters by making a trace plot of the chains.
+
 ```{r}
 plot(fit)
 ```
-

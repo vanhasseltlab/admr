@@ -174,6 +174,23 @@ maxfunc <- function(opts) {
 }
 
 #' @noRd
+MCapprEV <- function(opts) { # Performs a Monte Carlo approximation to compute the expected values (mean and covariance) of the model outputs based on random effects.
+  p <- opts$p
+  ## p is normal-scale parameters
+  bi <- gen_bi(opts)
+  theta_i <- g_iter(opts,bi)
+  m <- opts$f(opts$time,theta_i)
+  if (opts$omega_expansion==1) {
+    r <- meancov(m)
+  } else {
+    wt <- samplogdensfun(bi,p,opts$omega_expansion)
+    r <- meancov(m,logdens2wt(wt))
+  }
+  opts$h(r,opts$p)
+}
+
+
+#' @noRd
 nllfun <- function(obsEV,predEV,invpredV,n=1) {   # Computes the negative log-likelihood given observed and predicted expected values and their covariance.
   if (missing(invpredV)) invpredV <- solve(predEV$V)
   resids <- c(obsEV$E-predEV$E) ## force to simple vector
@@ -355,6 +372,26 @@ samplogdensfun <- function(bi,p,omega_expansion) { # Computes the log-density of
     true <- dmnorm(bi[i,],mean=rep(0,nrow(p$Omega)),sigma=p$Omega,log=TRUE)$den
     true-proposal
   })
+}
+
+#' @noRd
+upd_opts <- function(opts0,optslist) { # Initializes and generates core options and settings for modeling and optimization, including random effects, simulation settings, and likelihood approximations.
+  ## note: this function always resets biseq and adist, and takes away obs!!
+  if (!all(names(optslist) %in% names(formals(genopts))))
+    stop("Argument not understood by genopts() function!")
+  update_biseq <- TRUE
+  if ("biseq" %in% names(optslist)) update_biseq <- FALSE
+  for (i in names(optslist)) opts0[[i]] <- optslist[[i]]
+  if (update_biseq) opts0$biseq <- NA;
+  opts0$adist <- NULL
+  opts0$ptrans <- NULL;opts0$pderiv <- NULL;
+  opts0$ai <- NULL;opts0$pt <- NULL
+  opts0$obs <- NULL
+  opts0$d_g_d_beta <- NULL
+  opts0$d_g_d_bi <- NULL
+  opts0$d_bi_d_omega <- NULL
+  opts0$d_omega_d_Omega <- NULL
+  do.call(genopts,opts0)
 }
 
 #' @noRd
