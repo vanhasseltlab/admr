@@ -8,21 +8,28 @@
 #' @param obs observed data
 #' @param maxiter maximum number of iterations
 #' @param convcrit_nll convergence criterion for the negative log-likelihood
-#' @param nomap single model or multiple models
+#' @param single_dataframe single model or multiple models
 #' @param phase_fractions vector of phase fractions
 #' @param max_worse_iterations maximum number of consecutive worse iterations before skipping a phase
 #' @param chains number of chains
 #' @param pertubation pertubation factor for the initial parameter values of each chain
+#' @param seed random seed
 #' @returns A fitted model
 #' @export
 #' @examples
 #' #test
 #'
 
-fitEM <- function(opts, obs, maxiter = 100, convcrit_nll = 0.00001, nomap = TRUE,
+fitEM <- function(opts, obs, maxiter = 100, convcrit_nll = 0.00001, single_dataframe = TRUE,
                   phase_fractions = c(0.2, 0.4, 0.2, 0.2), max_worse_iterations = 10, chains = 1,
-                  pertubation = 0.1) {
+                  pertubation = 0.1, seed = 1) {
+
+  set.seed(seed)
+
   init <- opts$pt
+
+  if (single_dataframe == T) {nomap <- TRUE} else {nomap <- FALSE}
+
 
   # Ensure phase_fractions sum to 1
   if (abs(sum(phase_fractions) - 1) > .Machine$double.eps^0.5) {
@@ -31,28 +38,15 @@ fitEM <- function(opts, obs, maxiter = 100, convcrit_nll = 0.00001, nomap = TRUE
 
   start_time <- Sys.time()  # Start time for the entire process
 
-  perturb_init <- function(init) {
-    init + rnorm(length(init), mean = 0, sd = pertubation * abs(init))  # Slight perturbation
-  }
-
   ff_nloptr <- function(params) {
     ff(params)
-  }
-
-  grad_ff_nloptr <- function(params) {
-    if (nomap == TRUE) {
-      numDeriv::grad(maxfunc(opts), params)
-    } else {
-      Reduce('+', map(opts, ~ numDeriv::grad(maxfunc(.), params)))
-      return(print("Gradient not yet available for nomap = FALSE"))
-    }
   }
 
   chain_results <- vector("list", chains)  # Store results for each chain
 
   for (chain in seq_len(chains)) {
     chain_start_time <- Sys.time()  # Start time for the chain
-    chain_init <- if (chain == 1) init else perturb_init(init)
+    chain_init <- if (chain == 1) init else perturb_init(init, pertubation)
 
     if (nomap) {
       opts <- opts %>% p2opts(chain_init) %>% obs2opts(obs)
@@ -122,16 +116,6 @@ fitEM <- function(opts, obs, maxiter = 100, convcrit_nll = 0.00001, nomap = TRUE
           break
         }
 
-        if (phase_idx == 1) {
-          algorithm <- "NLOPT_LN_BOBYQA"
-          gradient <- FALSE
-        } else if (phase_idx == 2) {
-          algorithm <- "NLOPT_LN_BOBYQA"
-          gradient <- FALSE
-        } else {
-          algorithm <- "NLOPT_LN_BOBYQA"
-          gradient <- FALSE
-        }
 
         iter_start_time <- Sys.time()
 
@@ -142,32 +126,17 @@ fitEM <- function(opts, obs, maxiter = 100, convcrit_nll = 0.00001, nomap = TRUE
           ff <- function(p) Reduce('+', map(ffs, ~ .(p)))
         }
 
-        if (gradient == TRUE) {
-          m0 <- nloptr::nloptr(
-            x0 = chain_init,
-            eval_f = ff_nloptr,
-            eval_grad_f = grad_ff_nloptr,
-            lb = chain_init - current_phase$bounds,
-            ub = chain_init + current_phase$bounds,
-            opts = list(
-              algorithm = algorithm,
-              ftol_rel = 1e-10,
-              maxeval = current_phase$maxeval
-            )
+        m0 <- nloptr::nloptr(
+          x0 = chain_init,
+          eval_f = ff_nloptr,
+          lb = chain_init - current_phase$bounds,
+          ub = chain_init + current_phase$bounds,
+          opts = list(
+            algorithm = "NLOPT_LN_BOBYQA",
+            ftol_rel = 1e-10,
+            maxeval = current_phase$maxeval
           )
-        } else {
-          m0 <- nloptr::nloptr(
-            x0 = chain_init,
-            eval_f = ff_nloptr,
-            lb = chain_init - current_phase$bounds,
-            ub = chain_init + current_phase$bounds,
-            opts = list(
-              algorithm = algorithm,
-              ftol_rel = 1e-10,
-              maxeval = current_phase$maxeval
-            )
-          )
-        }
+        )
 
         # Optimization step
         chain_init <- m0$solution
@@ -292,7 +261,7 @@ fitEM <- function(opts, obs, maxiter = 100, convcrit_nll = 0.00001, nomap = TRUE
         ),
         sprintf("%.4f", residual_error)
       ),
-      `BSV(CV%)` = c(tryCatch(sqrt(diag(back_transformed_params$Omega)) * 100, error = function(e) NA), NA)
+      `BSV(CV%)` = c(calculate_bsv(back_transformed_params), NA) # Use the adjusted function here
     ),
     covariance_matrix = cov_matrix_fixed,
     convergence_info = list(
@@ -323,14 +292,12 @@ fitEM <- function(opts, obs, maxiter = 100, convcrit_nll = 0.00001, nomap = TRUE
   class(output) <- "fitEM_result"
   return(output)
 }
-
 #' Print fitEM results
 #'
 #' @param x A fitted model object returned by fitEM
 #' @param ... Additional arguments (not used)
 #' @export
 #'
-
 print.fitEM_result <- function(x, ...) {
   cat("-- FitEM Summary --\n\n")
 
@@ -363,17 +330,47 @@ print.fitEM_result <- function(x, ...) {
   print(x$param_df)
   cat("\n")
 
-  # Iteration diagnostics
+  # Iteration diagnostics (head and tail)
   cat("-- Iteration Diagnostics --\n")
+  iter_info <- x$iteration_history
+  n_total <- nrow(iter_info)
+
+  # Automatically show head and tail of iterations
+  if (n_total > 10) {
+    head_iters <- seq_len(5)
+    tail_iters <- seq(n_total - 4, n_total)
+  } else {
+    head_iters <- seq_len(n_total)
+    tail_iters <- integer(0)  # Empty if no tail is needed
+  }
+
   cat(sprintf(" Iter | %-12s\n", "NLL and Parameters"))
   cat(sprintf("%s\n", strrep("-", 80)))
-  for (i in seq_along(diag$nll_trace)) {
-    nll <- diag$nll_trace[i]
-    params <- x$iteration_history$parameters[[i]]
+
+  # Print head iterations
+  for (i in head_iters) {
+    nll <- iter_info$nll[i]
+    params <- iter_info$parameters[[i]]
+    if (is.null(params)) next  # Skip if parameters are missing
     cat(sprintf("%4d: %s\n", i, paste(sprintf("%.3f", c(nll, params)), collapse = " ")))
   }
+
+  # Add transition if both head and tail are shown
+  if (length(tail_iters) > 0 && max(head_iters) < min(tail_iters) - 1) {
+    cat("   ... (omitted iterations) ...\n")
+  }
+
+  # Print tail iterations
+  for (i in tail_iters) {
+    nll <- iter_info$nll[i]
+    params <- iter_info$parameters[[i]]
+    if (is.null(params)) next  # Skip if parameters are missing
+    cat(sprintf("%4d: %s\n", i, paste(sprintf("%.3f", c(nll, params)), collapse = " ")))
+  }
+
   cat("\n")
 }
+
 
 
 #' Plot diagnostics of fitEM results

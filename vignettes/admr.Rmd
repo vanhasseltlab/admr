@@ -1,8 +1,8 @@
 ---
-title: "First use case example"
+title: "Get started with `admr`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{admr}
+  %\VignetteIndexEntry{Get started with admr}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 editor_options: 
@@ -117,13 +117,6 @@ predder <- function(time, theta_i, dose = 100) {
 }
 ```
 
-Model g generates individual-specific parameter values theta_i based on random effects bi.
-
-```{r}
-twocomp_g <- function(beta,bi=rep(0,length(beta)),ai) {
-  beta*exp(bi)
-}
-```
 
 This opts object contains the options for the `admr` package.
 The `genopts` function generates the options object.
@@ -139,6 +132,8 @@ Here the parameters are:
 2.  p:
     -   Values for the population parameters (beta) and their covariance matrix (Omega).
     
+    -   These are either the initial values for the optimization or the true values for simulation.
+
     -   Example: list(beta = c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1), Omega = omegas(.09, 0, 5)).
 3.  nsim:
     -   Number of Monte Carlo samples per iteration.
@@ -148,37 +143,31 @@ Here the parameters are:
     -   Example: 2500.
 4.  n:
     -   Number of individuals in the dataset.
+    
+    -   This is used for the Objective Function Value (OFV), AIC, and BIC calculation.
 
     -   Example: 500.
 5.  adist:
     -   Currently not used (future implementation).
 
     -   Intended to define auxiliary distributions for covariates or additional random effects.
-6.  g:
-    -   The mapping function (g) that generates individual-specific parameters (theta_i) from population parameters (beta) and random effects (bi).
-
-    -   Example: twocomp_g.
-7.  interact:
+6.  interact:
     -   Currently not used (future implementation).
 
     -   Placeholder for handling interactions between different effects in the model.
-8.  fo_appr:
+7.  fo_appr:
     -   Currently not used (future implementation).
 
     -   Placeholder for enabling the First-Order Approximation method for parameter estimation.
-9.  biseq:
+8.  biseq:
     -   Currently not used (future implementation).
 
     -   Placeholder for pre-defined sequences of random effects (bi) for testing purposes.
-10. omega_expansion:
+9.  omega_expansion:
     -   Factor by which the covariance matrix (Omega) is expanded during estimation to account for uncertainty.
 
     -   Example: 2 doubles the covariance matrix values temporarily during sampling.
-11. p_thetai:
-    -   Function that calculates the log-density of the random effects (bi) under a multivariate normal distribution.
-
-    -   Used to evaluate how likely the random effects are, given the parameters and their covariance.
-12. f:
+10. f:
     -   The prediction function that simulates model outputs based on individual parameters.
 
     -   Example: predder, as specified above.
@@ -188,11 +177,7 @@ opts <- genopts(time=c(.1,.25,.5,1,2,3,5,8,12),
                   p=list(beta=c(cl = 5, v1 = 10, v2 = 30,q = 10, ka = 1),
                   Omega=omegas(.09,0,5),Sigma_prop=0.04),
                   nsim=2500,n=500,adist=NULL,
-                  g = twocomp_g,
                   interact=F,fo_appr=F,biseq=NA,omega_expansion=2,
-                  p_thetai=function(p,origbeta,bi) {
-                    dmnorm(bi,mean=log(p$beta/origbeta),
-                           sigma=p$Omega,log=TRUE)$den},
                   f=predder)
 
 fit <- fitEM(opts, examplomycin_aggregated, chains = 5)

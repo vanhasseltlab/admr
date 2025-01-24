@@ -6,7 +6,6 @@
 \usage{
 genopts(
   f,
-  g,
   time,
   p,
   h,
@@ -17,14 +16,11 @@ genopts(
   fo_appr = (nsim < 10),
   biseq = NA,
   omega_expansion = 1,
-  p_thetai = NA,
   single_betas = NA
 )
 }
 \arguments{
 \item{f}{The likelihood function}
-
-\item{g}{The model function}
 
 \item{time}{The data}
 
@@ -45,8 +41,6 @@ genopts(
 \item{biseq}{The sequence of random effects}
 
 \item{omega_expansion}{The expansion factor for the omega matrix}
-
-\item{p_thetai}{The theta matrix}
 
 \item{single_betas}{The beta matrix}
 }

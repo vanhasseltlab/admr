@@ -9,11 +9,12 @@ fitEM(
   obs,
   maxiter = 100,
   convcrit_nll = 1e-05,
-  nomap = TRUE,
+  single_dataframe = TRUE,
   phase_fractions = c(0.2, 0.4, 0.2, 0.2),
   max_worse_iterations = 10,
   chains = 1,
-  pertubation = 0.1
+  pertubation = 0.1,
+  seed = 1
 )
 }
 \arguments{
@@ -25,7 +26,7 @@ fitEM(
 
 \item{convcrit_nll}{convergence criterion for the negative log-likelihood}
 
-\item{nomap}{single model or multiple models}
+\item{single_dataframe}{single model or multiple models}
 
 \item{phase_fractions}{vector of phase fractions}
 
@@ -34,6 +35,8 @@ fitEM(
 \item{chains}{number of chains}
 
 \item{pertubation}{pertubation factor for the initial parameter values of each chain}
+
+\item{seed}{random seed}
 }
 \value{
 A fitted model

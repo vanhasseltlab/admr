@@ -5,12 +5,12 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>First use case example • admr</title>
+<title>Get started with `admr` • admr</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="First use case example">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Get started with `admr`">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -57,7 +57,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>First use case example</h1>
+      <h1>Get started with `admr`</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/hiddevandebeek/admr/blob/HEAD/vignettes/admr.Rmd" class="external-link"><code>vignettes/admr.Rmd</code></a></small>
@@ -211,30 +211,12 @@ evaluated.</li>
 <li>Example: c(.1, .25, .5, 1, 2, 3, 5, 8, 12).</li>
 </ul>
 </li>
-<li>p$beta:
+<li>p:
 <ul>
-<li>Initial values of the population-level parameters for the
-model.</li>
-<li>Example: c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1) represents
-clearance, central volume, peripheral volume, inter-compartmental
-clearance, and absorption rate constant.</li>
-</ul>
-</li>
-<li>p$Omega:
-<ul>
-<li><p>Covariance matrix for the random effects (bi).</p></li>
-<li><p>Specifies the variability between individuals for the model
-parameters.</p></li>
-<li><p>Example: omegas(.09, 0, 5) creates a matrix with diagonal
-variability of 0.09 and zero off-diagonal correlations for 5
-parameters.</p></li>
-</ul>
-</li>
-<li>p$Sigma_prop:
-<ul>
-<li><p>Proportional error variance for residual variability.</p></li>
-<li><p>Accounts for additional variability in the observed
-data.</p></li>
+<li><p>Values for the population parameters (beta) and their covariance
+matrix (Omega).</p></li>
+<li><p>Example: list(beta = c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1),
+Omega = omegas(.09, 0, 5)).</p></li>
 </ul>
 </li>
 <li>nsim:
@@ -307,7 +289,7 @@ parameters and their covariance.</p></li>
 <ul>
 <li><p>The prediction function that simulates model outputs based on
 individual parameters.</p></li>
-<li><p>Example: predder.</p></li>
+<li><p>Example: predder, as specified above.</p></li>
 </ul>
 </li>
 </ol>
@@ -373,33 +355,33 @@ individual parameters.</p></li>
 <span><span class="co">#&gt;   34: -1845.444    1.599    2.313    3.401    2.284    0.022   -2.284   -2.240   -2.358   -2.270   -2.345   -3.235</span></span>
 <span><span class="co">#&gt;   35: -1845.444    1.599    2.313    3.401    2.284    0.022   -2.284   -2.240   -2.358   -2.270   -2.345   -3.235</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 1 Complete: Final NLL = -1845.448, Time Elapsed = 11.47 seconds</span></span>
+<span><span class="co">#&gt; Chain 1 Complete: Final NLL = -1845.448, Time Elapsed = 9.87 seconds</span></span>
 <span><span class="co">#&gt;  </span></span>
 <span><span class="co">#&gt; Phase Exploration Phase converged at iteration 12. </span></span>
 <span><span class="co">#&gt; Phase Refinement Phase converged at iteration 17. </span></span>
 <span><span class="co">#&gt; Phase Final Phase converged at iteration 18. </span></span>
 <span><span class="co">#&gt; Phase Final Phase 2 converged at iteration 19. </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 2 Complete: Final NLL = -1845.442, Time Elapsed = 8.17 seconds</span></span>
+<span><span class="co">#&gt; Chain 2 Complete: Final NLL = -1845.442, Time Elapsed = 7.45 seconds</span></span>
 <span><span class="co">#&gt;  </span></span>
 <span><span class="co">#&gt; Phase Exploration Phase converged at iteration 7. </span></span>
 <span><span class="co">#&gt; Phase Refinement Phase converged at iteration 16. </span></span>
 <span><span class="co">#&gt; Phase Final Phase 2 converged at iteration 35. </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 3 Complete: Final NLL = -1845.445, Time Elapsed = 11.74 seconds</span></span>
+<span><span class="co">#&gt; Chain 3 Complete: Final NLL = -1845.445, Time Elapsed = 10.48 seconds</span></span>
 <span><span class="co">#&gt;  </span></span>
 <span><span class="co">#&gt; Phase Exploration Phase converged at iteration 12. </span></span>
 <span><span class="co">#&gt; Phase Refinement Phase converged at iteration 13. </span></span>
 <span><span class="co">#&gt; Phase Final Phase converged at iteration 18. </span></span>
 <span><span class="co">#&gt; Phase Final Phase 2 converged at iteration 19. </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 4 Complete: Final NLL = -1845.443, Time Elapsed = 9.31 seconds</span></span>
+<span><span class="co">#&gt; Chain 4 Complete: Final NLL = -1845.443, Time Elapsed = 7.63 seconds</span></span>
 <span><span class="co">#&gt;  </span></span>
 <span><span class="co">#&gt; Phase Refinement Phase converged at iteration 21. </span></span>
 <span><span class="co">#&gt; Phase Final Phase converged at iteration 28. </span></span>
 <span><span class="co">#&gt; Phase Final Phase 2 converged at iteration 34. </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 5 Complete: Final NLL = -1845.448, Time Elapsed = 15.14 seconds</span></span>
+<span><span class="co">#&gt; Chain 5 Complete: Final NLL = -1845.448, Time Elapsed = 13.74 seconds</span></span>
 <span><span class="co">#&gt; </span></span></code></pre></div>
 <p>This is the output of the <code>fitEM</code> function.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
@@ -414,10 +396,10 @@ individual parameters.</p></li>
 <span><span class="co">#&gt; Condition#(Cor): 222.81</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; -- Timing Information --</span></span>
-<span><span class="co">#&gt;      Best Chain: 11.4719 seconds</span></span>
-<span><span class="co">#&gt;      All Chains: 55.8372 seconds</span></span>
-<span><span class="co">#&gt;      Covariance: 50.8031 seconds</span></span>
-<span><span class="co">#&gt;         Elapsed: 106.64 seconds</span></span>
+<span><span class="co">#&gt;      Best Chain: 9.8696 seconds</span></span>
+<span><span class="co">#&gt;      All Chains: 49.1763 seconds</span></span>
+<span><span class="co">#&gt;      Covariance: 40.5670 seconds</span></span>
+<span><span class="co">#&gt;         Elapsed: 89.74 seconds</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; -- Population Parameters --</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 6</span></span></span>

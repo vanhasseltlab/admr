@@ -2,7 +2,7 @@
 title: "Examplomycin dataset"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{examplomycin dataset}
+  %\VignetteIndexEntry{Examplomycin dataset}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
