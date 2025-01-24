@@ -5,12 +5,12 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>First use case example • admr</title>
+<title>Get started with `admr` • admr</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="First use case example">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Get started with `admr`">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -57,7 +57,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>First use case example</h1>
+      <h1>Get started with `admr`</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/hiddevandebeek/admr/blob/master/vignettes/admr.Rmd" class="external-link"><code>vignettes/admr.Rmd</code></a></small>
@@ -191,12 +191,6 @@ function is the g function for the two-compartment model.</p>
 <span>    <span class="co"># Return matrix of predicted concentrations</span></span>
 <span>    <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">cp_matrix</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<p>Model g generates individual-specific parameter values theta_i based
-on random effects bi.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">twocomp_g</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">beta</span>,<span class="va">bi</span><span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">beta</span><span class="op">)</span><span class="op">)</span>,<span class="va">ai</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">beta</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">bi</span><span class="op">)</span></span>
-<span><span class="op">}</span></span></code></pre></div>
 <p>This opts object contains the options for the <code>admr</code>
 package. The <code>genopts</code> function generates the options object.
 IT</p>
@@ -215,6 +209,8 @@ evaluated.</li>
 <ul>
 <li><p>Values for the population parameters (beta) and their covariance
 matrix (Omega).</p></li>
+<li><p>These are either the initial values for the optimization or the
+true values for simulation.</p></li>
 <li><p>Example: list(beta = c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1),
 Omega = omegas(.09, 0, 5)).</p></li>
 </ul>
@@ -230,6 +226,8 @@ time.</p></li>
 <li>n:
 <ul>
 <li><p>Number of individuals in the dataset.</p></li>
+<li><p>This is used for the Objective Function Value (OFV), AIC, and BIC
+calculation.</p></li>
 <li><p>Example: 500.</p></li>
 </ul>
 </li>
@@ -238,14 +236,6 @@ time.</p></li>
 <li><p>Currently not used (future implementation).</p></li>
 <li><p>Intended to define auxiliary distributions for covariates or
 additional random effects.</p></li>
-</ul>
-</li>
-<li>g:
-<ul>
-<li><p>The mapping function (g) that generates individual-specific
-parameters (theta_i) from population parameters (beta) and random
-effects (bi).</p></li>
-<li><p>Example: twocomp_g.</p></li>
 </ul>
 </li>
 <li>interact:
@@ -277,14 +267,6 @@ estimation to account for uncertainty.</p></li>
 during sampling.</p></li>
 </ul>
 </li>
-<li>p_thetai:
-<ul>
-<li><p>Function that calculates the log-density of the random effects
-(bi) under a multivariate normal distribution.</p></li>
-<li><p>Used to evaluate how likely the random effects are, given the
-parameters and their covariance.</p></li>
-</ul>
-</li>
 <li>f:
 <ul>
 <li><p>The prediction function that simulates model outputs based on
@@ -293,16 +275,12 @@ individual parameters.</p></li>
 </ul>
 </li>
 </ol>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">opts</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/genopts.html">genopts</a></span><span class="op">(</span>time<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.1</span>,<span class="fl">.25</span>,<span class="fl">.5</span>,<span class="fl">1</span>,<span class="fl">2</span>,<span class="fl">3</span>,<span class="fl">5</span>,<span class="fl">8</span>,<span class="fl">12</span><span class="op">)</span>,</span>
 <span>                  p<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>beta<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>cl <span class="op">=</span> <span class="fl">5</span>, v1 <span class="op">=</span> <span class="fl">10</span>, v2 <span class="op">=</span> <span class="fl">30</span>,q <span class="op">=</span> <span class="fl">10</span>, ka <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
 <span>                  Omega<span class="op">=</span><span class="fu"><a href="../reference/omegas.html">omegas</a></span><span class="op">(</span><span class="fl">.09</span>,<span class="fl">0</span>,<span class="fl">5</span><span class="op">)</span>,Sigma_prop<span class="op">=</span><span class="fl">0.04</span><span class="op">)</span>,</span>
 <span>                  nsim<span class="op">=</span><span class="fl">2500</span>,n<span class="op">=</span><span class="fl">500</span>,adist<span class="op">=</span><span class="cn">NULL</span>,</span>
-<span>                  g <span class="op">=</span> <span class="va">twocomp_g</span>,</span>
 <span>                  interact<span class="op">=</span><span class="cn">F</span>,fo_appr<span class="op">=</span><span class="cn">F</span>,biseq<span class="op">=</span><span class="cn">NA</span>,omega_expansion<span class="op">=</span><span class="fl">2</span>,</span>
-<span>                  p_thetai<span class="op">=</span><span class="kw">function</span><span class="op">(</span><span class="va">p</span>,<span class="va">origbeta</span>,<span class="va">bi</span><span class="op">)</span> <span class="op">{</span></span>
-<span>                    <span class="fu"><a href="https://rdrr.io/pkg/mnorm/man/dmnorm.html" class="external-link">dmnorm</a></span><span class="op">(</span><span class="va">bi</span>,mean<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">p</span><span class="op">$</span><span class="va">beta</span><span class="op">/</span><span class="va">origbeta</span><span class="op">)</span>,</span>
-<span>                           sigma<span class="op">=</span><span class="va">p</span><span class="op">$</span><span class="va">Omega</span>,log<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span><span class="op">$</span><span class="va">den</span><span class="op">}</span>,</span>
 <span>                  f<span class="op">=</span><span class="va">predder</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fitEM.html">fitEM</a></span><span class="op">(</span><span class="va">opts</span>, <span class="va">examplomycin_aggregated</span>, chains <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
@@ -350,101 +328,83 @@ individual parameters.</p></li>
 <span><span class="co">#&gt;   28: -1845.445    1.599    2.312    3.401    2.284    0.022   -2.284   -2.239   -2.357   -2.270   -2.346   -3.235</span></span>
 <span><span class="co">#&gt;   29: -1845.445    1.599    2.312    3.401    2.284    0.022   -2.284   -2.239   -2.357   -2.270   -2.346   -3.235</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 1 Complete: Final NLL = -1845.447, Time Elapsed = 6.03 seconds</span></span>
+<span><span class="co">#&gt; Chain 1 Complete: Final NLL = -1845.447, Time Elapsed = 6.38 seconds</span></span>
 <span><span class="co">#&gt;  </span></span>
 <span><span class="co">#&gt; Phase Exploration Phase converged at iteration 13. </span></span>
-<span><span class="co">#&gt; Phase Refinement Phase converged at iteration 14. </span></span>
-<span><span class="co">#&gt; Phase Final Phase converged at iteration 22. </span></span>
-<span><span class="co">#&gt; Phase Final Phase 2 converged at iteration 26. </span></span>
+<span><span class="co">#&gt; Phase Refinement Phase converged at iteration 17. </span></span>
+<span><span class="co">#&gt; Phase Final Phase converged at iteration 18. </span></span>
+<span><span class="co">#&gt; Phase Final Phase 2 converged at iteration 21. </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 2 Complete: Final NLL = -1845.443, Time Elapsed = 6.40 seconds</span></span>
+<span><span class="co">#&gt; Chain 2 Complete: Final NLL = -1845.442, Time Elapsed = 6.22 seconds</span></span>
 <span><span class="co">#&gt;  </span></span>
-<span><span class="co">#&gt; Phase Exploration Phase converged at iteration 8. </span></span>
-<span><span class="co">#&gt; Phase Final Phase converged at iteration 22. </span></span>
-<span><span class="co">#&gt; Phase Final Phase 2 converged at iteration 28. </span></span>
+<span><span class="co">#&gt; Phase Exploration Phase converged at iteration 10. </span></span>
+<span><span class="co">#&gt; Phase Final Phase 2 converged at iteration 35. </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 3 Complete: Final NLL = -1845.450, Time Elapsed = 7.46 seconds</span></span>
-<span><span class="co">#&gt;  </span></span>
-<span><span class="co">#&gt; Phase Exploration Phase converged at iteration 8. </span></span>
-<span><span class="co">#&gt; Phase Refinement Phase converged at iteration 12. </span></span>
-<span><span class="co">#&gt; Phase Final Phase converged at iteration 14. </span></span>
-<span><span class="co">#&gt; Phase Final Phase 2 converged at iteration 18. </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 4 Complete: Final NLL = -1845.442, Time Elapsed = 4.89 seconds</span></span>
+<span><span class="co">#&gt; Chain 3 Complete: Final NLL = -1845.154, Time Elapsed = 8.48 seconds</span></span>
 <span><span class="co">#&gt;  </span></span>
 <span><span class="co">#&gt; Phase Exploration Phase converged at iteration 16. </span></span>
-<span><span class="co">#&gt; Phase Refinement Phase converged at iteration 18. </span></span>
-<span><span class="co">#&gt; Phase Final Phase converged at iteration 22. </span></span>
-<span><span class="co">#&gt; Phase Final Phase 2 converged at iteration 29. </span></span>
+<span><span class="co">#&gt; Phase Refinement Phase converged at iteration 19. </span></span>
+<span><span class="co">#&gt; Phase Final Phase converged at iteration 24. </span></span>
+<span><span class="co">#&gt; Phase Final Phase 2 converged at iteration 32. </span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 5 Complete: Final NLL = -1845.442, Time Elapsed = 7.47 seconds</span></span>
+<span><span class="co">#&gt; Chain 4 Complete: Final NLL = -1845.442, Time Elapsed = 7.06 seconds</span></span>
+<span><span class="co">#&gt;  </span></span>
+<span><span class="co">#&gt; Phase Exploration Phase converged at iteration 8. </span></span>
+<span><span class="co">#&gt; Phase Refinement Phase converged at iteration 10. </span></span>
+<span><span class="co">#&gt; Phase Final Phase converged at iteration 27. </span></span>
+<span><span class="co">#&gt; Phase Final Phase 2 converged at iteration 31. </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Chain 5 Complete: Final NLL = -1845.443, Time Elapsed = 7.26 seconds</span></span>
 <span><span class="co">#&gt; </span></span></code></pre></div>
 <p>This is the output of the <code>fitEM</code> function.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
 <span><span class="co">#&gt; -- FitEM Summary --</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; -- Objective Function and Information Criteria --</span></span>
-<span><span class="co">#&gt;  Log-likelihood: -1845.4496</span></span>
-<span><span class="co">#&gt;             AIC: 3701.90</span></span>
-<span><span class="co">#&gt;             BIC: 3759.26</span></span>
-<span><span class="co">#&gt; Condition#(Cov): 152.62</span></span>
-<span><span class="co">#&gt; Condition#(Cor): 218.72</span></span>
+<span><span class="co">#&gt;  Log-likelihood: -1845.4467</span></span>
+<span><span class="co">#&gt;             AIC: 3701.89</span></span>
+<span><span class="co">#&gt;             BIC: 3759.25</span></span>
+<span><span class="co">#&gt; Condition#(Cov): 156.74</span></span>
+<span><span class="co">#&gt; Condition#(Cor): 225.75</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; -- Timing Information --</span></span>
-<span><span class="co">#&gt;      Best Chain: 7.4613 seconds</span></span>
-<span><span class="co">#&gt;      All Chains: 32.2437 seconds</span></span>
-<span><span class="co">#&gt;      Covariance: 26.6118 seconds</span></span>
-<span><span class="co">#&gt;         Elapsed: 58.86 seconds</span></span>
+<span><span class="co">#&gt;      Best Chain: 6.3799 seconds</span></span>
+<span><span class="co">#&gt;      All Chains: 35.3944 seconds</span></span>
+<span><span class="co">#&gt;      Covariance: 27.8998 seconds</span></span>
+<span><span class="co">#&gt;         Elapsed: 63.29 seconds</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; -- Population Parameters --</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 6</span></span></span>
 <span><span class="co">#&gt;   Parameter        Est.      SE  `%RSE` `Back-transformed(95%CI)` `BSV(CV%)`</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> cl             1.60    0.015<span style="text-decoration: underline;">2</span>   0.954 4.95 (4.80, 5.10)               31.9</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> v1             2.31    0.086<span style="text-decoration: underline;">9</span>   3.76  10.07 (8.49, 11.94)             32.9</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> v2             3.40    0.040<span style="text-decoration: underline;">0</span>   1.18  30.04 (27.77, 32.49)            30.6</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> q              2.28    0.021<span style="text-decoration: underline;">2</span>   0.930 9.81 (9.41, 10.23)              32.3</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> ka             0.019<span style="text-decoration: underline;">4</span>  0.082<span style="text-decoration: underline;">1</span> 423.    1.02 (0.87, 1.20)               30.7</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> v1             2.31    0.088<span style="text-decoration: underline;">1</span>   3.81  10.09 (8.49, 11.99)             32.7</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> v2             3.40    0.040<span style="text-decoration: underline;">4</span>   1.19  30.00 (27.72, 32.47)            30.7</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> q              2.28    0.021<span style="text-decoration: underline;">2</span>   0.928 9.81 (9.41, 10.23)              32.1</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> ka             0.020<span style="text-decoration: underline;">8</span>  0.083<span style="text-decoration: underline;">3</span> 401.    1.02 (0.87, 1.20)               30.9</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Residual Error 0.039<span style="text-decoration: underline;">4</span> <span style="color: #BB0000;">NA</span>       <span style="color: #BB0000;">NA</span>     0.0394                          <span style="color: #BB0000;">NA</span>  </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; -- Iteration Diagnostics --</span></span>
 <span><span class="co">#&gt;  Iter | NLL and Parameters</span></span>
 <span><span class="co">#&gt; --------------------------------------------------------------------------------</span></span>
-<span><span class="co">#&gt;    1: -610.642 1.650 2.550 4.095 2.406 0.000 -2.073 -2.305 -2.382 -2.403 -2.263 -3.303</span></span>
-<span><span class="co">#&gt;    2: -1843.809 1.607 2.319 3.411 2.283 0.019 -2.257 -2.379 -2.553 -2.151 -2.250 -3.225</span></span>
-<span><span class="co">#&gt;    3: -1845.450 1.599 2.309 3.403 2.284 0.019 -2.282 -2.223 -2.366 -2.261 -2.362 -3.235</span></span>
-<span><span class="co">#&gt;    4: -1845.447 1.598 2.312 3.401 2.283 0.021 -2.285 -2.230 -2.355 -2.271 -2.355 -3.235</span></span>
-<span><span class="co">#&gt;    5: -1845.446 1.599 2.312 3.401 2.284 0.022 -2.284 -2.236 -2.356 -2.271 -2.351 -3.235</span></span>
-<span><span class="co">#&gt;    6: -1845.444 1.599 2.313 3.401 2.284 0.023 -2.284 -2.240 -2.358 -2.270 -2.345 -3.234</span></span>
-<span><span class="co">#&gt;    7: -1845.444 1.599 2.313 3.401 2.284 0.023 -2.284 -2.240 -2.358 -2.270 -2.345 -3.235</span></span>
-<span><span class="co">#&gt;    8: -1845.444 1.599 2.313 3.401 2.284 0.023 -2.284 -2.240 -2.358 -2.270 -2.345 -3.235</span></span>
-<span><span class="co">#&gt;    9: -1845.448 1.599 2.311 3.401 2.283 0.021 -2.284 -2.229 -2.359 -2.272 -2.358 -3.234</span></span>
-<span><span class="co">#&gt;   10: -1845.445 1.599 2.312 3.401 2.283 0.022 -2.284 -2.239 -2.358 -2.271 -2.346 -3.234</span></span>
-<span><span class="co">#&gt;   11: -1845.445 1.599 2.313 3.401 2.284 0.022 -2.284 -2.239 -2.357 -2.270 -2.347 -3.235</span></span>
-<span><span class="co">#&gt;   12: -1845.444 1.599 2.313 3.401 2.284 0.023 -2.284 -2.239 -2.358 -2.269 -2.346 -3.235</span></span>
-<span><span class="co">#&gt;   13: -1845.444 1.599 2.313 3.401 2.284 0.023 -2.284 -2.239 -2.358 -2.269 -2.346 -3.235</span></span>
-<span><span class="co">#&gt;   14: -1845.444 1.599 2.313 3.401 2.284 0.023 -2.284 -2.240 -2.358 -2.269 -2.346 -3.235</span></span>
-<span><span class="co">#&gt;   15: -1845.444 1.599 2.313 3.401 2.284 0.023 -2.284 -2.240 -2.358 -2.269 -2.346 -3.235</span></span>
-<span><span class="co">#&gt;   16: -1845.444 1.599 2.313 3.401 2.284 0.023 -2.284 -2.240 -2.358 -2.269 -2.346 -3.235</span></span>
-<span><span class="co">#&gt;   17: -1845.444 1.599 2.313 3.401 2.284 0.023 -2.284 -2.240 -2.358 -2.269 -2.346 -3.235</span></span>
-<span><span class="co">#&gt;   18: -1845.444 1.599 2.313 3.401 2.284 0.023 -2.284 -2.240 -2.358 -2.269 -2.346 -3.235</span></span>
-<span><span class="co">#&gt;   19: -1845.443 1.599 2.314 3.401 2.284 0.023 -2.284 -2.240 -2.357 -2.269 -2.345 -3.234</span></span>
-<span><span class="co">#&gt;   20: -1845.443 1.599 2.314 3.400 2.284 0.023 -2.284 -2.241 -2.357 -2.269 -2.345 -3.235</span></span>
-<span><span class="co">#&gt;   21: -1845.443 1.599 2.314 3.400 2.284 0.023 -2.284 -2.241 -2.357 -2.269 -2.345 -3.235</span></span>
-<span><span class="co">#&gt;   22: -1845.443 1.599 2.314 3.400 2.284 0.023 -2.284 -2.241 -2.358 -2.269 -2.345 -3.235</span></span>
-<span><span class="co">#&gt;   23: -1845.447 1.599 2.312 3.401 2.283 0.022 -2.284 -2.233 -2.359 -2.270 -2.352 -3.235</span></span>
-<span><span class="co">#&gt;   24: -1845.446 1.599 2.312 3.401 2.284 0.022 -2.284 -2.235 -2.358 -2.270 -2.351 -3.235</span></span>
-<span><span class="co">#&gt;   25: -1845.444 1.599 2.313 3.401 2.283 0.022 -2.284 -2.241 -2.358 -2.271 -2.345 -3.235</span></span>
-<span><span class="co">#&gt;   26: -1845.444 1.599 2.312 3.401 2.284 0.022 -2.284 -2.241 -2.357 -2.271 -2.345 -3.234</span></span>
-<span><span class="co">#&gt;   27: -1845.444 1.599 2.312 3.401 2.284 0.022 -2.284 -2.241 -2.358 -2.270 -2.345 -3.235</span></span>
-<span><span class="co">#&gt;   28: -1845.444 1.599 2.313 3.401 2.284 0.022 -2.284 -2.241 -2.357 -2.270 -2.345 -3.235</span></span></code></pre></div>
+<span><span class="co">#&gt;    1: -1839.160 1.609 2.303 3.401 2.303 0.000 -2.408 -2.408 -2.408 -2.408 -2.408 -3.219</span></span>
+<span><span class="co">#&gt;    2: -1845.442 1.599 2.309 3.402 2.284 0.019 -2.286 -2.239 -2.356 -2.279 -2.353 -3.234</span></span>
+<span><span class="co">#&gt;    3: -1845.447 1.599 2.311 3.401 2.283 0.021 -2.284 -2.235 -2.360 -2.272 -2.351 -3.234</span></span>
+<span><span class="co">#&gt;    4: -1845.446 1.599 2.311 3.401 2.283 0.021 -2.284 -2.235 -2.360 -2.273 -2.351 -3.234</span></span>
+<span><span class="co">#&gt;    5: -1845.445 1.599 2.313 3.401 2.284 0.023 -2.284 -2.236 -2.358 -2.268 -2.350 -3.235</span></span>
+<span><span class="co">#&gt;    ... (omitted iterations) ...</span></span>
+<span><span class="co">#&gt;   25: -1845.445 1.599 2.312 3.401 2.284 0.022 -2.284 -2.239 -2.357 -2.271 -2.346 -3.235</span></span>
+<span><span class="co">#&gt;   26: -1845.445 1.599 2.312 3.401 2.284 0.022 -2.284 -2.239 -2.357 -2.271 -2.346 -3.235</span></span>
+<span><span class="co">#&gt;   27: -1845.445 1.599 2.312 3.401 2.284 0.022 -2.284 -2.239 -2.357 -2.270 -2.346 -3.235</span></span>
+<span><span class="co">#&gt;   28: -1845.445 1.599 2.312 3.401 2.284 0.022 -2.284 -2.239 -2.357 -2.270 -2.346 -3.235</span></span>
+<span><span class="co">#&gt;   29: -1845.445 1.599 2.312 3.401 2.284 0.022 -2.284 -2.239 -2.357 -2.270 -2.346 -3.235</span></span></code></pre></div>
 <p>The <code>plot</code> function can be used to visualize the results.
 It shows the convergence of the model fit and parameters by making a
 trace plot of the chains.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></code></pre></div>
-<p><img src="admr_files/figure-html/unnamed-chunk-10-1.png" width="700"><img src="admr_files/figure-html/unnamed-chunk-10-2.png" width="700"></p>
+<p><img src="admr_files/figure-html/unnamed-chunk-9-1.png" width="700"><img src="admr_files/figure-html/unnamed-chunk-9-2.png" width="700"></p>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
