@@ -385,7 +385,7 @@ upd_opts <- function(opts0,optslist) { # Initializes and generates core options 
   if (update_biseq) opts0$biseq <- NA;
   opts0$adist <- NULL
   opts0$ptrans <- NULL;opts0$pderiv <- NULL;
-  opts0$ai <- NULL;opts0$pt <- NULL
+  opts0$ai <- NULL;opts0$pt <- NUL
   opts0$obs <- NULL
   opts0$d_g_d_beta <- NULL
   opts0$d_g_d_bi <- NULL
@@ -407,8 +407,8 @@ calculate_bsv <- function(back_transformed_params) {
     omega_diag <- diag(back_transformed_params$Omega)
 
     # Calculate BSV (CV%) for (log-)normal parameters
-    #bsv_cv <- sqrt(exp(omega_diag) - 1) * 100
-    bsv_cv <- sqrt(omega_diag) * 100
+    bsv_cv <- sqrt(exp(omega_diag) - 1) * 100
+    #bsv_cv <- sqrt(omega_diag) * 100
 
     # Handle potential NA cases or missing values in Omega
     c(bsv_cv, rep(NA, length(omega_diag) - length(bsv_cv)))
@@ -421,4 +421,189 @@ calculate_bsv <- function(back_transformed_params) {
 #' @noRd
 perturb_init <- function(init, pertubation) {
   init + rnorm(length(init), mean = 0, sd = pertubation * abs(init))  # Slight perturbation
+}
+
+#' @noRd
+compute_nll <- function(opts, params, nomap) {
+  if (nomap) {
+    maxfunc(p2opts(opts, params))(params)
+  } else {
+    Reduce('+', map(opts, ~ maxfunc(p2opts(., params))(params)))
+  }
+}
+
+#' @noRd
+run_chain <- function(chain, opts, obs, init, maxiter, phase_fractions, convcrit_nll,
+                      max_worse_iterations, pertubation, nomap) {
+  chain_start_time <- Sys.time()  # Start time for the chain
+  chain_init <- if (chain == 1) init else perturb_init(init, pertubation)
+
+  if (nomap) {
+    opts <- opts %>% p2opts(chain_init) %>% obs2opts(obs)
+  } else {
+    opts <- map(seq_along(opts), function(i) opts[[i]] %>% p2opts(chain_init) %>% obs2opts(obs[[i]]))
+  }
+
+  res <- tibble(
+    iter = 1,
+    parameters = vector("list", maxiter),
+    nll = NA_real_,
+    approx_nll = NA_real_,
+    iteration_time = 0
+  )
+
+  res$parameters[[1]] <- chain_init
+
+  if (nomap) {
+    res$nll[1] <- maxfunc(opts)(chain_init)
+  } else {
+    res$nll[1] <- Reduce('+', map(opts, ~ maxfunc(.)(chain_init)))
+  }
+
+  res$approx_nll[1] <- res$nll[1]
+
+  if (chain == 1) {  # Print live output for single-chain mode
+    cat(sprintf("Chain %d:\nIter | %-12s\n", chain, sprintf("NLL and Parameters (%d values)", length(init))))
+    cat(sprintf("%s\n", strrep("-", 80)))
+    cat(sprintf("%4d: %s\n", 1, paste(sprintf("%8.3f", c(res$nll[1], chain_init)), collapse = " ")))
+  }
+
+  phase_params <- list(
+    list(bounds = 2, maxeval = 5000, phase_name = "Wide Search Phase"),
+    list(bounds = 1, maxeval = 5000, phase_name = "Focussed Search Phase"),
+    list(bounds = 0.5, maxeval = 5000, phase_name = "Fine-Tuning Phase"),
+    list(bounds = 0.01, maxeval = 5000, phase_name = "Precision Phase")
+  )
+
+  if (length(phase_fractions) != length(phase_params)) {
+    stop("Number of phase_fractions must match the number of phases.")
+  }
+
+  cumulative_iters <- cumsum(c(floor(phase_fractions[-length(phase_fractions)] * maxiter), maxiter))
+  phase_start_iters <- c(2, head(cumulative_iters, -1) + 1)
+  phase_end_iters <- cumulative_iters
+
+  best_nll <- res$nll[1]
+  best_params <- res$parameters[[1]]
+  current_iter <- 2
+
+  for (phase_idx in seq_along(phase_params)) {
+    current_phase <- phase_params[[phase_idx]]
+
+    if (chain == 1) {
+      cat(sprintf("\n### %s ###\n", current_phase$phase_name))
+    }
+
+    # Call handle_phase
+    phase_result <- handle_phase(
+      current_phase = current_phase,
+      opts = opts,
+      chain_init = best_params,
+      best_params = best_params,
+      best_nll = best_nll,
+      current_iter = current_iter,
+      phase_end_iter = phase_end_iters[phase_idx],
+      nomap = nomap,
+      convcrit_nll = convcrit_nll,
+      max_worse_iterations = max_worse_iterations,
+      res = res,
+      maxiter = maxiter,
+      chain = chain  # Pass the chain index for printing control
+    )
+
+    # Update variables for the next phase
+    best_params <- phase_result$best_params
+    best_nll <- phase_result$best_nll
+    res <- phase_result$res
+    current_iter <- phase_result$current_iter
+
+    if (phase_result$phase_converged) {
+      cat(sprintf("Phase %s converged at iteration %d.\n", current_phase$phase_name, current_iter - 1))
+    }
+  }
+
+  res <- res[!is.na(res$nll), ]
+  chain_time <- as.numeric(difftime(Sys.time(), chain_start_time, units = "secs"))
+
+  cat(sprintf("\nChain %d Complete: Final NLL = %.3f, Time Elapsed = %.2f seconds\n \n",
+              chain, best_nll, chain_time))
+
+  return(list(res = res, best_nll = best_nll, best_params = best_params, time = chain_time))
+}
+
+#' @noRd
+handle_phase <- function(current_phase, opts, chain_init, best_params, best_nll, current_iter, phase_end_iter,
+                         nomap, convcrit_nll, max_worse_iterations, res, maxiter, chain) {
+  phase_converged <- FALSE
+  worse_counter <- 0
+
+  for (i in current_iter:phase_end_iter) {
+    if (current_iter > maxiter) {
+      cat("Maximum iterations reached. Terminating optimization.\n")
+      break
+    }
+
+    iter_start_time <- Sys.time()
+
+    if (nomap) {
+      ff <- maxfunc(p2opts(opts, chain_init))
+    } else {
+      ffs <- map(opts, ~ maxfunc(p2opts(., chain_init)))
+      ff <- function(p) Reduce('+', map(ffs, ~ .(p)))
+    }
+
+    m0 <- nloptr::nloptr(
+      x0 = chain_init,
+      eval_f = function(params) ff(params),
+      lb = chain_init - current_phase$bounds,
+      ub = chain_init + current_phase$bounds,
+      opts = list(
+        algorithm = "NLOPT_LN_BOBYQA",
+        ftol_rel = 1e-10,
+        maxeval = current_phase$maxeval
+      )
+    )
+
+    # Optimization step
+    chain_init <- m0$solution
+    res$parameters[[current_iter]] <- chain_init
+    res$nll[current_iter] <- compute_nll(opts, chain_init, nomap)
+    res$approx_nll[current_iter] <- m0$objective
+    res$iteration_time[current_iter] <- as.numeric(difftime(Sys.time(), iter_start_time, units = "secs"))
+
+    # Update best parameters if a better NLL is found
+    if (res$nll[current_iter] < best_nll) {
+      best_nll <- res$nll[current_iter]
+      best_params <- chain_init
+    }
+
+    # Printing live updates for the chain
+    if (chain == 1) {  # Only print for the first chain
+      cat(sprintf("%4d: %s\n", current_iter, paste(sprintf("%8.3f", c(res$nll[current_iter], chain_init)), collapse = " ")))
+    }
+
+    # Convergence check
+    if (abs(res$nll[current_iter] - res$approx_nll[current_iter]) < convcrit_nll) {
+      phase_converged <- TRUE
+      current_iter <- current_iter + 1
+      break  # Skip the rest of this phase, continue to the next phase
+    }
+
+    # Early phase termination due to worse counter
+    worse_counter <- if (res$nll[current_iter] > best_nll) worse_counter + 1 else 0
+    if (worse_counter >= max_worse_iterations) {
+      current_iter <- current_iter + 1
+      break  # Skip the rest of this phase, continue to the next phase
+    }
+
+    current_iter <- current_iter + 1  # Increment after every iteration
+  }
+
+  return(list(
+    best_params = best_params,
+    best_nll = best_nll,
+    res = res,
+    phase_converged = phase_converged,
+    current_iter = current_iter
+  ))
 }

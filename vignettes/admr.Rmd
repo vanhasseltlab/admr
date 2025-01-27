@@ -120,9 +120,6 @@ predder <- function(time, theta_i, dose = 100) {
 
 This opts object contains the options for the `admr` package.
 The `genopts` function generates the options object.
-IT
-
-The `fitEM` function fits the model to the dataset.
 Here the parameters are:
 
 1.  time:
@@ -179,8 +176,14 @@ opts <- genopts(time=c(.1,.25,.5,1,2,3,5,8,12),
                   nsim=2500,n=500,adist=NULL,
                   interact=F,fo_appr=F,biseq=NA,omega_expansion=2,
                   f=predder)
+```
 
-fit <- fitEM(opts, examplomycin_aggregated, chains = 5)
+
+The `fitEM` function fits the model to the dataset.
+It takes the following arguments:
+
+```{r}
+fit <- fitEM(opts, examplomycin_aggregated, chains = 3)
 ```
 
 This is the output of the `fitEM` function.
