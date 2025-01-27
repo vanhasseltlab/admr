@@ -193,9 +193,7 @@ function is the g function for the two-compartment model.</p>
 <span><span class="op">}</span></span></code></pre></div>
 <p>This opts object contains the options for the <code>admr</code>
 package. The <code>genopts</code> function generates the options object.
-IT</p>
-<p>The <code>fitEM</code> function fits the model to the dataset. Here
-the parameters are:</p>
+Here the parameters are:</p>
 <ol style="list-style-type: decimal">
 <li>time:
 <ul>
@@ -281,31 +279,33 @@ individual parameters.</p></li>
 <span>                  Omega<span class="op">=</span><span class="fu"><a href="../reference/omegas.html">omegas</a></span><span class="op">(</span><span class="fl">.09</span>,<span class="fl">0</span>,<span class="fl">5</span><span class="op">)</span>,Sigma_prop<span class="op">=</span><span class="fl">0.04</span><span class="op">)</span>,</span>
 <span>                  nsim<span class="op">=</span><span class="fl">2500</span>,n<span class="op">=</span><span class="fl">500</span>,adist<span class="op">=</span><span class="cn">NULL</span>,</span>
 <span>                  interact<span class="op">=</span><span class="cn">F</span>,fo_appr<span class="op">=</span><span class="cn">F</span>,biseq<span class="op">=</span><span class="cn">NA</span>,omega_expansion<span class="op">=</span><span class="fl">2</span>,</span>
-<span>                  f<span class="op">=</span><span class="va">predder</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fitEM.html">fitEM</a></span><span class="op">(</span><span class="va">opts</span>, <span class="va">examplomycin_aggregated</span>, chains <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
+<span>                  f<span class="op">=</span><span class="va">predder</span><span class="op">)</span></span></code></pre></div>
+<p>The <code>fitEM</code> function fits the model to the dataset. It
+takes the following arguments:</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fitEM.html">fitEM</a></span><span class="op">(</span><span class="va">opts</span>, <span class="va">examplomycin_aggregated</span>, chains <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Chain 1:</span></span>
 <span><span class="co">#&gt; Iter | NLL and Parameters (11 values)</span></span>
 <span><span class="co">#&gt; --------------------------------------------------------------------------------</span></span>
 <span><span class="co">#&gt;    1: -1839.160    1.609    2.303    3.401    2.303    0.000   -2.408   -2.408   -2.408   -2.408   -2.408   -3.219</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ### Exploration Phase ###</span></span>
+<span><span class="co">#&gt; ### Wide Search Phase ###</span></span>
 <span><span class="co">#&gt;    2: -1845.442    1.599    2.309    3.402    2.284    0.019   -2.286   -2.239   -2.356   -2.279   -2.353   -3.234</span></span>
 <span><span class="co">#&gt;    3: -1845.447    1.599    2.311    3.401    2.283    0.021   -2.284   -2.235   -2.360   -2.272   -2.351   -3.234</span></span>
 <span><span class="co">#&gt;    4: -1845.446    1.599    2.311    3.401    2.283    0.021   -2.284   -2.235   -2.360   -2.273   -2.351   -3.234</span></span>
 <span><span class="co">#&gt;    5: -1845.445    1.599    2.313    3.401    2.284    0.023   -2.284   -2.236   -2.358   -2.268   -2.350   -3.235</span></span>
 <span><span class="co">#&gt;    6: -1845.444    1.599    2.314    3.401    2.284    0.023   -2.284   -2.238   -2.357   -2.269   -2.347   -3.235</span></span>
 <span><span class="co">#&gt;    7: -1845.444    1.599    2.314    3.401    2.284    0.023   -2.284   -2.238   -2.357   -2.269   -2.347   -3.234</span></span>
-<span><span class="co">#&gt; Phase Exploration Phase converged at iteration 7. </span></span>
+<span><span class="co">#&gt; Phase Wide Search Phase converged at iteration 7.</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ### Refinement Phase ###</span></span>
+<span><span class="co">#&gt; ### Focussed Search Phase ###</span></span>
 <span><span class="co">#&gt;    8: -1845.443    1.599    2.314    3.400    2.284    0.023   -2.284   -2.241   -2.357   -2.269   -2.344   -3.235</span></span>
 <span><span class="co">#&gt;    9: -1845.443    1.599    2.314    3.400    2.284    0.023   -2.284   -2.241   -2.358   -2.269   -2.344   -3.235</span></span>
 <span><span class="co">#&gt;   10: -1845.443    1.599    2.314    3.400    2.284    0.023   -2.284   -2.241   -2.358   -2.269   -2.344   -3.235</span></span>
 <span><span class="co">#&gt;   11: -1845.443    1.599    2.314    3.400    2.284    0.023   -2.284   -2.241   -2.357   -2.269   -2.344   -3.235</span></span>
-<span><span class="co">#&gt; Phase Refinement Phase converged at iteration 11. </span></span>
+<span><span class="co">#&gt; Phase Focussed Search Phase converged at iteration 11.</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ### Final Phase ###</span></span>
+<span><span class="co">#&gt; ### Fine-Tuning Phase ###</span></span>
 <span><span class="co">#&gt;   12: -1845.446    1.599    2.312    3.401    2.284    0.022   -2.284   -2.238   -2.358   -2.271   -2.348   -3.234</span></span>
 <span><span class="co">#&gt;   13: -1845.445    1.599    2.312    3.401    2.284    0.022   -2.284   -2.238   -2.357   -2.271   -2.348   -3.235</span></span>
 <span><span class="co">#&gt;   14: -1845.444    1.599    2.313    3.401    2.284    0.023   -2.284   -2.240   -2.357   -2.270   -2.345   -3.234</span></span>
@@ -314,9 +314,9 @@ individual parameters.</p></li>
 <span><span class="co">#&gt;   17: -1845.443    1.599    2.314    3.401    2.284    0.023   -2.284   -2.240   -2.357   -2.269   -2.345   -3.235</span></span>
 <span><span class="co">#&gt;   18: -1845.443    1.599    2.314    3.401    2.284    0.023   -2.284   -2.240   -2.357   -2.269   -2.345   -3.235</span></span>
 <span><span class="co">#&gt;   19: -1845.443    1.599    2.314    3.401    2.284    0.023   -2.284   -2.240   -2.358   -2.269   -2.345   -3.235</span></span>
-<span><span class="co">#&gt; Phase Final Phase converged at iteration 19. </span></span>
+<span><span class="co">#&gt; Phase Fine-Tuning Phase converged at iteration 19.</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ### Final Phase 2 ###</span></span>
+<span><span class="co">#&gt; ### Precision Phase ###</span></span>
 <span><span class="co">#&gt;   20: -1845.445    1.599    2.311    3.401    2.283    0.021   -2.284   -2.240   -2.356   -2.272   -2.346   -3.235</span></span>
 <span><span class="co">#&gt;   21: -1845.445    1.599    2.312    3.401    2.283    0.021   -2.284   -2.240   -2.358   -2.272   -2.346   -3.234</span></span>
 <span><span class="co">#&gt;   22: -1845.445    1.599    2.312    3.401    2.283    0.021   -2.284   -2.240   -2.358   -2.271   -2.346   -3.234</span></span>
@@ -328,36 +328,22 @@ individual parameters.</p></li>
 <span><span class="co">#&gt;   28: -1845.445    1.599    2.312    3.401    2.284    0.022   -2.284   -2.239   -2.357   -2.270   -2.346   -3.235</span></span>
 <span><span class="co">#&gt;   29: -1845.445    1.599    2.312    3.401    2.284    0.022   -2.284   -2.239   -2.357   -2.270   -2.346   -3.235</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 1 Complete: Final NLL = -1845.447, Time Elapsed = 6.38 seconds</span></span>
+<span><span class="co">#&gt; Chain 1 Complete: Final NLL = -1845.447, Time Elapsed = 6.22 seconds</span></span>
 <span><span class="co">#&gt;  </span></span>
-<span><span class="co">#&gt; Phase Exploration Phase converged at iteration 13. </span></span>
-<span><span class="co">#&gt; Phase Refinement Phase converged at iteration 17. </span></span>
-<span><span class="co">#&gt; Phase Final Phase converged at iteration 18. </span></span>
-<span><span class="co">#&gt; Phase Final Phase 2 converged at iteration 21. </span></span>
+<span><span class="co">#&gt; Phase Wide Search Phase converged at iteration 13.</span></span>
+<span><span class="co">#&gt; Phase Focussed Search Phase converged at iteration 17.</span></span>
+<span><span class="co">#&gt; Phase Fine-Tuning Phase converged at iteration 18.</span></span>
+<span><span class="co">#&gt; Phase Precision Phase converged at iteration 21.</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 2 Complete: Final NLL = -1845.442, Time Elapsed = 6.22 seconds</span></span>
+<span><span class="co">#&gt; Chain 2 Complete: Final NLL = -1845.442, Time Elapsed = 6.06 seconds</span></span>
 <span><span class="co">#&gt;  </span></span>
-<span><span class="co">#&gt; Phase Exploration Phase converged at iteration 10. </span></span>
-<span><span class="co">#&gt; Phase Final Phase 2 converged at iteration 35. </span></span>
+<span><span class="co">#&gt; Phase Wide Search Phase converged at iteration 10.</span></span>
+<span><span class="co">#&gt; Phase Precision Phase converged at iteration 35.</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 3 Complete: Final NLL = -1845.154, Time Elapsed = 8.48 seconds</span></span>
-<span><span class="co">#&gt;  </span></span>
-<span><span class="co">#&gt; Phase Exploration Phase converged at iteration 16. </span></span>
-<span><span class="co">#&gt; Phase Refinement Phase converged at iteration 19. </span></span>
-<span><span class="co">#&gt; Phase Final Phase converged at iteration 24. </span></span>
-<span><span class="co">#&gt; Phase Final Phase 2 converged at iteration 32. </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 4 Complete: Final NLL = -1845.442, Time Elapsed = 7.06 seconds</span></span>
-<span><span class="co">#&gt;  </span></span>
-<span><span class="co">#&gt; Phase Exploration Phase converged at iteration 8. </span></span>
-<span><span class="co">#&gt; Phase Refinement Phase converged at iteration 10. </span></span>
-<span><span class="co">#&gt; Phase Final Phase converged at iteration 27. </span></span>
-<span><span class="co">#&gt; Phase Final Phase 2 converged at iteration 31. </span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 5 Complete: Final NLL = -1845.443, Time Elapsed = 7.26 seconds</span></span>
+<span><span class="co">#&gt; Chain 3 Complete: Final NLL = -1845.154, Time Elapsed = 8.57 seconds</span></span>
 <span><span class="co">#&gt; </span></span></code></pre></div>
 <p>This is the output of the <code>fitEM</code> function.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
 <span><span class="co">#&gt; -- FitEM Summary --</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -369,20 +355,20 @@ individual parameters.</p></li>
 <span><span class="co">#&gt; Condition#(Cor): 225.75</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; -- Timing Information --</span></span>
-<span><span class="co">#&gt;      Best Chain: 6.3799 seconds</span></span>
-<span><span class="co">#&gt;      All Chains: 35.3944 seconds</span></span>
-<span><span class="co">#&gt;      Covariance: 27.8998 seconds</span></span>
-<span><span class="co">#&gt;         Elapsed: 63.29 seconds</span></span>
+<span><span class="co">#&gt;      Best Chain: 6.2162 seconds</span></span>
+<span><span class="co">#&gt;      All Chains: 20.8472 seconds</span></span>
+<span><span class="co">#&gt;      Covariance: 27.1382 seconds</span></span>
+<span><span class="co">#&gt;         Elapsed: 47.99 seconds</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; -- Population Parameters --</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 6</span></span></span>
 <span><span class="co">#&gt;   Parameter        Est.      SE  `%RSE` `Back-transformed(95%CI)` `BSV(CV%)`</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> cl             1.60    0.015<span style="text-decoration: underline;">2</span>   0.954 4.95 (4.80, 5.10)               31.9</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> v1             2.31    0.088<span style="text-decoration: underline;">1</span>   3.81  10.09 (8.49, 11.99)             32.7</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> v2             3.40    0.040<span style="text-decoration: underline;">4</span>   1.19  30.00 (27.72, 32.47)            30.7</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> q              2.28    0.021<span style="text-decoration: underline;">2</span>   0.928 9.81 (9.41, 10.23)              32.1</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> ka             0.020<span style="text-decoration: underline;">8</span>  0.083<span style="text-decoration: underline;">3</span> 401.    1.02 (0.87, 1.20)               30.9</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> cl             1.60    0.015<span style="text-decoration: underline;">2</span>   0.954 4.95 (4.80, 5.10)               32.7</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> v1             2.31    0.088<span style="text-decoration: underline;">1</span>   3.81  10.09 (8.49, 11.99)             33.6</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> v2             3.40    0.040<span style="text-decoration: underline;">4</span>   1.19  30.00 (27.72, 32.47)            31.5</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> q              2.28    0.021<span style="text-decoration: underline;">2</span>   0.928 9.81 (9.41, 10.23)              33.0</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> ka             0.020<span style="text-decoration: underline;">8</span>  0.083<span style="text-decoration: underline;">3</span> 401.    1.02 (0.87, 1.20)               31.6</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> Residual Error 0.039<span style="text-decoration: underline;">4</span> <span style="color: #BB0000;">NA</span>       <span style="color: #BB0000;">NA</span>     0.0394                          <span style="color: #BB0000;">NA</span>  </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; -- Iteration Diagnostics --</span></span>
@@ -402,9 +388,9 @@ individual parameters.</p></li>
 <p>The <code>plot</code> function can be used to visualize the results.
 It shows the convergence of the model fit and parameters by making a
 trace plot of the chains.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></code></pre></div>
-<p><img src="admr_files/figure-html/unnamed-chunk-9-1.png" width="700"><img src="admr_files/figure-html/unnamed-chunk-9-2.png" width="700"></p>
+<p><img src="admr_files/figure-html/unnamed-chunk-10-1.png" width="700"><img src="admr_files/figure-html/unnamed-chunk-10-2.png" width="700"></p>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
