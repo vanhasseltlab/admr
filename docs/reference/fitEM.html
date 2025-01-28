@@ -55,11 +55,12 @@ likelihood updates with weighted MC updates. This version of the function uses n
 <span>  <span class="va">obs</span>,</span>
 <span>  maxiter <span class="op">=</span> <span class="fl">100</span>,</span>
 <span>  convcrit_nll <span class="op">=</span> <span class="fl">1e-05</span>,</span>
-<span>  nomap <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  single_dataframe <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  phase_fractions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.2</span>, <span class="fl">0.4</span>, <span class="fl">0.2</span>, <span class="fl">0.2</span><span class="op">)</span>,</span>
 <span>  max_worse_iterations <span class="op">=</span> <span class="fl">10</span>,</span>
 <span>  chains <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  pertubation <span class="op">=</span> <span class="fl">0.1</span></span>
+<span>  pertubation <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>  seed <span class="op">=</span> <span class="fl">1</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -83,7 +84,7 @@ likelihood updates with weighted MC updates. This version of the function uses n
 <dd><p>convergence criterion for the negative log-likelihood</p></dd>
 
 
-<dt id="arg-nomap">nomap<a class="anchor" aria-label="anchor" href="#arg-nomap"></a></dt>
+<dt id="arg-single-dataframe">single_dataframe<a class="anchor" aria-label="anchor" href="#arg-single-dataframe"></a></dt>
 <dd><p>single model or multiple models</p></dd>
 
 
@@ -101,6 +102,10 @@ likelihood updates with weighted MC updates. This version of the function uses n
 
 <dt id="arg-pertubation">pertubation<a class="anchor" aria-label="anchor" href="#arg-pertubation"></a></dt>
 <dd><p>pertubation factor for the initial parameter values of each chain</p></dd>
+
+
+<dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
+<dd><p>random seed</p></dd>
 
 </dl></div>
     <div class="section level2">

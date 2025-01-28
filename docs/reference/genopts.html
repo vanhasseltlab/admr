@@ -52,7 +52,6 @@ likelihood approximations.</p>
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">genopts</span><span class="op">(</span></span>
 <span>  <span class="va">f</span>,</span>
-<span>  <span class="va">g</span>,</span>
 <span>  <span class="va">time</span>,</span>
 <span>  <span class="va">p</span>,</span>
 <span>  <span class="va">h</span>,</span>
@@ -63,7 +62,6 @@ likelihood approximations.</p>
 <span>  fo_appr <span class="op">=</span> <span class="op">(</span><span class="va">nsim</span> <span class="op">&lt;</span> <span class="fl">10</span><span class="op">)</span>,</span>
 <span>  biseq <span class="op">=</span> <span class="cn">NA</span>,</span>
 <span>  omega_expansion <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  p_thetai <span class="op">=</span> <span class="cn">NA</span>,</span>
 <span>  single_betas <span class="op">=</span> <span class="cn">NA</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -74,10 +72,6 @@ likelihood approximations.</p>
 
 <dl><dt id="arg-f">f<a class="anchor" aria-label="anchor" href="#arg-f"></a></dt>
 <dd><p>The likelihood function</p></dd>
-
-
-<dt id="arg-g">g<a class="anchor" aria-label="anchor" href="#arg-g"></a></dt>
-<dd><p>The model function</p></dd>
 
 
 <dt id="arg-time">time<a class="anchor" aria-label="anchor" href="#arg-time"></a></dt>
@@ -118,10 +112,6 @@ likelihood approximations.</p>
 
 <dt id="arg-omega-expansion">omega_expansion<a class="anchor" aria-label="anchor" href="#arg-omega-expansion"></a></dt>
 <dd><p>The expansion factor for the omega matrix</p></dd>
-
-
-<dt id="arg-p-thetai">p_thetai<a class="anchor" aria-label="anchor" href="#arg-p-thetai"></a></dt>
-<dd><p>The theta matrix</p></dd>
 
 
 <dt id="arg-single-betas">single_betas<a class="anchor" aria-label="anchor" href="#arg-single-betas"></a></dt>

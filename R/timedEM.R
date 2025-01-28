@@ -65,11 +65,7 @@ timedEM <- function(init,opts,obs,maxiter=100,convcrit_nll=0.0005,nomap=TRUE) { 
     init <- m0$solution
     res$p[[i]] <- init
     res$time[i] <- Sys.time()
-    if (nomap) {
-      res$nll[i] <- maxfunc(p2opts(opts,init))(init)
-    } else {
-      res$nll[i] <- Reduce('+',map(opts,~maxfunc(p2opts(.,init))(init)))
-    }
+    res$nll[i] <- compute_nll(opts, init, nomap)
     res$appr_nll[i] <- m0$objective
     res$iter[i] <- i
     message(paste0("iteration ",i,", nll=",res$nll[i]))

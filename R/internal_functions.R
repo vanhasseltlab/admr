@@ -164,7 +164,7 @@ maxfunc <- function(opts) {
     newdens <- opts$p_thetai(pneww,origbeta,bi)
     wttot <- logdens2wt(newdens[NAfilters]-propdens[NAfilters])
     EVnow <- with(cov.wt(rawpreds[NAfilters,],wttot,method="ML"),list(E=center,V=cov))
-    EVnow <- opts$h(EVnow,pneww)#' @noRd
+    EVnow <- opts$h(EVnow,pneww)
     if (adjust) {
       kappa <- opts$f(opts$time,opts$g(ifelse(opts$single_betas,pneww$beta,origbeta))) - rawpreds[1,]
       EVnow$E <- EVnow$E + kappa
@@ -385,7 +385,7 @@ upd_opts <- function(opts0,optslist) { # Initializes and generates core options 
   if (update_biseq) opts0$biseq <- NA;
   opts0$adist <- NULL
   opts0$ptrans <- NULL;opts0$pderiv <- NULL;
-  opts0$ai <- NULL;opts0$pt <- NUL
+  opts0$ai <- NULL;opts0$pt <- NULL
   opts0$obs <- NULL
   opts0$d_g_d_beta <- NULL
   opts0$d_g_d_bi <- NULL

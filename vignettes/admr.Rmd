@@ -174,7 +174,7 @@ opts <- genopts(time=c(.1,.25,.5,1,2,3,5,8,12),
                   p=list(beta=c(cl = 5, v1 = 10, v2 = 30,q = 10, ka = 1),
                   Omega=omegas(.09,0,5),Sigma_prop=0.04),
                   nsim=2500,n=500,adist=NULL,
-                  interact=F,fo_appr=F,biseq=NA,omega_expansion=2,
+                  interact=F,fo_appr=F,biseq=NA,omega_expansion=1.2,
                   f=predder)
 ```
 

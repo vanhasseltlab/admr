@@ -25,9 +25,13 @@ fitEM <- function(opts, obs, maxiter = 100, convcrit_nll = 0.00001, single_dataf
                   pertubation = 0.1, seed = 1) {
 
   set.seed(seed)
-
-  init <- opts$pt
   nomap <- single_dataframe
+
+  if (nomap){
+    init <- opts$pt
+  } else{
+    init <- opts[[1]]$pt
+  }
 
   # Ensure phase_fractions sum to 1
   if (abs(sum(phase_fractions) - 1) > .Machine$double.eps^0.5) {

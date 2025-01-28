@@ -25,7 +25,13 @@
 
 genopts <- function(f,time,p,h,nsim=1,n=30,adist=NULL,
                     interact=TRUE,fo_appr=(nsim<10),biseq=NA,
-                    omega_expansion=1,single_betas=NA) {
+                    omega_expansion=1,single_betas=NA,
+                    p_thetai = function(p,origbeta,bi) {
+                      dmnorm(bi,mean=log(p$beta/origbeta),
+                             sigma=p$Omega,log=TRUE)$den},
+                    g = function(beta,bi=rep(0,length(beta)),ai) {
+                      beta*exp(bi)
+                    }) {
   if (is.null(n)) stop("n is null, breaking early")
   if (missing(h)) {
     h <- function(EV,p) {
@@ -55,12 +61,6 @@ genopts <- function(f,time,p,h,nsim=1,n=30,adist=NULL,
     biseq <- matrix(biseq,nsim,nrow(p$Omega))
   }
   ai <- NULL
-  p_thetai = function(p,origbeta,bi) {
-    dmnorm(bi,mean=log(p$beta/origbeta),
-           sigma=p$Omega,log=TRUE)$den}
-  g = function(beta,bi=rep(0,length(beta)),ai) {
-    beta*exp(bi)
-  }
   if (!is.null(adist)) {
     aiseq <- totseq[,nrow(p$Omega)+seq_along(adist),drop=F]
     if (!is.list(adist)) adist <- list(adist)
