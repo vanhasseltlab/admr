@@ -407,8 +407,8 @@ calculate_bsv <- function(back_transformed_params) {
     omega_diag <- diag(back_transformed_params$Omega)
 
     # Calculate BSV (CV%) for (log-)normal parameters
-    bsv_cv <- sqrt(exp(omega_diag) - 1) * 100
-    #bsv_cv <- sqrt(omega_diag) * 100
+    #bsv_cv <- sqrt(exp(omega_diag) - 1) * 100
+    bsv_cv <- sqrt(omega_diag) * 100
 
     # Handle potential NA cases or missing values in Omega
     c(bsv_cv, rep(NA, length(omega_diag) - length(bsv_cv)))
