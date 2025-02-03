@@ -57,8 +57,8 @@ timedEM <- function(init,opts,obs,maxiter=100,convcrit_nll=0.0005,nomap=TRUE) { 
       ub = init + 2,
       opts = list(
         algorithm = "NLOPT_LN_BOBYQA",
-        ftol_rel=sqrt(.Machine$double.eps),
-        maxeval = 2000
+        ftol_rel=.Machine$double.eps,
+        maxeval = 1000
       )
     )
 

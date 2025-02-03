@@ -559,7 +559,7 @@ handle_phase <- function(current_phase, opts, chain_init, best_params, best_nll,
       ub = chain_init + current_phase$bounds,
       opts = list(
         algorithm = "NLOPT_LN_BOBYQA",
-        ftol_rel = 1e-10,
+        ftol_rel = .Machine$double.eps,
         maxeval = current_phase$maxeval
       )
     )
