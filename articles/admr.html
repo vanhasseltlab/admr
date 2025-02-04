@@ -5,12 +5,12 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Get started with `admr` • admr</title>
+<title>Get started with admr • admr</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Get started with `admr`">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Get started with admr">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -57,7 +57,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>Get started with `admr`</h1>
+      <h1>Get started with admr</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/hiddevandebeek/admr/blob/master/vignettes/admr.Rmd" class="external-link"><code>vignettes/admr.Rmd</code></a></small>
@@ -170,11 +170,14 @@ solved models. The function takes the following arguments:</p>
 <p>This is necessary for the <code>admr</code> package to simulate the
 model. Tt constructs the event table for dosing and sampling, solves the
 RxODE model, and extracts the predicted concentrations. The function can
-handle both single and multiple individuals. The <code>twocomp_g</code>
-function is the g function for the two-compartment model.</p>
+handle both single and multiple individuals.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">predder</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">time</span>, <span class="va">theta_i</span>, <span class="va">dose</span> <span class="op">=</span> <span class="fl">100</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="va">n_individuals</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">theta_i</span><span class="op">)</span></span>
+<span>    </span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">n_individuals</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>      <span class="va">n_individuals</span> <span class="op">&lt;-</span> <span class="fl">1</span></span>
+<span>    <span class="op">}</span></span>
 <span></span>
 <span>    <span class="co"># Create the event table for dosing and sampling</span></span>
 <span>    <span class="va">ev</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/eventTable.html" class="external-link">eventTable</a></span><span class="op">(</span>amount.units<span class="op">=</span><span class="st">"mg"</span>, time.units<span class="op">=</span><span class="st">"hours"</span><span class="op">)</span></span>
@@ -193,26 +196,15 @@ function is the g function for the two-compartment model.</p>
 <span><span class="op">}</span></span></code></pre></div>
 <p>This opts object contains the options for the <code>admr</code>
 package. The <code>genopts</code> function generates the options object.
-Here the parameters are:</p>
-<ol style="list-style-type: decimal">
-<li>time:
-<ul>
-<li>A vector of time points for sampling predictions in the model.</li>
-<li>These are the observation times at which the model predictions are
-evaluated.</li>
-<li>Example: c(.1, .25, .5, 1, 2, 3, 5, 8, 12).</li>
-</ul>
-</li>
-<li>p:
-<ul>
-<li><p>Values for the population parameters (beta) and their covariance
-matrix (Omega).</p></li>
-<li><p>These are either the initial values for the optimization or the
-true values for simulation.</p></li>
-<li><p>Example: list(beta = c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1),
-Omega = omegas(.09, 0, 5)).</p></li>
-</ul>
-</li>
+Here the parameters are: 1. time: - A vector of time points for sampling
+predictions in the model. - These are the observation times at which the
+model predictions are evaluated. - Example: c(.1, .25, .5, 1, 2, 3, 5,
+8, 12). 2. p: - Values for the population parameters (beta) and their
+covariance matrix (Omega).</p>
+<pre><code>-   These are either the initial values for the optimization or the true values for simulation.
+
+-   Example: list(beta = c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1), Omega = omegas(.09, 0, 5)).</code></pre>
+<ol start="3" style="list-style-type: decimal">
 <li>nsim:
 <ul>
 <li><p>Number of Monte Carlo samples per iteration.</p></li>
@@ -229,32 +221,10 @@ calculation.</p></li>
 <li><p>Example: 500.</p></li>
 </ul>
 </li>
-<li>adist:
-<ul>
-<li><p>Currently not used (future implementation).</p></li>
-<li><p>Intended to define auxiliary distributions for covariates or
-additional random effects.</p></li>
-</ul>
-</li>
-<li>interact:
-<ul>
-<li><p>Currently not used (future implementation).</p></li>
-<li><p>Placeholder for handling interactions between different effects
-in the model.</p></li>
-</ul>
-</li>
 <li>fo_appr:
 <ul>
-<li><p>Currently not used (future implementation).</p></li>
-<li><p>Placeholder for enabling the First-Order Approximation method for
-parameter estimation.</p></li>
-</ul>
-</li>
-<li>biseq:
-<ul>
-<li><p>Currently not used (future implementation).</p></li>
-<li><p>Placeholder for pre-defined sequences of random effects (bi) for
-testing purposes.</p></li>
+<li>Enabling the First-Order Approximation method for parameter
+estimation.</li>
 </ul>
 </li>
 <li>omega_expansion:
@@ -273,17 +243,16 @@ individual parameters.</p></li>
 </ul>
 </li>
 </ol>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">opts</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/genopts.html">genopts</a></span><span class="op">(</span>time<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.1</span>,<span class="fl">.25</span>,<span class="fl">.5</span>,<span class="fl">1</span>,<span class="fl">2</span>,<span class="fl">3</span>,<span class="fl">5</span>,<span class="fl">8</span>,<span class="fl">12</span><span class="op">)</span>,</span>
 <span>                  p<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>beta<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>cl <span class="op">=</span> <span class="fl">5</span>, v1 <span class="op">=</span> <span class="fl">10</span>, v2 <span class="op">=</span> <span class="fl">30</span>,q <span class="op">=</span> <span class="fl">10</span>, ka <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
 <span>                  Omega<span class="op">=</span><span class="fu"><a href="../reference/omegas.html">omegas</a></span><span class="op">(</span><span class="fl">.09</span>,<span class="fl">0</span>,<span class="fl">5</span><span class="op">)</span>,Sigma_prop<span class="op">=</span><span class="fl">0.04</span><span class="op">)</span>,</span>
-<span>                  nsim<span class="op">=</span><span class="fl">2500</span>,n<span class="op">=</span><span class="fl">500</span>,adist<span class="op">=</span><span class="cn">NULL</span>,</span>
-<span>                  interact<span class="op">=</span><span class="cn">F</span>,fo_appr<span class="op">=</span><span class="cn">F</span>,biseq<span class="op">=</span><span class="cn">NA</span>,omega_expansion<span class="op">=</span><span class="fl">1.2</span>,</span>
+<span>                  nsim<span class="op">=</span><span class="fl">2500</span>,n<span class="op">=</span><span class="fl">500</span>, fo_appr<span class="op">=</span><span class="cn">F</span>, omega_expansion<span class="op">=</span><span class="fl">1.2</span>,</span>
 <span>                  f<span class="op">=</span><span class="va">predder</span><span class="op">)</span></span></code></pre></div>
 <p>The <code>fitEM</code> function fits the model to the dataset. It
 takes the following arguments:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fitEM.html">fitEM</a></span><span class="op">(</span><span class="va">opts</span>, <span class="va">examplomycin_aggregated</span>, chains <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fit.admr</span> <span class="op">&lt;-</span> <span class="fu">admr</span><span class="fu">::</span><span class="fu"><a href="../reference/fitEM.html">fitEM</a></span><span class="op">(</span><span class="va">opts</span>, <span class="va">examplomycin_aggregated</span>, chains <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Chain 1:</span></span>
 <span><span class="co">#&gt; Iter | NLL and Parameters (11 values)</span></span>
 <span><span class="co">#&gt; --------------------------------------------------------------------------------</span></span>
@@ -322,25 +291,25 @@ takes the following arguments:</p>
 <span><span class="co">#&gt;   22: -1845.280    1.601    2.307    3.405    2.285    0.018   -2.286   -2.201   -2.343   -2.265   -2.410   -3.235</span></span>
 <span><span class="co">#&gt; Phase Precision Phase converged at iteration 22.</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 1 Complete: Final NLL = -1845.283, Time Elapsed = 7.80 seconds</span></span>
+<span><span class="co">#&gt; Chain 1 Complete: Final NLL = -1845.283, Time Elapsed = 8.09 seconds</span></span>
 <span><span class="co">#&gt;  </span></span>
 <span><span class="co">#&gt; Phase Wide Search Phase converged at iteration 6.</span></span>
 <span><span class="co">#&gt; Phase Focussed Search Phase converged at iteration 11.</span></span>
 <span><span class="co">#&gt; Phase Fine-Tuning Phase converged at iteration 13.</span></span>
 <span><span class="co">#&gt; Phase Precision Phase converged at iteration 14.</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 2 Complete: Final NLL = -1845.280, Time Elapsed = 5.36 seconds</span></span>
+<span><span class="co">#&gt; Chain 2 Complete: Final NLL = -1845.280, Time Elapsed = 5.55 seconds</span></span>
 <span><span class="co">#&gt;  </span></span>
 <span><span class="co">#&gt; Phase Wide Search Phase converged at iteration 12.</span></span>
 <span><span class="co">#&gt; Phase Focussed Search Phase converged at iteration 14.</span></span>
 <span><span class="co">#&gt; Phase Fine-Tuning Phase converged at iteration 18.</span></span>
 <span><span class="co">#&gt; Phase Precision Phase converged at iteration 21.</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 3 Complete: Final NLL = -1845.283, Time Elapsed = 8.75 seconds</span></span>
+<span><span class="co">#&gt; Chain 3 Complete: Final NLL = -1845.283, Time Elapsed = 8.92 seconds</span></span>
 <span><span class="co">#&gt; </span></span></code></pre></div>
 <p>This is the output of the <code>fitEM</code> function.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">fit.admr</span><span class="op">)</span></span>
 <span><span class="co">#&gt; -- FitEM Summary --</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; -- Objective Function and Information Criteria --</span></span>
@@ -351,10 +320,10 @@ takes the following arguments:</p>
 <span><span class="co">#&gt; Condition#(Cor): 204.50</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; -- Timing Information --</span></span>
-<span><span class="co">#&gt;      Best Chain: 7.7983 seconds</span></span>
-<span><span class="co">#&gt;      All Chains: 21.9109 seconds</span></span>
-<span><span class="co">#&gt;      Covariance: 27.2032 seconds</span></span>
-<span><span class="co">#&gt;         Elapsed: 49.11 seconds</span></span>
+<span><span class="co">#&gt;      Best Chain: 8.0870 seconds</span></span>
+<span><span class="co">#&gt;      All Chains: 22.5636 seconds</span></span>
+<span><span class="co">#&gt;      Covariance: 28.1141 seconds</span></span>
+<span><span class="co">#&gt;         Elapsed: 50.68 seconds</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; -- Population Parameters --</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 6</span></span></span>
@@ -384,8 +353,8 @@ takes the following arguments:</p>
 <p>The <code>plot</code> function can be used to visualize the results.
 It shows the convergence of the model fit and parameters by making a
 trace plot of the chains.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit.admr</span><span class="op">)</span></span></code></pre></div>
 <p><img src="admr_files/figure-html/unnamed-chunk-10-1.png" width="700"><img src="admr_files/figure-html/unnamed-chunk-10-2.png" width="700"></p>
 </div>
 </div>
