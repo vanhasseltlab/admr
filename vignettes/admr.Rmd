@@ -1,5 +1,5 @@
 ---
-title: "Get started with `admr`"
+title: "Get started with admr"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Get started with admr}
@@ -30,7 +30,7 @@ library(tidyr)
 library(mnorm)
 ```
 
-```{r}
+```{r, cache=TRUE}
 head(examplomycin)
 ```
 
@@ -38,7 +38,7 @@ In this scenario, we will use the `examplomycin` dataset to demonstrate how to u
 We show how to manipulate the dataset to get it in the right format for the `admr` package.
 In future scenarios, we might not have access to an individual dataset, but this vignette demonstrates the right format.
 
-```{r}
+```{r, cache=TRUE}
 examplomycin_wide <- examplomycin %>%
   filter(EVID != 101) %>%
   dplyr::select(ID, TIME, DV) %>%  # Select only the relevant columns
@@ -94,11 +94,13 @@ rxModel <- RxODE({
 This is necessary for the `admr` package to simulate the model.
 Tt constructs the event table for dosing and sampling, solves the RxODE model, and extracts the predicted concentrations.
 The function can handle both single and multiple individuals.
-The `twocomp_g` function is the g function for the two-compartment model.
-
-```{r}
+```{r, cache=TRUE}
 predder <- function(time, theta_i, dose = 100) {
     n_individuals <- nrow(theta_i)
+    
+    if (is.null(n_individuals)) {
+      n_individuals <- 1
+    }
 
     # Create the event table for dosing and sampling
     ev <- eventTable(amount.units="mg", time.units="hours")
@@ -117,18 +119,16 @@ predder <- function(time, theta_i, dose = 100) {
 }
 ```
 
-
 This opts object contains the options for the `admr` package.
 The `genopts` function generates the options object.
 Here the parameters are:
-
 1.  time:
     -   A vector of time points for sampling predictions in the model.
     -   These are the observation times at which the model predictions are evaluated.
     -   Example: c(.1, .25, .5, 1, 2, 3, 5, 8, 12).
 2.  p:
     -   Values for the population parameters (beta) and their covariance matrix (Omega).
-    
+
     -   These are either the initial values for the optimization or the true values for simulation.
 
     -   Example: list(beta = c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1), Omega = omegas(.09, 0, 5)).
@@ -140,61 +140,42 @@ Here the parameters are:
     -   Example: 2500.
 4.  n:
     -   Number of individuals in the dataset.
-    
+
     -   This is used for the Objective Function Value (OFV), AIC, and BIC calculation.
 
     -   Example: 500.
-5.  adist:
-    -   Currently not used (future implementation).
-
-    -   Intended to define auxiliary distributions for covariates or additional random effects.
-6.  interact:
-    -   Currently not used (future implementation).
-
-    -   Placeholder for handling interactions between different effects in the model.
-7.  fo_appr:
-    -   Currently not used (future implementation).
-
-    -   Placeholder for enabling the First-Order Approximation method for parameter estimation.
-8.  biseq:
-    -   Currently not used (future implementation).
-
-    -   Placeholder for pre-defined sequences of random effects (bi) for testing purposes.
-9.  omega_expansion:
+5.  fo_appr:
+    -   Enabling the First-Order Approximation method for parameter estimation.
+6.  omega_expansion:
     -   Factor by which the covariance matrix (Omega) is expanded during estimation to account for uncertainty.
 
     -   Example: 2 doubles the covariance matrix values temporarily during sampling.
-10. f:
+7.  f:
     -   The prediction function that simulates model outputs based on individual parameters.
 
     -   Example: predder, as specified above.
-
-```{r}
+  
+```{r, cache=TRUE}
 opts <- genopts(time=c(.1,.25,.5,1,2,3,5,8,12),
                   p=list(beta=c(cl = 5, v1 = 10, v2 = 30,q = 10, ka = 1),
                   Omega=omegas(.09,0,5),Sigma_prop=0.04),
-                  nsim=2500,n=500,adist=NULL,
-                  interact=F,fo_appr=F,biseq=NA,omega_expansion=1.2,
+                  nsim=2500,n=500, fo_appr=F, omega_expansion=1.2,
                   f=predder)
 ```
 
-
 The `fitEM` function fits the model to the dataset.
 It takes the following arguments:
-
-```{r}
-fit <- fitEM(opts, examplomycin_aggregated, chains = 3)
+```{r, cache=TRUE}
+fit.admr <- admr::fitEM(opts, examplomycin_aggregated, chains = 3)
 ```
 
 This is the output of the `fitEM` function.
-
 ```{r}
-print(fit)
+print(fit.admr)
 ```
 
 The `plot` function can be used to visualize the results.
 It shows the convergence of the model fit and parameters by making a trace plot of the chains.
-
 ```{r}
-plot(fit)
+plot(fit.admr)
 ```
