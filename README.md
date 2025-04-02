@@ -6,7 +6,7 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-admr (Aggregate Data Modeling in R) is an open-source R package designed
+admr (Aggregate Data Modeling in r) is an open-source R package designed
 to facilitate pharmacometric modeling using summary-level data. It
 enables users to work with aggregate data, such as mean observations and
 variance-covariance matrices, to fit pharmacokinetic and pharmacodynamic
