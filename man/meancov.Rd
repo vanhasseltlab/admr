@@ -2,21 +2,49 @@
 % Please edit documentation in R/meancov.R
 \name{meancov}
 \alias{meancov}
-\title{Generate options for optimization}
+\title{Compute mean and covariance of a matrix}
 \usage{
 meancov(m, wt)
 }
 \arguments{
-\item{m}{The matrix}
+\item{m}{A numeric matrix or data frame containing the observations.
+Each row represents an individual, and each column represents a time point.}
 
-\item{wt}{The weights}
+\item{wt}{Optional vector of weights for each observation. If not provided,
+all observations are weighted equally.}
 }
 \value{
-A list with the mean and covariance
+A list containing:
+\itemize{
+\item \code{E}: Vector of means for each time point
+\item \code{V}: Covariance matrix of the observations
+}
 }
 \description{
-\code{\link[=meancov]{meancov()}} computes the mean and covariance of a matrix, optionally with weights.
+\code{meancov} computes the mean and covariance of a matrix, optionally with weights.
+This function is used to convert raw data into aggregate form (mean and covariance)
+for use in aggregate data modeling.
+}
+\details{
+The function computes:
+\itemize{
+\item The mean of each column (time point) using \code{colMeans}
+\item The covariance matrix using \code{cov.wt} with maximum likelihood estimation
+}
+
+If weights are provided, they are used in both the mean and covariance calculations.
+The function uses maximum likelihood estimation for the covariance matrix, which
+is appropriate for aggregate data modeling.
 }
 \examples{
-#test
+# Create a matrix of observations
+m <- matrix(rnorm(100), nrow = 10, ncol = 10)
+
+# Compute mean and covariance without weights
+result <- meancov(m)
+
+# Compute mean and covariance with weights
+weights <- runif(10)
+result_weighted <- meancov(m, weights)
+
 }

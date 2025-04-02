@@ -10,16 +10,19 @@ editor_options:
     wrap: sentence
 ---
 
-# Example of using `admr` with `rxode2`
+# Introduction to Aggregate Data Modeling with `admr`
 
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
-```
+This vignette demonstrates how to use the `admr` package for aggregate data modeling in pharmacometrics. Aggregate data modeling is particularly useful when individual-level data is not available, but summary statistics (mean and covariance) of the data are known.
 
-Import the `admr` and other packages:
+## Overview
+
+The `admr` package provides tools for:
+- Converting individual-level data to aggregate form
+- Fitting models to aggregate data using maximum likelihood estimation
+- Simulating data from aggregate models
+- Comparing different implementations of aggregate data modeling
+
+## Required Packages
 
 ```{r setup, message = FALSE, warning = FALSE}
 library(admr)
@@ -30,31 +33,43 @@ library(tidyr)
 library(mnorm)
 ```
 
+## The Examplomycin Dataset
+
+We'll use the `examplomycin` dataset, which contains simulated concentration-time data for a fictional drug. The dataset includes:
+- 500 subjects
+- 9 time points per subject
+- A two-compartment model with first-order absorption
+- Random effects on all parameters
+- Proportional residual error
+
 ```{r, cache=TRUE}
 head(examplomycin)
 ```
 
-In this scenario, we will use the `examplomycin` dataset to demonstrate how to use the `admr` package with the `rxode2` package.
-We show how to manipulate the dataset to get it in the right format for the `admr` package.
-In future scenarios, we might not have access to an individual dataset, but this vignette demonstrates the right format.
+## Converting to Aggregate Data Format
+
+The `admr` package works with data in aggregate form (mean and covariance). We'll convert the individual-level data to this format:
 
 ```{r, cache=TRUE}
 examplomycin_wide <- examplomycin %>%
-  filter(EVID != 101) %>%
-  dplyr::select(ID, TIME, DV) %>%  # Select only the relevant columns
-  pivot_wider(names_from = TIME, values_from = DV) %>%
-  dplyr::select(-c(1))
+  filter(EVID != 101) %>%  # Remove dosing events
+  dplyr::select(ID, TIME, DV) %>%  # Select relevant columns
+  pivot_wider(names_from = TIME, values_from = DV) %>%  # Convert to wide format
+  dplyr::select(-c(1))  # Remove ID column
 
 examplomycin_aggregated <- examplomycin_wide %>%
-  admr::meancov()
+  admr::meancov()  # Compute mean and covariance
 
 head(examplomycin_aggregated)
 ```
 
-## Defining the RxODE model
+## Defining the Pharmacokinetic Model
 
-We will define a two-compartment model for the examplomycin dataset.
-The model has the following differential equations:
+We'll define a two-compartment model with first-order absorption using `RxODE`. The model includes:
+- A depot compartment for absorption
+- A central compartment for distribution
+- A peripheral compartment for tissue distribution
+- First-order elimination from the central compartment
 
 ```{r, message = FALSE, warning = FALSE}
 rxModel <- RxODE({
@@ -73,9 +88,7 @@ rxModel <- RxODE({
 })
 ```
 
-A solved model is available for the two-compartment model, speeding up the simulation process.
-The `linCmt` function has multiple solved models.
-The function takes the following arguments:
+Alternatively, we can use the solved model approach with `linCmt`:
 
 ```{r, message = FALSE, warning = FALSE}
 rxModel <- RxODE({
@@ -89,11 +102,13 @@ rxModel <- RxODE({
 })
 ```
 
-## Defining the prediction function
+## Creating the Prediction Function
 
-This is necessary for the `admr` package to simulate the model.
-Tt constructs the event table for dosing and sampling, solves the RxODE model, and extracts the predicted concentrations.
-The function can handle both single and multiple individuals.
+The prediction function is crucial for the `admr` package. It:
+- Constructs the event table for dosing and sampling
+- Solves the RxODE model
+- Returns predicted concentrations in the required format
+
 ```{r, cache=TRUE}
 predder <- function(time, theta_i, dose = 100) {
     n_individuals <- nrow(theta_i)
@@ -104,78 +119,72 @@ predder <- function(time, theta_i, dose = 100) {
 
     # Create the event table for dosing and sampling
     ev <- eventTable(amount.units="mg", time.units="hours")
-    ev$add.dosing(dose = dose, nbr.doses = 1, start.time = 0)  # Assume same dose
-    ev$add.sampling(time)  # Time points to simulate
+    ev$add.dosing(dose = dose, nbr.doses = 1, start.time = 0)
+    ev$add.sampling(time)
     
-    # Solve the RxODE model for all individuals
+    # Solve the RxODE model
     out <- rxSolve(rxModel, params = theta_i, events = ev, cores = 0)
     
-    # Extract the predicted concentrations (cp) and format them as a matrix
+    # Format output as matrix
     cp_matrix <- matrix(out$cp, nrow = n_individuals, ncol = length(time), 
                         byrow = TRUE)
     
-    # Return matrix of predicted concentrations
     return(cp_matrix)
 }
 ```
 
-This opts object contains the options for the `admr` package.
-The `genopts` function generates the options object.
-Here the parameters are:
-1.  time:
-    -   A vector of time points for sampling predictions in the model.
-    -   These are the observation times at which the model predictions are evaluated.
-    -   Example: c(.1, .25, .5, 1, 2, 3, 5, 8, 12).
-2.  p:
-    -   Values for the population parameters (beta) and their covariance matrix (Omega).
+## Setting Up Model Options
 
-    -   These are either the initial values for the optimization or the true values for simulation.
+The `genopts` function creates an options object that controls the model fitting process:
 
-    -   Example: list(beta = c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1), Omega = omegas(.09, 0, 5)).
-3.  nsim:
-    -   Number of Monte Carlo samples per iteration.
-
-    -   Higher values improve accuracy but increase computation time.
-
-    -   Example: 2500.
-4.  n:
-    -   Number of individuals in the dataset.
-
-    -   This is used for the Objective Function Value (OFV), AIC, and BIC calculation.
-
-    -   Example: 500.
-5.  fo_appr:
-    -   Enabling the First-Order Approximation method for parameter estimation.
-6.  omega_expansion:
-    -   Factor by which the covariance matrix (Omega) is expanded during estimation to account for uncertainty.
-
-    -   Example: 2 doubles the covariance matrix values temporarily during sampling.
-7.  f:
-    -   The prediction function that simulates model outputs based on individual parameters.
-
-    -   Example: predder, as specified above.
-  
 ```{r, cache=TRUE}
-opts <- genopts(time=c(.1,.25,.5,1,2,3,5,8,12),
-                  p=list(beta=c(cl = 5, v1 = 10, v2 = 30,q = 10, ka = 1),
-                  Omega=omegas(.09,0,5),Sigma_prop=0.04),
-                  nsim=2500,n=500, fo_appr=F, omega_expansion=1.2,
-                  f=predder)
+opts <- genopts(
+  time = c(.1, .25, .5, 1, 2, 3, 5, 8, 12),  # Observation times
+  p = list(
+    beta = c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1),  # Population parameters
+    Omega = omegas(.09, 0, 5),  # Random effects covariance matrix
+    Sigma_prop = 0.04  # Proportional error variance
+  ),
+  nsim = 2500,  # Number of Monte Carlo samples
+  n = 500,  # Number of individuals
+  fo_appr = FALSE,  # Disable first-order approximation
+  omega_expansion = 1.2,  # Omega expansion factor
+  f = predder  # Prediction function
+)
 ```
 
-The `fitEM` function fits the model to the dataset.
-It takes the following arguments:
+## Fitting the Model
+
+The `fitIRMC` function fits the model to the aggregate data using the Iterative Reweighting algorithm:
+
 ```{r, cache=TRUE}
-fit.admr <- admr::fitIRMC(opts, examplomycin_aggregated, chains = 3)
+fit.admr <- admr::fitIRMC(
+  opts,  # Model options
+  examplomycin_aggregated,  # Aggregate data
+  chains = 3  # Number of parallel chains
+)
 ```
 
-This is the output of the `fitEM` function.
+## Examining Results
+
+The `print` method provides a summary of the model fit:
+
 ```{r}
 print(fit.admr)
 ```
 
-The `plot` function can be used to visualize the results.
-It shows the convergence of the model fit and parameters by making a trace plot of the chains.
+The `plot` method visualizes the convergence of the model fit:
+
 ```{r}
 plot(fit.admr)
 ```
+
+## Conclusion
+
+This vignette demonstrates the basic workflow for aggregate data modeling with `admr`. The package provides a flexible framework for:
+- Converting individual-level data to aggregate form
+- Defining complex pharmacokinetic models
+- Fitting models to aggregate data
+- Assessing model convergence and parameter estimates
+
+For more advanced usage, see the package documentation and other vignettes.

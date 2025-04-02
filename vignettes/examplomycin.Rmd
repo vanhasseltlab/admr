@@ -1,16 +1,28 @@
 ---
-title: "Examplomycin dataset"
+title: "Examplomycin Dataset: A Pharmacokinetic Example"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Examplomycin dataset}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
-# Creating the examplomycin dataset
-In this vignette we will create a simulated dataset for a fictional drug called examplomycin. The dataset will contain 500 subjects with 9 timepoints each. The data will be generated using a two-compartment model with first-order absorption and elimination. The model parameters will be sampled from a multivariate normal distribution with a specified covariance matrix. The dataset will also include a random error term to simulate measurement noise. We make the dataset available as a data object in the package for use in other vignettes.
 
-## Libraries
-We will use the following libraries to generate the data and plot the results:
+# Creating the Examplomycin Dataset
+
+This vignette demonstrates how to create a simulated pharmacokinetic dataset for a fictional drug called examplomycin. The dataset is designed to showcase the capabilities of the `admr` package for aggregate data modeling.
+
+## Overview
+
+The examplomycin dataset is a simulated pharmacokinetic study with the following characteristics:
+- 500 healthy subjects
+- Single oral dose of 100 mg
+- 9 sampling time points per subject
+- Two-compartment model with first-order absorption
+- Random effects on all parameters
+- Proportional residual error
+
+## Required Packages
+
 ```{r library import, message = FALSE, warning = FALSE}
 library(rxode2)
 library(MASS)
@@ -22,12 +34,20 @@ library(ggplot2)
 library(usethis)
 ```
 
-## Data generating function
-This function generates the examplomycin dataset. It takes three arguments: `n` (number of subjects), `times` (vector of timepoints), and `seed` (random seed for reproducibility). The function first defines the two-compartment model using the `RxODE` function. It then generates the model parameters by sampling from a multivariate normal distribution with a specified covariance matrix. The function also generates the event table for the simulation, including a single dose of 100 units at time 0 and observations at the specified timepoints. The model is solved using the `rxSolve` function, and the simulated data is stored in a data frame. The function returns the simulated dataset.
+## Data Generation Function
+
+The `generate_data` function creates the examplomycin dataset with the following features:
+- Two-compartment model with first-order absorption
+- Log-normal random effects on all parameters
+- Proportional residual error
+- Standardized sampling schedule
+- NLMIXR-compatible data format
+
 ```{r data generating function}
 generate_data <- function(n, times, seed = 1) {
   set.seed(seed)
   
+  # Define the pharmacokinetic model
   mod <- RxODE({
     # Parameters
     ke = cl / v1             # Elimination rate constant
@@ -46,24 +66,29 @@ generate_data <- function(n, times, seed = 1) {
     cp = central / v1
   })
 
-  # Generate covariates
-  theta <- c(cl=5, v1 = 10, v2 =30, q =10, ka = 1)
+  # Population parameters
+  theta <- c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1)
 
+  # Correlation matrix for random effects
   omegaCor <- matrix(c(1,  0,  0,  0,  0,
                        0,  1,  0,  0,  0,
                        0,  0,  1,  0,  0,
                        0,  0,  0,  1,  0,
                        0,  0,  0,  0,  1), 
-                     dimnames=list(NULL,c("eta.cl","eta.v1","eta.v2", "eta.q", 
-                                          "eta.ka")), nrow=5)
+                     dimnames = list(NULL, c("eta.cl", "eta.v1", "eta.v2", "eta.q", 
+                                           "eta.ka")), nrow = 5)
 
-  iiv.sd <- c(0.3, 0.3, 0.3, 0.3, 0.3) ## SDs of model parameters
+  # Standard deviations of random effects
+  iiv.sd <- c(0.3, 0.3, 0.3, 0.3, 0.3)
 
+  # Create covariance matrix
   iiv <- iiv.sd %*% t(iiv.sd)
-  omega <- iiv * omegaCor  # covariance matrix
+  omega <- iiv * omegaCor
 
+  # Generate random effects
   mv <- mvrnorm(n, rep(0, dim(omega)[1]), omega)
 
+  # Create individual parameters
   params.all <-
     data.table(
       "ID" = seq(1:n),
@@ -74,27 +99,28 @@ generate_data <- function(n, times, seed = 1) {
       "ka" = theta['ka'] * exp(mv[, 5])
     )
 
-  # Event table
+  # Create event table
   ev <- et() %>%
-    et(amt = 100) %>%  # Add single dose
-    et(0) %>%  # Add initial time observation
+    et(amt = 100) %>%  # Single dose
+    et(0) %>%  # Initial time point
     et(times) %>%  # Sampling schedule
-    et(ID = seq(1, n)) %>%  # Assign unique IDs for all subjects
+    et(ID = seq(1, n)) %>%  # Subject IDs
     as.data.frame()
 
   # Solve the model
   sim <- rxSolve(mod, events = ev, iCov = params.all, cores = 0, addCov = T) %>%
     mutate(ID = as.integer(id), TIME = as.numeric(time)) %>%
     dplyr::select(-c(id, time)) %>%
-    mutate(AMT =  ifelse(TIME == 0, 100, 0)) %>%
+    mutate(AMT = ifelse(TIME == 0, 100, 0)) %>%
     mutate(EVID = ifelse(TIME == 0, 101, 0)) %>%
     mutate(CMT = ifelse(TIME == 0, 1, 2))
 
-  # Simulate residual error and combine
+  # Add residual error
   sim$rv <- rnorm(nrow(sim), 0, 0.2)
   sim$DV <- round(sim$cp * (1 + sim$rv), 3)
   sim <- merge(sim, params.all)
 
+  # Select final columns
   dat <- sim %>%
     dplyr::select("ID", "TIME", "DV", "AMT", "EVID", "CMT")
 
@@ -102,31 +128,58 @@ generate_data <- function(n, times, seed = 1) {
 }
 ```
 
-## Generating the examplomycin dataset
-We will now generate the examplomycin dataset with 500 subjects and 9 timepoints each. We will use a random seed of 1 for reproducibility.
+## Generating the Dataset
+
+We'll generate the examplomycin dataset with:
+- 500 subjects
+- 9 time points (0.1, 0.25, 0.5, 1, 2, 3, 5, 8, 12 hours)
+- Random seed for reproducibility
+
 ```{r examplomycin data}
-examplomycin <- generate_data(n = 500, times = c(.1,.25,.5,1,2,3,5,8,12), 
-                              seed = 1)
+examplomycin <- generate_data(
+  n = 500,  # Number of subjects
+  times = c(.1, .25, .5, 1, 2, 3, 5, 8, 12),  # Sampling times
+  seed = 1  # Random seed
+)
 head(examplomycin)
 ```
+
+## Saving the Dataset
+
+The dataset is saved as a package data object for use in other vignettes and examples:
+
 ```{r saving data, include=FALSE}
 usethis::use_data(examplomycin, overwrite = TRUE)
 ```
 
-## Plotting the examplomycin dataset
-We will now create a concentration-time plot of the examplomycin dataset. Each line represents a different subject, and the points represent the observed concentrations at each timepoint. The color of the lines corresponds to the subject ID.
+## Visualizing the Dataset
+
+We'll create a concentration-time plot to visualize the simulated data:
+
 ```{r plot output, fig.alt="Line plot of examplomycin concentration over time."}
-# Basic concentration-time plot
+# Create concentration-time plot
 ggplot(examplomycin, aes(x = TIME, y = DV, color = factor(ID))) +
-  geom_line(alpha = 0.7) +    # Lines connecting points
-  geom_point(size = 2, alpha = 0.8) +  # Points for observations
-  scale_color_viridis_d(name = "Subject ID") +  # Color by subject ID
+  geom_line(alpha = 0.7) +    # Connect points with lines
+  geom_point(size = 2, alpha = 0.8) +  # Add observation points
+  scale_color_viridis_d(name = "Subject ID") +  # Color by subject
   labs(
     title = "Concentration-Time Profile",
     x = "Time (hours)",
     y = "Observed Concentration (DV)"
-  ) + # y log scale
+  ) +
   theme_minimal() +
-  theme(legend.position = "none")  # Hide legend if too many subjects
+  theme(legend.position = "none")  # Hide legend for clarity
 ```
+
+## Dataset Structure
+
+The examplomycin dataset contains the following columns:
+- `ID`: Subject identifier
+- `TIME`: Observation time (hours)
+- `DV`: Observed concentration
+- `AMT`: Dose amount (100 mg or NA)
+- `EVID`: Event type (101 for dose, 0 for observation)
+- `CMT`: Compartment number (1 for depot, 2 for central)
+
+This dataset serves as a realistic example for demonstrating aggregate data modeling techniques in the `admr` package.
 

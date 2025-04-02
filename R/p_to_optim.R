@@ -1,14 +1,59 @@
-#' Parameters to optimizable form
+#' Convert parameters to optimizable form
 #'
-#'[p_to_optim()] Converts a parameter list into a form that can be optimized, returning transformed values, back-transformation functions, and derivatives.
+#' @description
+#' `p_to_optim` converts a parameter list into a form suitable for optimization by transforming
+#' the parameters and computing their derivatives. This function handles the transformation of
+#' both fixed and random effect parameters.
 #'
-#' @param p The parameter list
+#' @param p A list containing the parameter structure:
+#'          \itemize{
+#'            \item `beta`: Vector of population parameters
+#'            \item `Omega`: Covariance matrix for random effects
+#'            \item `Sigma_prop`: Proportional error variance (optional)
+#'            \item `Sigma_add`: Additive error variance (optional)
+#'          }
 #'
-#' @returns optimized parameter list
-#' @export
+#' @returns A list containing:
+#' \itemize{
+#'   \item `values`: Transformed parameter values
+#'   \item `backtransformfunc`: Function to back-transform parameters
+#'   \item `d_psi_d_psitrans_long`: Derivatives of the transformation
+#'   \item `d_bi_d_omega`: Derivatives of random effects with respect to Omega
+#'   \item `d_omega_d_Omega`: Derivatives of omega with respect to Omega
+#' }
+#'
+#' @details
+#' The function performs several transformations:
+#' \itemize{
+#'   \item Log-transforms positive parameters (beta and diagonal elements of Omega)
+#'   \item Transforms correlation parameters using the inverse hyperbolic tangent
+#'   \item Computes derivatives for the transformation
+#'   \item Handles fixed parameters (specified as strings)
+#' }
+#'
+#' The back-transformation function can be used to convert the optimized parameters back to
+#' their original scale. The derivatives are used in the optimization process to compute
+#' gradients and Hessians.
+#'
 #' @examples
-#' #test
-
+#' # Define parameters
+#' p <- list(
+#'   beta = c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1),
+#'   Omega = matrix(c(0.09, 0, 0, 0, 0,
+#'                   0, 0.09, 0, 0, 0,
+#'                   0, 0, 0.09, 0, 0,
+#'                   0, 0, 0, 0.09, 0,
+#'                   0, 0, 0, 0, 0.09), nrow = 5, ncol = 5),
+#'   Sigma_prop = 0.04
+#' )
+#'
+#' # Convert to optimizable form
+#' p_optim <- p_to_optim(p)
+#'
+#' # Back-transform parameters
+#' p_orig <- p_optim$backtransformfunc(p_optim$values)
+#'
+#' @export
 p_to_optim <- function(p) {
   ### a master function to feed parameters to optim
   if (any(names(p) == "Sigma_exp")) {
