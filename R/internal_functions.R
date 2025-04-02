@@ -158,7 +158,8 @@ maxfunc <- function(opts) {
   rawpreds <- opts$f(opts$time,g_iter(opts,bi))
   NAfilters <- apply(rawpreds,1,function(i) !any(is.na(i)))
   adjust <- !any(is.na(opts$single_betas))
-  propdens <- dmnorm(bi,mean=rep(0,nrow(opts$p$Omega)),sigma=opts$p$Omega*opts$omega_expansion,log=TRUE)$den
+  propdens <- mnorm::dmnorm(bi,mean=rep(0,nrow(opts$p$Omega)),sigma=opts$p$Omega*opts$omega_expansion,log=TRUE)$den
+
   function(pnew,returnEV=FALSE) {
     pneww <- opts$ptrans(pnew)
     newdens <- opts$p_thetai(pneww,origbeta,bi)

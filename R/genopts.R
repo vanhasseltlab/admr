@@ -12,7 +12,7 @@
 #' @param nsim The number of simulations
 #' @param n The number of simulations
 #' @param adist The distribution of the random effects
-#' @param interact Whether to include interaction terms
+#' @param interact FOCEI interaction
 #' @param fo_appr Whether to use first-order approximation
 #' @param biseq The sequence of random effects
 #' @param omega_expansion The expansion factor for the omega matrix

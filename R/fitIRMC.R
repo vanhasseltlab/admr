@@ -1,6 +1,6 @@
 #' Fitting aggregate data
 #'
-#'[fitEM()] implements the Expectation-Maximization(EM) algorithm for parameter
+#'[fitIRMC()] implements the Iterative Reweighting (IRMC) algorithm for parameter
 #'estimation of the given aggregate data model, iterating over maximum
 #'likelihood updates with weighted MC updates. This version of the function uses nloptr instead of optimx. TOL = 1e-10
 #'
@@ -20,7 +20,7 @@
 #' #test
 #'
 
-fitEM <- function(opts, obs, maxiter = 100, convcrit_nll = 0.00001, single_dataframe = TRUE,
+fitIRMC <- function(opts, obs, maxiter = 100, convcrit_nll = 0.00001, single_dataframe = TRUE,
                   phase_fractions = c(0.2, 0.4, 0.2, 0.2), max_worse_iterations = 10, chains = 1,
                   pertubation = 0.1, seed = 1) {
 
@@ -39,11 +39,6 @@ fitEM <- function(opts, obs, maxiter = 100, convcrit_nll = 0.00001, single_dataf
   }
 
   start_time <- Sys.time()  # Start time for the entire process
-
-  ff_nloptr <- function(params) {
-    ff(params)
-  }
-
   chain_results <- vector("list", chains)  # Store results for each chain
 
   for (chain in seq_len(chains)) {
@@ -159,18 +154,18 @@ fitEM <- function(opts, obs, maxiter = 100, convcrit_nll = 0.00001, single_dataf
     )
   )
 
-  class(output) <- "fitEM_result"
+  class(output) <- "fitIRMC_result"
   return(output)
 }
 
-#' Print fitEM results
+#' Print fitIRMC results
 #'
-#' @param x A fitted model object returned by fitEM
+#' @param x A fitted model object returned by fitIRMC
 #' @param ... Additional arguments (not used)
 #' @export
 #'
-print.fitEM_result <- function(x, ...) {
-  cat("-- FitEM Summary --\n\n")
+print.fitIRMC_result <- function(x, ...) {
+  cat("-- FitIRMC Summary --\n\n")
 
   # Objective function and information criteria
   cat("-- Objective Function and Information Criteria --\n")
@@ -244,16 +239,16 @@ print.fitEM_result <- function(x, ...) {
 
 
 
-#' Plot diagnostics of fitEM results
+#' Plot diagnostics of fitIRMC results
 #'
-#' @param x A fitted model object returned by fitEM
+#' @param x A fitted model object returned by fitIRMC
 #' @param ... Additional arguments (not used)
 #' @export
 #'
 
-plot.fitEM_result <- function(x, ...) {
-  if (!inherits(x, "fitEM_result")) {
-    stop("The input must be a fitEM_result object.")
+plot.fitIRMC_result <- function(x, ...) {
+  if (!inherits(x, "fitIRMC_result")) {
+    stop("The input must be a fitIRMC_result object.")
   }
 
   chain_results <- x$chain_results

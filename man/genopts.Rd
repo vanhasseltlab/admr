@@ -16,7 +16,14 @@ genopts(
   fo_appr = (nsim < 10),
   biseq = NA,
   omega_expansion = 1,
-  single_betas = NA
+  single_betas = NA,
+  p_thetai = function(p, origbeta, bi) {
+     dmnorm(bi, mean = log(p$beta/origbeta),
+    sigma = p$Omega, log = TRUE)$den
+ },
+  g = function(beta, bi = rep(0, length(beta)), ai) {
+     beta * exp(bi)
+ }
 )
 }
 \arguments{
@@ -34,7 +41,7 @@ genopts(
 
 \item{adist}{The distribution of the random effects}
 
-\item{interact}{Whether to include interaction terms}
+\item{interact}{FOCEI interaction}
 
 \item{fo_appr}{Whether to use first-order approximation}
 

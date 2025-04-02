@@ -1,9 +1,9 @@
 #' Fitting aggregate data
 #'
-#'[timedEM()] implements the Expectation-Maximization(EM) algorithm for parameter
-#'estimation of the given aggregate data model, iterating over maximum
-#'likelihood updates with weighted MC updates. It is used to compare the performance
-#'of the old and new implementation of aggregate data modelling.
+#'[timedIRMC()] implements the Iterative Reweighting (IRMC) algorithm for
+#'parameter estimation of the given aggregate data model, iterating over maximum
+#'likelihood updates with weighted MC updates. It can be used to compare the
+#'performance of the old and new implementation of aggregate data modelling.
 #'
 #'
 #' @param init initial parameter values
@@ -17,12 +17,13 @@
 #' @examples
 #' #test
 
-timedEM <- function(init,opts,obs,maxiter=100,convcrit_nll=0.0005,nomap=TRUE) { # Implements the Expectation-Maximization (EM) algorithm for parameter estimation, iterating over maximum likelihood updates.
+timedIRMC <- function(init,opts,obs,maxiter=100,convcrit_nll=0.0005,nomap=TRUE) { # Implements the Expectation-Maximization (IRMC) algorithm for parameter estimation, iterating over maximum likelihood updates.
   if (nomap) {
     opts <- opts %>% p2opts(init) %>% obs2opts(obs)
   } else {
     opts <- map(seq_along(opts),function(i) opts[[i]] %>% p2opts(init) %>% obs2opts(obs[[i]]))
   }
+
   res <- tibble(p=vector("list",maxiter),
                 nll=NA,
                 appr_nll=NA,
@@ -30,11 +31,7 @@ timedEM <- function(init,opts,obs,maxiter=100,convcrit_nll=0.0005,nomap=TRUE) { 
                 iter=1)
   res$p[[1]] <- init
   res$time[1] <- Sys.time()
-  if (nomap) {
-    res$nll[1] <- maxfunc(opts)(init)
-  } else {
-    res$nll[1] <- Reduce('+',map(opts,~maxfunc(.)(init)))
-  }
+  res$nll[1] <- compute_nll(opts, init, nomap)
   res$appr_nll[1] <- res$nll[1]
   message(paste0("iteration ",1,", nll=",res$nll[1]))
   pvals <- rep(0,length(init)+1)
@@ -57,8 +54,8 @@ timedEM <- function(init,opts,obs,maxiter=100,convcrit_nll=0.0005,nomap=TRUE) { 
       ub = init + 2,
       opts = list(
         algorithm = "NLOPT_LN_BOBYQA",
-        ftol_rel=.Machine$double.eps,
-        maxeval = 1000
+        ftol_rel=.Machine$double.eps^2,
+        maxeval = 5000
       )
     )
 

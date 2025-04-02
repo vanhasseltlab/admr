@@ -4,10 +4,10 @@
 \alias{timedbobyqa}
 \title{Fitting aggregate data}
 \usage{
-timedbobyqa(p0, opts, obs)
+timedbobyqa(init, opts, obs, nomap = TRUE)
 }
 \arguments{
-\item{p0}{initial parameter values}
+\item{init}{initial parameter values}
 
 \item{opts}{options}
 
@@ -17,7 +17,7 @@ timedbobyqa(p0, opts, obs)
 A fitted model
 }
 \description{
-\code{\link[=timedbobyqa]{timedbobyqa()}} implements the bobqa algorithm for parameter estimation of the
+\code{\link[=timedbobyqa]{timedbobyqa()}} implements the bobyqa algorithm for parameter estimation of the
 given aggregate data model, iterating over maximum likelihood updates with MC
 updates. Each iteration creates new MC samples and updates the parameter values.
 It is used to compare the performance of the old and new implementation

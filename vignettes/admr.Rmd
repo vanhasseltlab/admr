@@ -166,7 +166,7 @@ opts <- genopts(time=c(.1,.25,.5,1,2,3,5,8,12),
 The `fitEM` function fits the model to the dataset.
 It takes the following arguments:
 ```{r, cache=TRUE}
-fit.admr <- admr::fitEM(opts, examplomycin_aggregated, chains = 3)
+fit.admr <- admr::fitIRMC(opts, examplomycin_aggregated, chains = 3)
 ```
 
 This is the output of the `fitEM` function.
