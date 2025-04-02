@@ -78,6 +78,14 @@ settings. The algorithm can automatically skip phases if the optimization is not
 Multiple chains can be run in parallel to improve the chances of finding the global optimum.
 }
 \examples{
+# Load required libraries
+library(admr)
+library(rxode2)
+library(nlmixr2)
+library(dplyr)
+library(tidyr)
+library(mnorm)
+
 # Load and prepare data
 data(examplomycin)
 examplomycin_wide <- examplomycin \%>\%

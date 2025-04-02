@@ -40,6 +40,14 @@ Monte Carlo sampling at each iteration to update the parameter estimates. The al
 until convergence or until the maximum number of iterations is reached.
 }
 \examples{
+# Load required libraries
+library(admr)
+library(rxode2)
+library(nlmixr2)
+library(dplyr)
+library(tidyr)
+library(mnorm)
+
 # Load and prepare data
 data(examplomycin)
 examplomycin_wide <- examplomycin \%>\%
