@@ -96,22 +96,28 @@ until convergence or until the maximum number of iterations is reached.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Load and prepare data</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Load required libraries</span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://hiddevandebeek.github.io/admr">admr</a></span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://nlmixr2.github.io/rxode2/" class="external-link">rxode2</a></span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://nlmixr2.org/" class="external-link">nlmixr2</a></span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyr.tidyverse.org" class="external-link">tidyr</a></span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">mnorm</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Load and prepare data</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">examplomycin</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">examplomycin_wide</span> <span class="op">&lt;-</span> <span class="va">examplomycin</span> <span class="op">%&gt;%</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">EVID</span> <span class="op">!=</span> <span class="fl">101</span><span class="op">)</span> <span class="op">%&gt;%</span></span></span>
-<span class="r-in"><span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">ID</span>, <span class="va">TIME</span>, <span class="va">DV</span><span class="op">)</span> <span class="op">%&gt;%</span></span></span>
-<span class="r-in"><span>  <span class="fu">pivot_wider</span><span class="op">(</span>names_from <span class="op">=</span> <span class="va">TIME</span>, values_from <span class="op">=</span> <span class="va">DV</span><span class="op">)</span> <span class="op">%&gt;%</span></span></span>
+<span class="r-in"><span><span class="va">examplomycin_wide</span> <span class="op">&lt;-</span> <span class="va">examplomycin</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">EVID</span> <span class="op">!=</span> <span class="fl">101</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">ID</span>, <span class="va">TIME</span>, <span class="va">DV</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_wider.html" class="external-link">pivot_wider</a></span><span class="op">(</span>names_from <span class="op">=</span> <span class="va">TIME</span>, values_from <span class="op">=</span> <span class="va">DV</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in examplomycin %&gt;% filter(EVID != 101) %&gt;% dplyr::select(ID, TIME,     DV) %&gt;% pivot_wider(names_from = TIME, values_from = DV) %&gt;%     dplyr::select(-c(1)):</span> could not find function "%&gt;%"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Create aggregated data</span></span></span>
-<span class="r-in"><span><span class="va">examplomycin_aggregated</span> <span class="op">&lt;-</span> <span class="va">examplomycin_wide</span> <span class="op">%&gt;%</span></span></span>
+<span class="r-in"><span><span class="va">examplomycin_aggregated</span> <span class="op">&lt;-</span> <span class="va">examplomycin_wide</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu">admr</span><span class="fu">::</span><span class="fu"><a href="meancov.html">meancov</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in examplomycin_wide %&gt;% admr::meancov():</span> could not find function "%&gt;%"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Define RxODE model</span></span></span>
-<span class="r-in"><span><span class="va">rxModel</span> <span class="op">&lt;-</span> <span class="fu">RxODE</span><span class="op">(</span><span class="op">{</span></span></span>
+<span class="r-in"><span><span class="va">rxModel</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/rxode2.html" class="external-link">RxODE</a></span><span class="op">(</span><span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="va">cp</span> <span class="op">=</span> <span class="fu">linCmt</span><span class="op">(</span></span></span>
 <span class="r-in"><span>    <span class="va">cl</span>,           <span class="co"># Clearance</span></span></span>
 <span class="r-in"><span>    <span class="va">v1</span>,           <span class="co"># Volume of the central compartment</span></span></span>
@@ -120,18 +126,19 @@ until convergence or until the maximum number of iterations is reached.</p>
 <span class="r-in"><span>    <span class="va">ka</span>            <span class="co"># Absorption rate constant</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in RxODE({    cp = linCmt(cl, v1, v2, q, ka)}):</span> could not find function "RxODE"</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Define prediction function</span></span></span>
 <span class="r-in"><span><span class="va">predder</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">time</span>, <span class="va">theta_i</span>, <span class="va">dose</span> <span class="op">=</span> <span class="fl">100</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="va">n_individuals</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">theta_i</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">n_individuals</span><span class="op">)</span><span class="op">)</span> <span class="va">n_individuals</span> <span class="op">&lt;-</span> <span class="fl">1</span></span></span>
 <span class="r-in"><span>  </span></span>
-<span class="r-in"><span>  <span class="va">ev</span> <span class="op">&lt;-</span> <span class="fu">eventTable</span><span class="op">(</span>amount.units<span class="op">=</span><span class="st">"mg"</span>, time.units<span class="op">=</span><span class="st">"hours"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">ev</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/eventTable.html" class="external-link">eventTable</a></span><span class="op">(</span>amount.units<span class="op">=</span><span class="st">"mg"</span>, time.units<span class="op">=</span><span class="st">"hours"</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="va">ev</span><span class="op">$</span><span class="fu">add.dosing</span><span class="op">(</span>dose <span class="op">=</span> <span class="va">dose</span>, nbr.doses <span class="op">=</span> <span class="fl">1</span>, start.time <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="va">ev</span><span class="op">$</span><span class="fu">add.sampling</span><span class="op">(</span><span class="va">time</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  </span></span>
-<span class="r-in"><span>  <span class="va">out</span> <span class="op">&lt;-</span> <span class="fu">rxSolve</span><span class="op">(</span><span class="va">rxModel</span>, params <span class="op">=</span> <span class="va">theta_i</span>, events <span class="op">=</span> <span class="va">ev</span>, cores <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/rxSolve.html" class="external-link">rxSolve</a></span><span class="op">(</span><span class="va">rxModel</span>, params <span class="op">=</span> <span class="va">theta_i</span>, events <span class="op">=</span> <span class="va">ev</span>, cores <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="va">cp_matrix</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="va">out</span><span class="op">$</span><span class="va">cp</span>, nrow <span class="op">=</span> <span class="va">n_individuals</span>, ncol <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">time</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                      byrow <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">cp_matrix</span><span class="op">)</span></span></span>
@@ -158,9 +165,32 @@ until convergence or until the maximum number of iterations is reached.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Run optimization</span></span></span>
 <span class="r-in"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">timedbobyqa</span><span class="op">(</span><span class="va">opts</span><span class="op">$</span><span class="va">pt</span>, <span class="va">opts</span>, <span class="va">examplomycin_aggregated</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'examplomycin_aggregated' not found</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 50 - NLL: -1842.696 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 100 - NLL: -1844.712 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 150 - NLL: -1845.05 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 200 - NLL: -1845.218 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 250 - NLL: -1845.241 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 300 - NLL: -1845.254 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 350 - NLL: -1845.273 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 400 - NLL: -1845.281 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 450 - NLL: -1845.284 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 500 - NLL: -1845.288 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 550 - NLL: -1845.29 </span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'result' not found</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 565 × 4</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    p             nll time                 iter</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dttm&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">840.</span> 2025-04-02 <span style="color: #949494;">14:41:03</span>     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">840.</span> 2025-04-02 <span style="color: #949494;">14:41:03</span>     2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">840.</span> 2025-04-02 <span style="color: #949494;">14:41:04</span>     3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> <span style="text-decoration: underline;">14</span>057. 2025-04-02 <span style="color: #949494;">14:41:04</span>     4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span>  <span style="text-decoration: underline;">5</span>029. 2025-04-02 <span style="color: #949494;">14:41:04</span>     5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span>   227. 2025-04-02 <span style="color: #949494;">14:41:04</span>     6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span>  -<span style="color: #BB0000;">417.</span> 2025-04-02 <span style="color: #949494;">14:41:04</span>     7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span>  -<span style="color: #BB0000;">413.</span> 2025-04-02 <span style="color: #949494;">14:41:04</span>     8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">779.</span> 2025-04-02 <span style="color: #949494;">14:41:04</span>     9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">800.</span> 2025-04-02 <span style="color: #949494;">14:41:05</span>    10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 555 more rows</span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
