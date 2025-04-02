@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# admr: Aggregate Data Modeling in R
+# admr: Aggregate Data Modeling in R <img src="inst/img/logo.png" width="120" align="right" />
 
 <!-- badges: start -->
 <!-- badges: end -->
