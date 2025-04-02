@@ -96,19 +96,69 @@ until convergence or until the maximum number of iterations is reached.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Create test data</span></span></span>
-<span class="r-in"><span><span class="va">test_data</span> <span class="op">&lt;-</span> <span class="fu">create_test_data</span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in create_test_data():</span> could not find function "create_test_data"</span>
-<span class="r-in"><span><span class="va">opts</span> <span class="op">&lt;-</span> <span class="va">test_data</span><span class="op">$</span><span class="va">opts</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'test_data' not found</span>
-<span class="r-in"><span><span class="va">obs</span> <span class="op">&lt;-</span> <span class="va">test_data</span><span class="op">$</span><span class="va">obs</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'test_data' not found</span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Load and prepare data</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">examplomycin</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">examplomycin_wide</span> <span class="op">&lt;-</span> <span class="va">examplomycin</span> <span class="op">%&gt;%</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">EVID</span> <span class="op">!=</span> <span class="fl">101</span><span class="op">)</span> <span class="op">%&gt;%</span></span></span>
+<span class="r-in"><span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">ID</span>, <span class="va">TIME</span>, <span class="va">DV</span><span class="op">)</span> <span class="op">%&gt;%</span></span></span>
+<span class="r-in"><span>  <span class="fu">pivot_wider</span><span class="op">(</span>names_from <span class="op">=</span> <span class="va">TIME</span>, values_from <span class="op">=</span> <span class="va">DV</span><span class="op">)</span> <span class="op">%&gt;%</span></span></span>
+<span class="r-in"><span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in examplomycin %&gt;% filter(EVID != 101) %&gt;% dplyr::select(ID, TIME,     DV) %&gt;% pivot_wider(names_from = TIME, values_from = DV) %&gt;%     dplyr::select(-c(1)):</span> could not find function "%&gt;%"</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Create aggregated data</span></span></span>
+<span class="r-in"><span><span class="va">examplomycin_aggregated</span> <span class="op">&lt;-</span> <span class="va">examplomycin_wide</span> <span class="op">%&gt;%</span></span></span>
+<span class="r-in"><span>  <span class="fu">admr</span><span class="fu">::</span><span class="fu"><a href="meancov.html">meancov</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in examplomycin_wide %&gt;% admr::meancov():</span> could not find function "%&gt;%"</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Define RxODE model</span></span></span>
+<span class="r-in"><span><span class="va">rxModel</span> <span class="op">&lt;-</span> <span class="fu">RxODE</span><span class="op">(</span><span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="va">cp</span> <span class="op">=</span> <span class="fu">linCmt</span><span class="op">(</span></span></span>
+<span class="r-in"><span>    <span class="va">cl</span>,           <span class="co"># Clearance</span></span></span>
+<span class="r-in"><span>    <span class="va">v1</span>,           <span class="co"># Volume of the central compartment</span></span></span>
+<span class="r-in"><span>    <span class="va">v2</span>,           <span class="co"># Volume of the peripheral compartment</span></span></span>
+<span class="r-in"><span>    <span class="va">q</span>,            <span class="co"># Inter-compartmental clearance</span></span></span>
+<span class="r-in"><span>    <span class="va">ka</span>            <span class="co"># Absorption rate constant</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in RxODE({    cp = linCmt(cl, v1, v2, q, ka)}):</span> could not find function "RxODE"</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Define prediction function</span></span></span>
+<span class="r-in"><span><span class="va">predder</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">time</span>, <span class="va">theta_i</span>, <span class="va">dose</span> <span class="op">=</span> <span class="fl">100</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="va">n_individuals</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">theta_i</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">n_individuals</span><span class="op">)</span><span class="op">)</span> <span class="va">n_individuals</span> <span class="op">&lt;-</span> <span class="fl">1</span></span></span>
+<span class="r-in"><span>  </span></span>
+<span class="r-in"><span>  <span class="va">ev</span> <span class="op">&lt;-</span> <span class="fu">eventTable</span><span class="op">(</span>amount.units<span class="op">=</span><span class="st">"mg"</span>, time.units<span class="op">=</span><span class="st">"hours"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">ev</span><span class="op">$</span><span class="fu">add.dosing</span><span class="op">(</span>dose <span class="op">=</span> <span class="va">dose</span>, nbr.doses <span class="op">=</span> <span class="fl">1</span>, start.time <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">ev</span><span class="op">$</span><span class="fu">add.sampling</span><span class="op">(</span><span class="va">time</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  </span></span>
+<span class="r-in"><span>  <span class="va">out</span> <span class="op">&lt;-</span> <span class="fu">rxSolve</span><span class="op">(</span><span class="va">rxModel</span>, params <span class="op">=</span> <span class="va">theta_i</span>, events <span class="op">=</span> <span class="va">ev</span>, cores <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">cp_matrix</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="va">out</span><span class="op">$</span><span class="va">cp</span>, nrow <span class="op">=</span> <span class="va">n_individuals</span>, ncol <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">time</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                      byrow <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">cp_matrix</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Create options</span></span></span>
+<span class="r-in"><span><span class="va">opts</span> <span class="op">&lt;-</span> <span class="fu"><a href="genopts.html">genopts</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  time <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.1</span>, <span class="fl">.25</span>, <span class="fl">.5</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">5</span>, <span class="fl">8</span>, <span class="fl">12</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  p <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    beta <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>cl <span class="op">=</span> <span class="fl">5</span>, v1 <span class="op">=</span> <span class="fl">10</span>, v2 <span class="op">=</span> <span class="fl">30</span>, q <span class="op">=</span> <span class="fl">10</span>, ka <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    Omega <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.09</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>,</span></span>
+<span class="r-in"><span>                     <span class="fl">0</span>, <span class="fl">0.09</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>,</span></span>
+<span class="r-in"><span>                     <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0.09</span>, <span class="fl">0</span>, <span class="fl">0</span>,</span></span>
+<span class="r-in"><span>                     <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0.09</span>, <span class="fl">0</span>,</span></span>
+<span class="r-in"><span>                     <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0.09</span><span class="op">)</span>, nrow <span class="op">=</span> <span class="fl">5</span>, ncol <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    Sigma_prop <span class="op">=</span> <span class="fl">0.04</span></span></span>
+<span class="r-in"><span>  <span class="op">)</span>,</span></span>
+<span class="r-in"><span>  nsim <span class="op">=</span> <span class="fl">2500</span>,</span></span>
+<span class="r-in"><span>  n <span class="op">=</span> <span class="fl">500</span>,</span></span>
+<span class="r-in"><span>  fo_appr <span class="op">=</span> <span class="cn">FALSE</span>,</span></span>
+<span class="r-in"><span>  omega_expansion <span class="op">=</span> <span class="fl">1.2</span>,</span></span>
+<span class="r-in"><span>  f <span class="op">=</span> <span class="va">predder</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Run optimization</span></span></span>
-<span class="r-in"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">timedbobyqa</span><span class="op">(</span><span class="va">opts</span><span class="op">$</span><span class="va">pt</span>, <span class="va">opts</span>, <span class="va">obs</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'obs' not found</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># View results</span></span></span>
+<span class="r-in"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">timedbobyqa</span><span class="op">(</span><span class="va">opts</span><span class="op">$</span><span class="va">pt</span>, <span class="va">opts</span>, <span class="va">examplomycin_aggregated</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'examplomycin_aggregated' not found</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></span>
 <span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'result' not found</span>
 <span class="r-in"><span></span></span>
