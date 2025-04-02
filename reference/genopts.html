@@ -62,7 +62,14 @@ likelihood approximations.</p>
 <span>  fo_appr <span class="op">=</span> <span class="op">(</span><span class="va">nsim</span> <span class="op">&lt;</span> <span class="fl">10</span><span class="op">)</span>,</span>
 <span>  biseq <span class="op">=</span> <span class="cn">NA</span>,</span>
 <span>  omega_expansion <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  single_betas <span class="op">=</span> <span class="cn">NA</span></span>
+<span>  single_betas <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>  p_thetai <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">p</span>, <span class="va">origbeta</span>, <span class="va">bi</span><span class="op">)</span> <span class="op">{</span></span>
+<span>     <span class="fu">dmnorm</span><span class="op">(</span><span class="va">bi</span>, mean <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">p</span><span class="op">$</span><span class="va">beta</span><span class="op">/</span><span class="va">origbeta</span><span class="op">)</span>,</span>
+<span>    sigma <span class="op">=</span> <span class="va">p</span><span class="op">$</span><span class="va">Omega</span>, log <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">$</span><span class="va">den</span></span>
+<span> <span class="op">}</span>,</span>
+<span>  g <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">beta</span>, <span class="va">bi</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">beta</span><span class="op">)</span><span class="op">)</span>, <span class="va">ai</span><span class="op">)</span> <span class="op">{</span></span>
+<span><span class="va">beta</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">bi</span><span class="op">)</span></span>
+<span> <span class="op">}</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -99,7 +106,7 @@ likelihood approximations.</p>
 
 
 <dt id="arg-interact">interact<a class="anchor" aria-label="anchor" href="#arg-interact"></a></dt>
-<dd><p>Whether to include interaction terms</p></dd>
+<dd><p>FOCEI interaction</p></dd>
 
 
 <dt id="arg-fo-appr">fo_appr<a class="anchor" aria-label="anchor" href="#arg-fo-appr"></a></dt>
