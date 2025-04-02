@@ -47,15 +47,65 @@ weighted importance sampling. The algorithm continues until convergence or until
 number of iterations is reached.
 }
 \examples{
-# Create test data
-test_data <- create_test_data()
-opts <- test_data$opts
-obs <- test_data$obs
+# Load and prepare data
+data(examplomycin)
+examplomycin_wide <- examplomycin \%>\%
+  filter(EVID != 101) \%>\%
+  dplyr::select(ID, TIME, DV) \%>\%
+  pivot_wider(names_from = TIME, values_from = DV) \%>\%
+  dplyr::select(-c(1))
+
+# Create aggregated data
+examplomycin_aggregated <- examplomycin_wide \%>\%
+  admr::meancov()
+
+# Define RxODE model
+rxModel <- RxODE({
+  cp = linCmt(
+    cl,           # Clearance
+    v1,           # Volume of the central compartment
+    v2,           # Volume of the peripheral compartment
+    q,            # Inter-compartmental clearance
+    ka            # Absorption rate constant
+  )
+})
+
+# Define prediction function
+predder <- function(time, theta_i, dose = 100) {
+  n_individuals <- nrow(theta_i)
+  if (is.null(n_individuals)) n_individuals <- 1
+  
+  ev <- eventTable(amount.units="mg", time.units="hours")
+  ev$add.dosing(dose = dose, nbr.doses = 1, start.time = 0)
+  ev$add.sampling(time)
+  
+  out <- rxSolve(rxModel, params = theta_i, events = ev, cores = 0)
+  cp_matrix <- matrix(out$cp, nrow = n_individuals, ncol = length(time),
+                      byrow = TRUE)
+  return(cp_matrix)
+}
+
+# Create options
+opts <- genopts(
+  time = c(.1, .25, .5, 1, 2, 3, 5, 8, 12),
+  p = list(
+    beta = c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1),
+    Omega = matrix(c(0.09, 0, 0, 0, 0,
+                     0, 0.09, 0, 0, 0,
+                     0, 0, 0.09, 0, 0,
+                     0, 0, 0, 0.09, 0,
+                     0, 0, 0, 0, 0.09), nrow = 5, ncol = 5),
+    Sigma_prop = 0.04
+  ),
+  nsim = 2500,
+  n = 500,
+  fo_appr = FALSE,
+  omega_expansion = 1.2,
+  f = predder
+)
 
 # Run optimization
-result <- timedIRMC(opts$pt, opts, obs)
-
-# View results
+result <- timedIRMC(opts$pt, opts, examplomycin_aggregated)
 print(result)
 
 }
