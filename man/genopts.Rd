@@ -2,7 +2,7 @@
 % Please edit documentation in R/genopts.R
 \name{genopts}
 \alias{genopts}
-\title{Generate options for optimization}
+\title{Generate options for aggregate data modeling}
 \usage{
 genopts(
   f,
@@ -27,38 +27,98 @@ genopts(
 )
 }
 \arguments{
-\item{f}{The likelihood function}
+\item{f}{The prediction function that simulates the model output given parameters and time points.}
 
-\item{time}{The data}
+\item{time}{Vector of time points at which to evaluate the model predictions.}
 
-\item{p}{The parameter settings}
+\item{p}{List containing initial parameter values and structure:
+\itemize{
+\item \code{beta}: Vector of population parameters
+\item \code{Omega}: Covariance matrix for random effects
+\item \code{Sigma_prop}: Proportional error variance (optional)
+\item \code{Sigma_add}: Additive error variance (optional)
+}}
 
-\item{h}{The error function}
+\item{h}{The error function that computes the variance of the predictions.}
 
-\item{nsim}{The number of simulations}
+\item{nsim}{Number of Monte Carlo samples per iteration. Default is 1.}
 
-\item{n}{The number of simulations}
+\item{n}{Number of individuals in the dataset. Used for OFV, AIC, and BIC calculation.
+Default is 30.}
 
-\item{adist}{The distribution of the random effects}
+\item{adist}{Distribution of random effects. Default is NULL (normal distribution).}
 
-\item{interact}{FOCEI interaction}
+\item{interact}{Logical indicating whether to use FOCEI interaction. Default is TRUE.}
 
-\item{fo_appr}{Whether to use first-order approximation}
+\item{fo_appr}{Logical indicating whether to use first-order approximation.
+Default is TRUE if nsim < 10, FALSE otherwise.}
 
-\item{biseq}{The sequence of random effects}
+\item{biseq}{Sequence of random effects. Default is NA (generated internally).}
 
-\item{omega_expansion}{The expansion factor for the omega matrix}
+\item{omega_expansion}{Factor by which to expand the covariance matrix during estimation.
+Default is 1.}
 
-\item{single_betas}{The beta matrix}
+\item{single_betas}{Matrix of beta parameters for multiple models. Default is NA.}
+
+\item{p_thetai}{Function to compute the log-density of random effects. Default is a
+multivariate normal density.}
+
+\item{g}{Function to transform population parameters to individual parameters. Default is
+exponential transformation.}
 }
 \value{
-A fitted model
+A list containing:
+\itemize{
+\item \code{f}: The prediction function
+\item \code{time}: Time points for evaluation
+\item \code{p}: Parameter structure and initial values
+\item \code{h}: The error function
+\item \code{nsim}: Number of Monte Carlo samples
+\item \code{n}: Number of individuals
+\item \code{adist}: Distribution of random effects
+\item \code{interact}: FOCEI interaction flag
+\item \code{fo_appr}: First-order approximation flag
+\item \code{biseq}: Random effects sequence
+\item \code{omega_expansion}: Covariance expansion factor
+\item \code{single_betas}: Beta parameters for multiple models
+\item \code{p_thetai}: Random effects density function
+\item \code{g}: Parameter transformation function
+\item \code{pt}: Transformed initial parameters
+}
 }
 \description{
-\code{\link[=genopts]{genopts()}} initializes and generates core options and settings for modeling
-and optimization, including random effects, simulation settings, and
+\code{genopts} initializes and generates core options and settings for aggregate data modeling
+and optimization. It creates a comprehensive options object that contains all necessary
+information for model fitting, including random effects, simulation settings, and
 likelihood approximations.
 }
+\details{
+This function is the main entry point for setting up aggregate data modeling. It creates
+an options object that contains all necessary information for model fitting, including
+the prediction function, parameter structure, and various settings for the optimization
+algorithm.
+}
 \examples{
-#test
+# Define prediction function
+predder <- function(time, theta_i, dose = 100) {
+  # ... prediction function implementation ...
+}
+
+# Create options
+opts <- genopts(
+  f = predder,
+  time = c(.1, .25, .5, 1, 2, 3, 5, 8, 12),
+  p = list(
+    beta = c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1),
+    Omega = matrix(c(0.09, 0, 0, 0, 0,
+                    0, 0.09, 0, 0, 0,
+                    0, 0, 0.09, 0, 0,
+                    0, 0, 0, 0.09, 0,
+                    0, 0, 0, 0, 0.09), nrow = 5, ncol = 5),
+    Sigma_prop = 0.04
+  ),
+  nsim = 2500,
+  n = 500
+)
+
 }
