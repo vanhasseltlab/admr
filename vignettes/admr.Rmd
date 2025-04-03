@@ -12,15 +12,18 @@ editor_options:
 
 # Introduction to Aggregate Data Modeling with `admr`
 
-This vignette demonstrates how to use the `admr` package for aggregate data modeling in pharmacometrics. Aggregate data modeling is particularly useful when individual-level data is not available, but summary statistics (mean and covariance) of the data are known.
+This vignette provides a comprehensive introduction to using the `admr` package for aggregate data modeling in pharmacometrics. We'll cover the basic concepts, data preparation, model specification, and advanced features.
 
-## Overview
+## What is Aggregate Data Modeling?
 
-The `admr` package provides tools for:
-- Converting individual-level data to aggregate form
-- Fitting models to aggregate data using maximum likelihood estimation
-- Simulating data from aggregate models
-- Comparing different implementations of aggregate data modeling
+Aggregate data modeling is a powerful approach in pharmacometrics that allows you to work with summary-level data instead of individual-level observations. This is particularly useful when:
+
+- Individual-level data is not available (e.g., from published literature)
+- You need to combine data from multiple studies
+- You want to perform meta-analyses
+- You're working with simulated data and want to reduce computational burden
+
+The `admr` package implements the Iterative Reweighting Monte Carlo (IRMC) algorithm, which efficiently fits models to aggregate data by iteratively updating parameter estimates using weighted importance sampling.
 
 ## Required Packages
 
@@ -31,46 +34,75 @@ library(nlmixr2)
 library(dplyr)
 library(tidyr)
 library(mnorm)
+library(ggplot2)  # For visualization
 ```
 
-## The Examplomycin Dataset
+## Understanding the Data Format
 
-We'll use the `examplomycin` dataset, which contains simulated concentration-time data for a fictional drug. The dataset includes:
-- 500 subjects
-- 9 time points per subject
-- A two-compartment model with first-order absorption
-- Random effects on all parameters
-- Proportional residual error
+The `admr` package works with two types of data formats:
+
+1. **Raw Data**: Individual-level observations in a wide or long format
+2. **Aggregate Data**: Summary statistics (mean and covariance) computed from raw data
+
+Let's look at the examplomycin dataset, which we'll use throughout this vignette:
 
 ```{r, cache=TRUE}
+# Load the dataset
+data(examplomycin)
 head(examplomycin)
+
+# Basic dataset information
+cat("Number of subjects:", length(unique(examplomycin$ID)), "\n")
+cat("Number of time points:", length(unique(examplomycin$TIME)), "\n")
+cat("Time points:", paste(sort(unique(examplomycin$TIME)), collapse = ", "), "\n")
 ```
 
-## Converting to Aggregate Data Format
+## Data Preparation
 
-The `admr` package works with data in aggregate form (mean and covariance). We'll convert the individual-level data to this format:
+### Converting Raw Data to Aggregate Format
+
+The first step is to convert your raw data into aggregate format. Here's how to do it:
 
 ```{r, cache=TRUE}
+# Convert to wide format
 examplomycin_wide <- examplomycin %>%
   filter(EVID != 101) %>%  # Remove dosing events
   dplyr::select(ID, TIME, DV) %>%  # Select relevant columns
   pivot_wider(names_from = TIME, values_from = DV) %>%  # Convert to wide format
   dplyr::select(-c(1))  # Remove ID column
 
+# Create aggregated data
 examplomycin_aggregated <- examplomycin_wide %>%
   admr::meancov()  # Compute mean and covariance
 
-head(examplomycin_aggregated)
+# View the structure of aggregated data
+str(examplomycin_aggregated)
 ```
 
-## Defining the Pharmacokinetic Model
+### Visualizing the Data
 
-We'll define a two-compartment model with first-order absorption using `RxODE`. The model includes:
-- A depot compartment for absorption
-- A central compartment for distribution
-- A peripheral compartment for tissue distribution
-- First-order elimination from the central compartment
+Before fitting the model, it's helpful to visualize the data:
 
+```{r, cache=TRUE}
+# Create a concentration-time plot
+ggplot(examplomycin, aes(x = TIME, y = DV)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "loess", se = TRUE) +
+  labs(
+    title = "Concentration-Time Profile",
+    x = "Time (hours)",
+    y = "Concentration (mg/L)"
+  ) +
+  theme_minimal()
+```
+
+## Model Specification
+
+### Defining the Pharmacokinetic Model
+
+We'll use a two-compartment model with first-order absorption. There are two ways to specify this:
+
+1. Using differential equations:
 ```{r, message = FALSE, warning = FALSE}
 rxModel <- RxODE({
   # Parameters
@@ -78,31 +110,30 @@ rxModel <- RxODE({
   k12 = q / v1             # Rate constant for central to peripheral transfer
   k21 = q / v2             # Rate constant for peripheral to central transfer
   
-  # Differential equations for drug amount in compartments
+  # Differential equations
   d/dt(depot)    = -ka * depot
   d/dt(central)  = ka * depot - ke * central - k12 * central + k21 * peripheral
   d/dt(peripheral) = k12 * central - k21 * peripheral
   
-  # Concentration in the central compartment
+  # Concentration in central compartment
   cp = central / v1
 })
 ```
 
-Alternatively, we can use the solved model approach with `linCmt`:
-
+2. Using the solved model approach (simpler):
 ```{r, message = FALSE, warning = FALSE}
 rxModel <- RxODE({
-  cp = linCmt(    # Solved one- or two-compartment model
+  cp = linCmt(
     cl,           # Clearance
-    v1,           # Volume of the central compartment
-    v2,           # Volume of the peripheral compartment
+    v1,           # Volume of central compartment
+    v2,           # Volume of peripheral compartment
     q,            # Inter-compartmental clearance
     ka            # Absorption rate constant
   )
 })
 ```
 
-## Creating the Prediction Function
+### Creating the Prediction Function
 
 The prediction function is crucial for the `admr` package. It:
 - Constructs the event table for dosing and sampling
@@ -117,15 +148,15 @@ predder <- function(time, theta_i, dose = 100) {
       n_individuals <- 1
     }
 
-    # Create the event table for dosing and sampling
+    # Create event table
     ev <- eventTable(amount.units="mg", time.units="hours")
     ev$add.dosing(dose = dose, nbr.doses = 1, start.time = 0)
     ev$add.sampling(time)
     
-    # Solve the RxODE model
+    # Solve model
     out <- rxSolve(rxModel, params = theta_i, events = ev, cores = 0)
     
-    # Format output as matrix
+    # Format output
     cp_matrix <- matrix(out$cp, nrow = n_individuals, ncol = length(time), 
                         byrow = TRUE)
     
@@ -133,7 +164,9 @@ predder <- function(time, theta_i, dose = 100) {
 }
 ```
 
-## Setting Up Model Options
+## Model Fitting
+
+### Setting Up Model Options
 
 The `genopts` function creates an options object that controls the model fitting process:
 
@@ -142,30 +175,37 @@ opts <- genopts(
   time = c(.1, .25, .5, 1, 2, 3, 5, 8, 12),  # Observation times
   p = list(
     beta = c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1),  # Population parameters
-    Omega = omegas(.09, 0, 5),  # Random effects covariance matrix
-    Sigma_prop = 0.04  # Proportional error variance
+    Omega = matrix(c(0.09, 0, 0, 0, 0,
+                    0, 0.09, 0, 0, 0,
+                    0, 0, 0.09, 0, 0,
+                    0, 0, 0, 0.09, 0,
+                    0, 0, 0, 0, 0.09), nrow = 5, ncol = 5),  # Random effects
+    Sigma_prop = 0.04  # Proportional error
   ),
   nsim = 2500,  # Number of Monte Carlo samples
-  n = 500,  # Number of individuals
+  n = 500,      # Number of individuals
   fo_appr = FALSE,  # Disable first-order approximation
   omega_expansion = 1.2,  # Omega expansion factor
-  f = predder  # Prediction function
+  f = predder    # Prediction function
 )
 ```
 
-## Fitting the Model
+### Fitting the Model
 
-The `fitIRMC` function fits the model to the aggregate data using the Iterative Reweighting algorithm:
+The `fitIRMC` function fits the model using the IRMC algorithm:
 
 ```{r, cache=TRUE}
 fit.admr <- admr::fitIRMC(
-  opts,  # Model options
-  examplomycin_aggregated,  # Aggregate data
-  chains = 3  # Number of parallel chains
+  opts = opts,
+  obs = examplomycin_aggregated,
+  chains = 3,  # Number of parallel chains
+  maxiter = 100  # Maximum iterations
 )
 ```
 
-## Examining Results
+## Model Diagnostics
+
+### Basic Diagnostics
 
 The `print` method provides a summary of the model fit:
 
@@ -173,18 +213,98 @@ The `print` method provides a summary of the model fit:
 print(fit.admr)
 ```
 
+### Convergence Assessment
+
 The `plot` method visualizes the convergence of the model fit:
 
 ```{r}
 plot(fit.admr)
 ```
 
-## Conclusion
+### Parameter Estimates
 
-This vignette demonstrates the basic workflow for aggregate data modeling with `admr`. The package provides a flexible framework for:
-- Converting individual-level data to aggregate form
-- Defining complex pharmacokinetic models
-- Fitting models to aggregate data
-- Assessing model convergence and parameter estimates
+Let's examine the parameter estimates and their uncertainty:
 
-For more advanced usage, see the package documentation and other vignettes.
+```{r}
+# Extract parameter estimates
+params <- fit.admr$final_params
+cat("Final parameter estimates:\n")
+print(params)
+
+# Extract covariance matrix
+cov_matrix <- fit.admr$covariance_matrix
+cat("\nParameter covariance matrix:\n")
+print(cov_matrix)
+```
+
+## Advanced Features
+
+### Multiple Chains
+
+The `fitIRMC` function supports multiple chains to improve optimization:
+
+```{r, eval=FALSE}
+# Run with multiple chains
+result <- fitIRMC(
+  opts = opts,
+  obs = examplomycin_aggregated,
+  chains = 3,  # Number of chains
+  pertubation = 0.1  # Perturbation factor
+)
+```
+
+### Phase-Based Optimization
+
+You can customize the optimization phases:
+
+```{r, eval=FALSE}
+# Custom phase fractions
+result <- fitIRMC(
+  opts = opts,
+  obs = examplomycin_aggregated,
+  phase_fractions = c(0.3, 0.3, 0.2, 0.2)  # Custom phase distribution
+)
+```
+
+## Best Practices
+
+1. **Data Preparation**:
+   - Always check your data for missing values and outliers
+   - Ensure time points are consistent across subjects
+   - Consider the impact of dosing events on your analysis
+
+2. **Model Specification**:
+   - Start with a simple model and gradually add complexity
+   - Use meaningful initial values for parameters
+   - Consider parameter transformations for better estimation
+
+3. **Model Fitting**:
+   - Use multiple chains to improve optimization
+   - Monitor convergence carefully
+   - Check parameter estimates for biological plausibility
+
+4. **Diagnostics**:
+   - Always examine convergence plots
+   - Check parameter correlations
+   - Validate model predictions against observed data
+
+## Next Steps
+
+After mastering the basics, you might want to explore:
+
+1. Advanced modeling features:
+   - Custom error models
+   - Parameter transformations
+   - Complex dosing regimens
+
+2. Performance optimization:
+   - Adjusting Monte Carlo sample size
+   - Using first-order approximations
+   - Parallel computing options
+
+3. Additional diagnostics:
+   - Residual analysis
+   - Parameter sensitivity analysis
+   - Model comparison
+
+For more information, see the package documentation and other vignettes.

@@ -1,36 +1,47 @@
 ---
+title: "admr: Aggregate Data Modeling in R"
 output: github_document
 ---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-```{r, include = FALSE}
+```{r setup, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  fig.path = "man/figures/README-",
-  out.width = "100%"
+  fig.path = "man/figures/"
 )
 ```
 
-# admr: Aggregate Data Modeling in R <img src="inst/img/logo.png" width="120" align="right" />
+# admr: Aggregate Data Modeling in R <img src="man/figures/logo.png" width="120" align="right" />
 
 <!-- badges: start -->
 <!-- badges: end -->
 
 admr (Aggregate Data Modeling in R) is an open-source R package designed to facilitate pharmacometric modeling using summary-level data. It enables users to work with aggregate data, such as mean observations and variance-covariance matrices, to fit pharmacokinetic and pharmacodynamic (PK/PD) models efficiently. This package implements a newly developed Expectation-Maximization (EM) algorithm to enhance computational performance and provides tools for advanced modeling applications.
 
-**Features**
+## Overview
 
--   Expectation-Maximization Algorithm: Efficiently fits pharmacometric models to aggregate data, improving speed and scalability compared to Monte Carlo methods.
+The `admr` package provides a comprehensive framework for aggregate data modeling in pharmacometrics, offering several key advantages:
 
--   Aggregate Data Flexibility: Allows for the integration of summary-level data from diverse sources, including published literature and simulated models.
+- **Efficient Parameter Estimation**: Uses the Iterative Reweighting Monte Carlo (IRMC) algorithm for robust and fast parameter estimation.
+- **Flexible Data Integration**: Works with both individual-level and aggregate data, making it ideal for meta-analyses and literature-based modeling.
+- **Advanced Modeling Features**: Supports complex PK/PD models with various error structures and parameter transformations.
+- **Comprehensive Diagnostics**: Built-in tools for model assessment, convergence checking, and parameter stability analysis.
 
--   Meta-Analysis Support: Facilitates model-based meta-analyses by enabling the combination of summary data across studies.
+## Key Features
 
--   R Integration: Fully compatible with R, leveraging popular pharmacometric modeling libraries like rxode2.
+- **Efficient Model Fitting**: Uses iterative reweighted Monte Carlo (IRMC) for robust parameter estimation, improving speed and scalability compared to traditional Monte Carlo methods.
 
--   Open-Source: Developed for accessibility and ease of use by the pharmacometric community.
+- **Flexible Data Formats**: Supports both raw and aggregate data formats, allowing for the integration of summary-level data from diverse sources, including published literature and simulated models.
+
+- **Comprehensive Diagnostics**: Built-in tools for model assessment, convergence checking, and parameter stability analysis.
+
+- **Meta-Analysis Support**: Facilitates model-based meta-analyses by enabling the combination of summary data across studies.
+
+- **R Integration**: Fully compatible with R, leveraging popular pharmacometric modeling libraries like rxode2.
+
+- **Open-Source**: Developed for accessibility and ease of use by the pharmacometric community.
 
 ## Installation
 
@@ -43,11 +54,113 @@ You can install the development version of admr from [GitHub](https://github.com
 devtools::install_github("hiddevandebeek/admr")
 ```
 
-## Example
+## Quick Start
 
-Below is a basic example of how to use admr to fit a pharmacokinetic model to aggregate data:
+Below is a complete example of how to use admr to fit a pharmacokinetic model to aggregate data:
 
 ```{r example}
+# Load required libraries
 library(admr)
-## basic example code
+library(rxode2)
+library(nlmixr2)
+library(dplyr)
+library(tidyr)
+library(mnorm)
+
+# Load and prepare data
+data(examplomycin)
+examplomycin_wide <- examplomycin %>%
+  filter(EVID != 101) %>%
+  dplyr::select(ID, TIME, DV) %>%
+  pivot_wider(names_from = TIME, values_from = DV) %>%
+  dplyr::select(-c(1))
+
+# Create aggregated data
+examplomycin_aggregated <- examplomycin_wide %>%
+  admr::meancov()
+
+# Define RxODE model
+rxModel <- RxODE({
+  cp = linCmt(
+    cl,           # Clearance
+    v1,           # Volume of the central compartment
+    v2,           # Volume of the peripheral compartment
+    q,            # Inter-compartmental clearance
+    ka            # Absorption rate constant
+  )
+})
+
+# Define prediction function
+predder <- function(time, theta_i, dose = 100) {
+  n_individuals <- nrow(theta_i)
+  if (is.null(n_individuals)) n_individuals <- 1
+  
+  ev <- eventTable(amount.units="mg", time.units="hours")
+  ev$add.dosing(dose = dose, nbr.doses = 1, start.time = 0)
+  ev$add.sampling(time)
+  
+  out <- rxSolve(rxModel, params = theta_i, events = ev, cores = 0)
+  cp_matrix <- matrix(out$cp, nrow = n_individuals, ncol = length(time),
+                      byrow = TRUE)
+  return(cp_matrix)
+}
+
+# Create options
+opts <- genopts(
+  time = c(.1, .25, .5, 1, 2, 3, 5, 8, 12),
+  p = list(
+    beta = c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1),
+    Omega = matrix(c(0.09, 0, 0, 0, 0,
+                    0, 0.09, 0, 0, 0,
+                    0, 0, 0.09, 0, 0,
+                    0, 0, 0, 0.09, 0,
+                    0, 0, 0, 0, 0.09), nrow = 5, ncol = 5),
+    Sigma_prop = 0.04
+  ),
+  nsim = 2500,
+  n = 500,
+  fo_appr = FALSE,
+  omega_expansion = 1.2,
+  f = predder
+)
+
+# Fit model to data
+result <- fitIRMC(opts = opts, obs = examplomycin_aggregated)
+print(result)
 ```
+
+## Documentation
+
+The package documentation is available at [https://hiddevandebeek.github.io/admr/](https://hiddevandebeek.github.io/admr/). Key documentation sections include:
+
+- [Getting Started](https://hiddevandebeek.github.io/admr/articles/getting_started.html)
+- [Advanced Topics](https://hiddevandebeek.github.io/admr/articles/advanced_modeling.html)
+- [Function Reference](https://hiddevandebeek.github.io/admr/reference/index.html)
+- [Examples](https://hiddevandebeek.github.io/admr/articles/examples.html)
+
+## Use Cases
+
+The `admr` package is particularly useful for:
+
+- **Meta-Analysis**: Combining data from multiple studies where individual-level data is not available
+- **Literature-Based Modeling**: Fitting models to published summary statistics
+- **Simulation Studies**: Evaluating model performance with aggregate data
+- **Population PK/PD**: Fitting complex models to summary-level data
+
+## Getting Help
+
+- Check the [documentation](https://hiddevandebeek.github.io/admr/)
+- Browse [GitHub issues](https://github.com/hiddevandebeek/admr/issues)
+- Create a new issue with a reproducible example
+
+## Citation
+
+If you use `admr` in your research, please cite it as:
+
+```r
+citation("admr")
+```
+
+## License
+
+This project is licensed under the GPL-2 License - see the [LICENSE](LICENSE) file for details.

@@ -6,6 +6,12 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Get started with admr • admr</title>
+<!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
+<link rel="apple-touch-icon" type="image/png" sizes="180x180" href="../apple-touch-icon.png">
+<link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png">
+<link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png">
+<link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png">
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
@@ -56,8 +62,7 @@
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-
-      <h1>Get started with admr</h1>
+      <img src="../logo.png" class="logo" alt=""><h1>Get started with admr</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/hiddevandebeek/admr/blob/HEAD/vignettes/admr.Rmd" class="external-link"><code>vignettes/admr.Rmd</code></a></small>
@@ -69,18 +74,28 @@
 <div class="section level2">
 <h2 id="introduction-to-aggregate-data-modeling-with-admr">Introduction to Aggregate Data Modeling with <code>admr</code><a class="anchor" aria-label="anchor" href="#introduction-to-aggregate-data-modeling-with-admr"></a>
 </h2>
-<p>This vignette demonstrates how to use the <code>admr</code> package
-for aggregate data modeling in pharmacometrics. Aggregate data modeling
-is particularly useful when individual-level data is not available, but
-summary statistics (mean and covariance) of the data are known.</p>
+<p>This vignette provides a comprehensive introduction to using the
+<code>admr</code> package for aggregate data modeling in
+pharmacometrics. We’ll cover the basic concepts, data preparation, model
+specification, and advanced features.</p>
 <div class="section level3">
-<h3 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
+<h3 id="what-is-aggregate-data-modeling">What is Aggregate Data Modeling?<a class="anchor" aria-label="anchor" href="#what-is-aggregate-data-modeling"></a>
 </h3>
-<p>The <code>admr</code> package provides tools for: - Converting
-individual-level data to aggregate form - Fitting models to aggregate
-data using maximum likelihood estimation - Simulating data from
-aggregate models - Comparing different implementations of aggregate data
-modeling</p>
+<p>Aggregate data modeling is a powerful approach in pharmacometrics
+that allows you to work with summary-level data instead of
+individual-level observations. This is particularly useful when:</p>
+<ul>
+<li>Individual-level data is not available (e.g., from published
+literature)</li>
+<li>You need to combine data from multiple studies</li>
+<li>You want to perform meta-analyses</li>
+<li>You’re working with simulated data and want to reduce computational
+burden</li>
+</ul>
+<p>The <code>admr</code> package implements the Iterative Reweighting
+Monte Carlo (IRMC) algorithm, which efficiently fits models to aggregate
+data by iteratively updating parameter estimates using weighted
+importance sampling.</p>
 </div>
 <div class="section level3">
 <h3 id="required-packages">Required Packages<a class="anchor" aria-label="anchor" href="#required-packages"></a>
@@ -91,18 +106,28 @@ modeling</p>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://nlmixr2.org/" class="external-link">nlmixr2</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyr.tidyverse.org" class="external-link">tidyr</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">mnorm</span><span class="op">)</span></span></code></pre></div>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">mnorm</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span>  <span class="co"># For visualization</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="the-examplomycin-dataset">The Examplomycin Dataset<a class="anchor" aria-label="anchor" href="#the-examplomycin-dataset"></a>
+<h3 id="understanding-the-data-format">Understanding the Data Format<a class="anchor" aria-label="anchor" href="#understanding-the-data-format"></a>
 </h3>
-<p>We’ll use the <code>examplomycin</code> dataset, which contains
-simulated concentration-time data for a fictional drug. The dataset
-includes: - 500 subjects - 9 time points per subject - A two-compartment
-model with first-order absorption - Random effects on all parameters -
-Proportional residual error</p>
+<p>The <code>admr</code> package works with two types of data
+formats:</p>
+<ol style="list-style-type: decimal">
+<li>
+<strong>Raw Data</strong>: Individual-level observations in a wide
+or long format</li>
+<li>
+<strong>Aggregate Data</strong>: Summary statistics (mean and
+covariance) computed from raw data</li>
+</ol>
+<p>Let’s look at the examplomycin dataset, which we’ll use throughout
+this vignette:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">examplomycin</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="co"># Load the dataset</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">examplomycin</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">examplomycin</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##    ID TIME    DV AMT EVID CMT</span></span>
 <span><span class="co">## 1 460 0.00 0.000 100  101   1</span></span>
 <span><span class="co">## 2 460 0.10 0.752   0    0   2</span></span>
@@ -110,96 +135,114 @@ Proportional residual error</p>
 <span><span class="co">## 4 460 0.50 3.694   0    0   2</span></span>
 <span><span class="co">## 5 460 1.00 3.479   0    0   2</span></span>
 <span><span class="co">## 6 460 2.00 4.003   0    0   2</span></span></code></pre>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Basic dataset information</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Number of subjects:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">examplomycin</span><span class="op">$</span><span class="va">ID</span><span class="op">)</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Number of subjects: 500</span></span></code></pre>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Number of time points:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">examplomycin</span><span class="op">$</span><span class="va">TIME</span><span class="op">)</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Number of time points: 10</span></span></code></pre>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Time points:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">examplomycin</span><span class="op">$</span><span class="va">TIME</span><span class="op">)</span><span class="op">)</span>, collapse <span class="op">=</span> <span class="st">", "</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Time points: 0, 0.1, 0.25, 0.5, 1, 2, 3, 5, 8, 12</span></span></code></pre>
 </div>
 <div class="section level3">
-<h3 id="converting-to-aggregate-data-format">Converting to Aggregate Data Format<a class="anchor" aria-label="anchor" href="#converting-to-aggregate-data-format"></a>
+<h3 id="data-preparation">Data Preparation<a class="anchor" aria-label="anchor" href="#data-preparation"></a>
 </h3>
-<p>The <code>admr</code> package works with data in aggregate form (mean
-and covariance). We’ll convert the individual-level data to this
-format:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">examplomycin_wide</span> <span class="op">&lt;-</span> <span class="va">examplomycin</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<div class="section level4">
+<h4 id="converting-raw-data-to-aggregate-format">Converting Raw Data to Aggregate Format<a class="anchor" aria-label="anchor" href="#converting-raw-data-to-aggregate-format"></a>
+</h4>
+<p>The first step is to convert your raw data into aggregate format.
+Here’s how to do it:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Convert to wide format</span></span>
+<span><span class="va">examplomycin_wide</span> <span class="op">&lt;-</span> <span class="va">examplomycin</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">EVID</span> <span class="op">!=</span> <span class="fl">101</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span>  <span class="co"># Remove dosing events</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">ID</span>, <span class="va">TIME</span>, <span class="va">DV</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span>  <span class="co"># Select relevant columns</span></span>
 <span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_wider.html" class="external-link">pivot_wider</a></span><span class="op">(</span>names_from <span class="op">=</span> <span class="va">TIME</span>, values_from <span class="op">=</span> <span class="va">DV</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span>  <span class="co"># Convert to wide format</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span>  <span class="co"># Remove ID column</span></span>
 <span></span>
+<span><span class="co"># Create aggregated data</span></span>
 <span><span class="va">examplomycin_aggregated</span> <span class="op">&lt;-</span> <span class="va">examplomycin_wide</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu">admr</span><span class="fu">::</span><span class="fu"><a href="../reference/meancov.html">meancov</a></span><span class="op">(</span><span class="op">)</span>  <span class="co"># Compute mean and covariance</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">examplomycin_aggregated</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## $E</span></span>
-<span><span class="co">##      0.1     0.25      0.5        1        2        3        5        8 </span></span>
-<span><span class="co">## 0.966418 1.938774 2.787908 3.024706 2.257656 1.650808 1.063120 0.751180 </span></span>
-<span><span class="co">##       12 </span></span>
-<span><span class="co">## 0.512168 </span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## $V</span></span>
-<span><span class="co">##               0.1         0.25         0.5           1          2           3</span></span>
-<span><span class="co">## 0.1   0.210318331  0.307810566  0.34863077 0.202610737 0.02244783 -0.04472722</span></span>
-<span><span class="co">## 0.25  0.307810566  0.707512991  0.65887098 0.416118052 0.05871261 -0.07441765</span></span>
-<span><span class="co">## 0.5   0.348630772  0.658870977  1.09983366 0.530554165 0.10572618 -0.07538386</span></span>
-<span><span class="co">## 1     0.202610737  0.416118052  0.53055416 0.803744604 0.16252833  0.02792441</span></span>
-<span><span class="co">## 2     0.022447834  0.058712608  0.10572618 0.162528331 0.34465070  0.12026872</span></span>
-<span><span class="co">## 3    -0.044727222 -0.074417647 -0.07538386 0.027924410 0.12026872  0.24989260</span></span>
-<span><span class="co">## 5    -0.018976800 -0.042420657 -0.04648286 0.001618855 0.07644080  0.11148574</span></span>
-<span><span class="co">## 8    -0.006630907 -0.011273701 -0.01981830 0.016197981 0.06398700  0.07493319</span></span>
-<span><span class="co">## 12   -0.005625994 -0.005018766 -0.01492001 0.014748325 0.04941463  0.05460018</span></span>
-<span><span class="co">##                 5            8           12</span></span>
-<span><span class="co">## 0.1  -0.018976800 -0.006630907 -0.005625994</span></span>
-<span><span class="co">## 0.25 -0.042420657 -0.011273701 -0.005018766</span></span>
-<span><span class="co">## 0.5  -0.046482865 -0.019818299 -0.014920009</span></span>
-<span><span class="co">## 1     0.001618855  0.016197981  0.014748325</span></span>
-<span><span class="co">## 2     0.076440801  0.063987002  0.049414630</span></span>
-<span><span class="co">## 3     0.111485737  0.074933189  0.054600176</span></span>
-<span><span class="co">## 5     0.154215442  0.087680168  0.061332530</span></span>
-<span><span class="co">## 8     0.087680168  0.096530356  0.057621124</span></span>
-<span><span class="co">## 12    0.061332530  0.057621124  0.057988752</span></span></code></pre>
+<span><span class="co"># View the structure of aggregated data</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">examplomycin_aggregated</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## List of 2</span></span>
+<span><span class="co">##  $ E: Named num [1:9] 0.966 1.939 2.788 3.025 2.258 ...</span></span>
+<span><span class="co">##   ..- attr(*, "names")= chr [1:9] "0.1" "0.25" "0.5" "1" ...</span></span>
+<span><span class="co">##  $ V: num [1:9, 1:9] 0.2103 0.3078 0.3486 0.2026 0.0224 ...</span></span>
+<span><span class="co">##   ..- attr(*, "dimnames")=List of 2</span></span>
+<span><span class="co">##   .. ..$ : chr [1:9] "0.1" "0.25" "0.5" "1" ...</span></span>
+<span><span class="co">##   .. ..$ : chr [1:9] "0.1" "0.25" "0.5" "1" ...</span></span></code></pre>
+</div>
+<div class="section level4">
+<h4 id="visualizing-the-data">Visualizing the Data<a class="anchor" aria-label="anchor" href="#visualizing-the-data"></a>
+</h4>
+<p>Before fitting the model, it’s helpful to visualize the data:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Create a concentration-time plot</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">examplomycin</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">TIME</span>, y <span class="op">=</span> <span class="va">DV</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_smooth.html" class="external-link">geom_smooth</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"loess"</span>, se <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
+<span>    title <span class="op">=</span> <span class="st">"Concentration-Time Profile"</span>,</span>
+<span>    x <span class="op">=</span> <span class="st">"Time (hours)"</span>,</span>
+<span>    y <span class="op">=</span> <span class="st">"Concentration (mg/L)"</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## `geom_smooth()` using formula = 'y ~ x'</span></span></code></pre>
+<p><img src="admr_files/figure-html/unnamed-chunk-3-1.png" width="700"></p>
+</div>
 </div>
 <div class="section level3">
-<h3 id="defining-the-pharmacokinetic-model">Defining the Pharmacokinetic Model<a class="anchor" aria-label="anchor" href="#defining-the-pharmacokinetic-model"></a>
+<h3 id="model-specification">Model Specification<a class="anchor" aria-label="anchor" href="#model-specification"></a>
 </h3>
-<p>We’ll define a two-compartment model with first-order absorption
-using <code>RxODE</code>. The model includes: - A depot compartment for
-absorption - A central compartment for distribution - A peripheral
-compartment for tissue distribution - First-order elimination from the
-central compartment</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="section level4">
+<h4 id="defining-the-pharmacokinetic-model">Defining the Pharmacokinetic Model<a class="anchor" aria-label="anchor" href="#defining-the-pharmacokinetic-model"></a>
+</h4>
+<p>We’ll use a two-compartment model with first-order absorption. There
+are two ways to specify this:</p>
+<ol style="list-style-type: decimal">
+<li>Using differential equations:</li>
+</ol>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rxModel</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/rxode2.html" class="external-link">RxODE</a></span><span class="op">(</span><span class="op">{</span></span>
 <span>  <span class="co"># Parameters</span></span>
 <span>  <span class="va">ke</span> <span class="op">=</span> <span class="va">cl</span> <span class="op">/</span> <span class="va">v1</span>             <span class="co"># Elimination rate constant</span></span>
 <span>  <span class="va">k12</span> <span class="op">=</span> <span class="va">q</span> <span class="op">/</span> <span class="va">v1</span>             <span class="co"># Rate constant for central to peripheral transfer</span></span>
 <span>  <span class="va">k21</span> <span class="op">=</span> <span class="va">q</span> <span class="op">/</span> <span class="va">v2</span>             <span class="co"># Rate constant for peripheral to central transfer</span></span>
 <span>  </span>
-<span>  <span class="co"># Differential equations for drug amount in compartments</span></span>
+<span>  <span class="co"># Differential equations</span></span>
 <span>  <span class="va">d</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/stats/TDist.html" class="external-link">dt</a></span><span class="op">(</span><span class="va">depot</span><span class="op">)</span>    <span class="op">=</span> <span class="op">-</span><span class="va">ka</span> <span class="op">*</span> <span class="va">depot</span></span>
 <span>  <span class="va">d</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/stats/TDist.html" class="external-link">dt</a></span><span class="op">(</span><span class="va">central</span><span class="op">)</span>  <span class="op">=</span> <span class="va">ka</span> <span class="op">*</span> <span class="va">depot</span> <span class="op">-</span> <span class="va">ke</span> <span class="op">*</span> <span class="va">central</span> <span class="op">-</span> <span class="va">k12</span> <span class="op">*</span> <span class="va">central</span> <span class="op">+</span> <span class="va">k21</span> <span class="op">*</span> <span class="va">peripheral</span></span>
 <span>  <span class="va">d</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/stats/TDist.html" class="external-link">dt</a></span><span class="op">(</span><span class="va">peripheral</span><span class="op">)</span> <span class="op">=</span> <span class="va">k12</span> <span class="op">*</span> <span class="va">central</span> <span class="op">-</span> <span class="va">k21</span> <span class="op">*</span> <span class="va">peripheral</span></span>
 <span>  </span>
-<span>  <span class="co"># Concentration in the central compartment</span></span>
+<span>  <span class="co"># Concentration in central compartment</span></span>
 <span>  <span class="va">cp</span> <span class="op">=</span> <span class="va">central</span> <span class="op">/</span> <span class="va">v1</span></span>
 <span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
-<p>Alternatively, we can use the solved model approach with
-<code>linCmt</code>:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<ol start="2" style="list-style-type: decimal">
+<li>Using the solved model approach (simpler):</li>
+</ol>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rxModel</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/rxode2.html" class="external-link">RxODE</a></span><span class="op">(</span><span class="op">{</span></span>
-<span>  <span class="va">cp</span> <span class="op">=</span> <span class="fu">linCmt</span><span class="op">(</span>    <span class="co"># Solved one- or two-compartment model</span></span>
+<span>  <span class="va">cp</span> <span class="op">=</span> <span class="fu">linCmt</span><span class="op">(</span></span>
 <span>    <span class="va">cl</span>,           <span class="co"># Clearance</span></span>
-<span>    <span class="va">v1</span>,           <span class="co"># Volume of the central compartment</span></span>
-<span>    <span class="va">v2</span>,           <span class="co"># Volume of the peripheral compartment</span></span>
+<span>    <span class="va">v1</span>,           <span class="co"># Volume of central compartment</span></span>
+<span>    <span class="va">v2</span>,           <span class="co"># Volume of peripheral compartment</span></span>
 <span>    <span class="va">q</span>,            <span class="co"># Inter-compartmental clearance</span></span>
 <span>    <span class="va">ka</span>            <span class="co"># Absorption rate constant</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level3">
-<h3 id="creating-the-prediction-function">Creating the Prediction Function<a class="anchor" aria-label="anchor" href="#creating-the-prediction-function"></a>
-</h3>
+<div class="section level4">
+<h4 id="creating-the-prediction-function">Creating the Prediction Function<a class="anchor" aria-label="anchor" href="#creating-the-prediction-function"></a>
+</h4>
 <p>The prediction function is crucial for the <code>admr</code> package.
 It: - Constructs the event table for dosing and sampling - Solves the
 RxODE model - Returns predicted concentrations in the required
 format</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">predder</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">time</span>, <span class="va">theta_i</span>, <span class="va">dose</span> <span class="op">=</span> <span class="fl">100</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="va">n_individuals</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">theta_i</span><span class="op">)</span></span>
 <span>    </span>
@@ -207,51 +250,60 @@ format</p>
 <span>      <span class="va">n_individuals</span> <span class="op">&lt;-</span> <span class="fl">1</span></span>
 <span>    <span class="op">}</span></span>
 <span></span>
-<span>    <span class="co"># Create the event table for dosing and sampling</span></span>
+<span>    <span class="co"># Create event table</span></span>
 <span>    <span class="va">ev</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/eventTable.html" class="external-link">eventTable</a></span><span class="op">(</span>amount.units<span class="op">=</span><span class="st">"mg"</span>, time.units<span class="op">=</span><span class="st">"hours"</span><span class="op">)</span></span>
 <span>    <span class="va">ev</span><span class="op">$</span><span class="fu">add.dosing</span><span class="op">(</span>dose <span class="op">=</span> <span class="va">dose</span>, nbr.doses <span class="op">=</span> <span class="fl">1</span>, start.time <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
 <span>    <span class="va">ev</span><span class="op">$</span><span class="fu">add.sampling</span><span class="op">(</span><span class="va">time</span><span class="op">)</span></span>
 <span>    </span>
-<span>    <span class="co"># Solve the RxODE model</span></span>
+<span>    <span class="co"># Solve model</span></span>
 <span>    <span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/rxSolve.html" class="external-link">rxSolve</a></span><span class="op">(</span><span class="va">rxModel</span>, params <span class="op">=</span> <span class="va">theta_i</span>, events <span class="op">=</span> <span class="va">ev</span>, cores <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
 <span>    </span>
-<span>    <span class="co"># Format output as matrix</span></span>
+<span>    <span class="co"># Format output</span></span>
 <span>    <span class="va">cp_matrix</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="va">out</span><span class="op">$</span><span class="va">cp</span>, nrow <span class="op">=</span> <span class="va">n_individuals</span>, ncol <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">time</span><span class="op">)</span>, </span>
 <span>                        byrow <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span>    </span>
 <span>    <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">cp_matrix</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 </div>
+</div>
 <div class="section level3">
-<h3 id="setting-up-model-options">Setting Up Model Options<a class="anchor" aria-label="anchor" href="#setting-up-model-options"></a>
+<h3 id="model-fitting">Model Fitting<a class="anchor" aria-label="anchor" href="#model-fitting"></a>
 </h3>
+<div class="section level4">
+<h4 id="setting-up-model-options">Setting Up Model Options<a class="anchor" aria-label="anchor" href="#setting-up-model-options"></a>
+</h4>
 <p>The <code>genopts</code> function creates an options object that
 controls the model fitting process:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">opts</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/genopts.html">genopts</a></span><span class="op">(</span></span>
 <span>  time <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.1</span>, <span class="fl">.25</span>, <span class="fl">.5</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">5</span>, <span class="fl">8</span>, <span class="fl">12</span><span class="op">)</span>,  <span class="co"># Observation times</span></span>
 <span>  p <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    beta <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>cl <span class="op">=</span> <span class="fl">5</span>, v1 <span class="op">=</span> <span class="fl">10</span>, v2 <span class="op">=</span> <span class="fl">30</span>, q <span class="op">=</span> <span class="fl">10</span>, ka <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,  <span class="co"># Population parameters</span></span>
-<span>    Omega <span class="op">=</span> <span class="fu"><a href="../reference/omegas.html">omegas</a></span><span class="op">(</span><span class="fl">.09</span>, <span class="fl">0</span>, <span class="fl">5</span><span class="op">)</span>,  <span class="co"># Random effects covariance matrix</span></span>
-<span>    Sigma_prop <span class="op">=</span> <span class="fl">0.04</span>  <span class="co"># Proportional error variance</span></span>
+<span>    Omega <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.09</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>,</span>
+<span>                    <span class="fl">0</span>, <span class="fl">0.09</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>,</span>
+<span>                    <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0.09</span>, <span class="fl">0</span>, <span class="fl">0</span>,</span>
+<span>                    <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0.09</span>, <span class="fl">0</span>,</span>
+<span>                    <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0.09</span><span class="op">)</span>, nrow <span class="op">=</span> <span class="fl">5</span>, ncol <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>,  <span class="co"># Random effects</span></span>
+<span>    Sigma_prop <span class="op">=</span> <span class="fl">0.04</span>  <span class="co"># Proportional error</span></span>
 <span>  <span class="op">)</span>,</span>
 <span>  nsim <span class="op">=</span> <span class="fl">2500</span>,  <span class="co"># Number of Monte Carlo samples</span></span>
-<span>  n <span class="op">=</span> <span class="fl">500</span>,  <span class="co"># Number of individuals</span></span>
+<span>  n <span class="op">=</span> <span class="fl">500</span>,      <span class="co"># Number of individuals</span></span>
 <span>  fo_appr <span class="op">=</span> <span class="cn">FALSE</span>,  <span class="co"># Disable first-order approximation</span></span>
 <span>  omega_expansion <span class="op">=</span> <span class="fl">1.2</span>,  <span class="co"># Omega expansion factor</span></span>
-<span>  f <span class="op">=</span> <span class="va">predder</span>  <span class="co"># Prediction function</span></span>
+<span>  f <span class="op">=</span> <span class="va">predder</span>    <span class="co"># Prediction function</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level3">
-<h3 id="fitting-the-model">Fitting the Model<a class="anchor" aria-label="anchor" href="#fitting-the-model"></a>
-</h3>
-<p>The <code>fitIRMC</code> function fits the model to the aggregate
-data using the Iterative Reweighting algorithm:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="section level4">
+<h4 id="fitting-the-model">Fitting the Model<a class="anchor" aria-label="anchor" href="#fitting-the-model"></a>
+</h4>
+<p>The <code>fitIRMC</code> function fits the model using the IRMC
+algorithm:</p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit.admr</span> <span class="op">&lt;-</span> <span class="fu">admr</span><span class="fu">::</span><span class="fu"><a href="../reference/fitIRMC.html">fitIRMC</a></span><span class="op">(</span></span>
-<span>  <span class="va">opts</span>,  <span class="co"># Model options</span></span>
-<span>  <span class="va">examplomycin_aggregated</span>,  <span class="co"># Aggregate data</span></span>
-<span>  chains <span class="op">=</span> <span class="fl">3</span>  <span class="co"># Number of parallel chains</span></span>
+<span>  opts <span class="op">=</span> <span class="va">opts</span>,</span>
+<span>  obs <span class="op">=</span> <span class="va">examplomycin_aggregated</span>,</span>
+<span>  chains <span class="op">=</span> <span class="fl">3</span>,  <span class="co"># Number of parallel chains</span></span>
+<span>  maxiter <span class="op">=</span> <span class="fl">100</span>  <span class="co"># Maximum iterations</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Chain 1:</span></span>
 <span><span class="co">## Iter | NLL and Parameters (11 values)</span></span>
@@ -283,29 +335,33 @@ data using the Iterative Reweighting algorithm:</p>
 <span><span class="co">##   14: -1845.280    1.601    2.307    3.405    2.285    0.018   -2.286   -2.201   -2.343   -2.265   -2.410   -3.235</span></span>
 <span><span class="co">## Phase Precision Phase converged at iteration 14.</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 1 Complete: Final NLL = -1845.280, Time Elapsed = 5.76 seconds</span></span>
+<span><span class="co">## Chain 1 Complete: Final NLL = -1845.280, Time Elapsed = 6.37 seconds</span></span>
 <span><span class="co">##  </span></span>
 <span><span class="co">## Phase Wide Search Phase converged at iteration 9.</span></span>
 <span><span class="co">## Phase Focussed Search Phase converged at iteration 12.</span></span>
 <span><span class="co">## Phase Fine-Tuning Phase converged at iteration 13.</span></span>
 <span><span class="co">## Phase Precision Phase converged at iteration 15.</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 2 Complete: Final NLL = -1845.280, Time Elapsed = 7.03 seconds</span></span>
+<span><span class="co">## Chain 2 Complete: Final NLL = -1845.280, Time Elapsed = 6.70 seconds</span></span>
 <span><span class="co">##  </span></span>
 <span><span class="co">## Phase Wide Search Phase converged at iteration 9.</span></span>
 <span><span class="co">## Phase Focussed Search Phase converged at iteration 16.</span></span>
 <span><span class="co">## Phase Fine-Tuning Phase converged at iteration 19.</span></span>
 <span><span class="co">## Phase Precision Phase converged at iteration 23.</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 3 Complete: Final NLL = -1845.284, Time Elapsed = 11.36 seconds</span></span>
+<span><span class="co">## Chain 3 Complete: Final NLL = -1845.284, Time Elapsed = 13.11 seconds</span></span>
 <span><span class="co">## </span></span></code></pre>
 </div>
+</div>
 <div class="section level3">
-<h3 id="examining-results">Examining Results<a class="anchor" aria-label="anchor" href="#examining-results"></a>
+<h3 id="model-diagnostics">Model Diagnostics<a class="anchor" aria-label="anchor" href="#model-diagnostics"></a>
 </h3>
+<div class="section level4">
+<h4 id="basic-diagnostics">Basic Diagnostics<a class="anchor" aria-label="anchor" href="#basic-diagnostics"></a>
+</h4>
 <p>The <code>print</code> method provides a summary of the model
 fit:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">fit.admr</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## -- FitIRMC Summary --</span></span>
 <span><span class="co">## </span></span>
@@ -317,10 +373,10 @@ fit:</p>
 <span><span class="co">## Condition#(Cor): 205.66</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## -- Timing Information --</span></span>
-<span><span class="co">##      Best Chain: 11.3647 seconds</span></span>
-<span><span class="co">##      All Chains: 24.1567 seconds</span></span>
-<span><span class="co">##      Covariance: 27.9901 seconds</span></span>
-<span><span class="co">##         Elapsed: 52.15 seconds</span></span>
+<span><span class="co">##      Best Chain: 13.1111 seconds</span></span>
+<span><span class="co">##      All Chains: 26.1838 seconds</span></span>
+<span><span class="co">##      Covariance: 31.2724 seconds</span></span>
+<span><span class="co">##         Elapsed: 57.46 seconds</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## -- Population Parameters --</span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 6 × 6</span></span></span>
@@ -347,21 +403,141 @@ fit:</p>
 <span><span class="co">##   21: -1845.280 1.601 2.307 3.405 2.285 0.018 -2.286 -2.201 -2.343 -2.265 -2.410 -3.235</span></span>
 <span><span class="co">##   22: -1845.280 1.601 2.307 3.405 2.285 0.018 -2.286 -2.201 -2.343 -2.265 -2.410 -3.235</span></span>
 <span><span class="co">##   23: -1845.280 1.601 2.307 3.405 2.285 0.018 -2.286 -2.201 -2.343 -2.265 -2.410 -3.235</span></span></code></pre>
+</div>
+<div class="section level4">
+<h4 id="convergence-assessment">Convergence Assessment<a class="anchor" aria-label="anchor" href="#convergence-assessment"></a>
+</h4>
 <p>The <code>plot</code> method visualizes the convergence of the model
 fit:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit.admr</span><span class="op">)</span></span></code></pre></div>
-<p><img src="admr_files/figure-html/unnamed-chunk-9-1.png" width="700"><img src="admr_files/figure-html/unnamed-chunk-9-2.png" width="700"></p>
+<p><img src="admr_files/figure-html/unnamed-chunk-10-1.png" width="700"><img src="admr_files/figure-html/unnamed-chunk-10-2.png" width="700"></p>
+</div>
+<div class="section level4">
+<h4 id="parameter-estimates">Parameter Estimates<a class="anchor" aria-label="anchor" href="#parameter-estimates"></a>
+</h4>
+<p>Let’s examine the parameter estimates and their uncertainty:</p>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Extract parameter estimates</span></span>
+<span><span class="va">params</span> <span class="op">&lt;-</span> <span class="va">fit.admr</span><span class="op">$</span><span class="va">final_params</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Final parameter estimates:\n"</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Final parameter estimates:</span></span></code></pre>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">params</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##  [1]  1.60065017  2.30685800  3.40477742  2.28488079  0.01829093 -2.28653724</span></span>
+<span><span class="co">##  [7] -2.21237073 -2.34454858 -2.27007756 -2.39888299 -3.23508682</span></span></code></pre>
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Extract covariance matrix</span></span>
+<span><span class="va">cov_matrix</span> <span class="op">&lt;-</span> <span class="va">fit.admr</span><span class="op">$</span><span class="va">covariance_matrix</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"\nParameter covariance matrix:\n"</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## </span></span>
+<span><span class="co">## Parameter covariance matrix:</span></span></code></pre>
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">cov_matrix</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">##               [,1]          [,2]          [,3]          [,4]          [,5]</span></span>
+<span><span class="co">## [1,]  0.0002332984  0.0003523774 -0.0003252881  0.0000598485  0.0003445519</span></span>
+<span><span class="co">## [2,]  0.0003523774  0.0071273318 -0.0026026132  0.0003292478  0.0066125395</span></span>
+<span><span class="co">## [3,] -0.0003252881 -0.0026026132  0.0015550982 -0.0001664353 -0.0024807333</span></span>
+<span><span class="co">## [4,]  0.0000598485  0.0003292478 -0.0001664353  0.0004514254  0.0003802730</span></span>
+<span><span class="co">## [5,]  0.0003445519  0.0066125395 -0.0024807333  0.0003802730  0.0063440125</span></span></code></pre>
+</div>
 </div>
 <div class="section level3">
-<h3 id="conclusion">Conclusion<a class="anchor" aria-label="anchor" href="#conclusion"></a>
+<h3 id="advanced-features">Advanced Features<a class="anchor" aria-label="anchor" href="#advanced-features"></a>
 </h3>
-<p>This vignette demonstrates the basic workflow for aggregate data
-modeling with <code>admr</code>. The package provides a flexible
-framework for: - Converting individual-level data to aggregate form -
-Defining complex pharmacokinetic models - Fitting models to aggregate
-data - Assessing model convergence and parameter estimates</p>
-<p>For more advanced usage, see the package documentation and other
+<div class="section level4">
+<h4 id="multiple-chains">Multiple Chains<a class="anchor" aria-label="anchor" href="#multiple-chains"></a>
+</h4>
+<p>The <code>fitIRMC</code> function supports multiple chains to improve
+optimization:</p>
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Run with multiple chains</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fitIRMC.html">fitIRMC</a></span><span class="op">(</span></span>
+<span>  opts <span class="op">=</span> <span class="va">opts</span>,</span>
+<span>  obs <span class="op">=</span> <span class="va">examplomycin_aggregated</span>,</span>
+<span>  chains <span class="op">=</span> <span class="fl">3</span>,  <span class="co"># Number of chains</span></span>
+<span>  pertubation <span class="op">=</span> <span class="fl">0.1</span>  <span class="co"># Perturbation factor</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level4">
+<h4 id="phase-based-optimization">Phase-Based Optimization<a class="anchor" aria-label="anchor" href="#phase-based-optimization"></a>
+</h4>
+<p>You can customize the optimization phases:</p>
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Custom phase fractions</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fitIRMC.html">fitIRMC</a></span><span class="op">(</span></span>
+<span>  opts <span class="op">=</span> <span class="va">opts</span>,</span>
+<span>  obs <span class="op">=</span> <span class="va">examplomycin_aggregated</span>,</span>
+<span>  phase_fractions <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.3</span>, <span class="fl">0.3</span>, <span class="fl">0.2</span>, <span class="fl">0.2</span><span class="op">)</span>  <span class="co"># Custom phase distribution</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+</div>
+<div class="section level3">
+<h3 id="best-practices">Best Practices<a class="anchor" aria-label="anchor" href="#best-practices"></a>
+</h3>
+<ol style="list-style-type: decimal">
+<li>
+<strong>Data Preparation</strong>:
+<ul>
+<li>Always check your data for missing values and outliers</li>
+<li>Ensure time points are consistent across subjects</li>
+<li>Consider the impact of dosing events on your analysis</li>
+</ul>
+</li>
+<li>
+<strong>Model Specification</strong>:
+<ul>
+<li>Start with a simple model and gradually add complexity</li>
+<li>Use meaningful initial values for parameters</li>
+<li>Consider parameter transformations for better estimation</li>
+</ul>
+</li>
+<li>
+<strong>Model Fitting</strong>:
+<ul>
+<li>Use multiple chains to improve optimization</li>
+<li>Monitor convergence carefully</li>
+<li>Check parameter estimates for biological plausibility</li>
+</ul>
+</li>
+<li>
+<strong>Diagnostics</strong>:
+<ul>
+<li>Always examine convergence plots</li>
+<li>Check parameter correlations</li>
+<li>Validate model predictions against observed data</li>
+</ul>
+</li>
+</ol>
+</div>
+<div class="section level3">
+<h3 id="next-steps">Next Steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>
+</h3>
+<p>After mastering the basics, you might want to explore:</p>
+<ol style="list-style-type: decimal">
+<li>Advanced modeling features:
+<ul>
+<li>Custom error models</li>
+<li>Parameter transformations</li>
+<li>Complex dosing regimens</li>
+</ul>
+</li>
+<li>Performance optimization:
+<ul>
+<li>Adjusting Monte Carlo sample size</li>
+<li>Using first-order approximations</li>
+<li>Parallel computing options</li>
+</ul>
+</li>
+<li>Additional diagnostics:
+<ul>
+<li>Residual analysis</li>
+<li>Parameter sensitivity analysis</li>
+<li>Model comparison</li>
+</ul>
+</li>
+</ol>
+<p>For more information, see the package documentation and other
 vignettes.</p>
 </div>
 </div>
