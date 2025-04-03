@@ -13,8 +13,6 @@ knitr::opts_chunk$set(
 )
 ```
 
-# admr: Aggregate Data Modeling in R <img src="man/figures/logo.png" width="120" align="right" />
-
 <!-- badges: start -->
 <!-- badges: end -->
 

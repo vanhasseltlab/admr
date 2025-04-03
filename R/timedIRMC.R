@@ -104,25 +104,34 @@
 #' print(result)
 #'
 #' @export
-timedIRMC <- function(init, opts, obs, maxiter = 100, convcrit_nll = 5e-04, nomap = TRUE) { # Implements the Expectation-Maximization (IRMC) algorithm for parameter estimation, iterating over maximum likelihood updates.
+timedIRMC <- function(init, opts, obs, maxiter = 100, convcrit_nll = 5e-04, nomap = TRUE) {
+  # Convert initial parameters and observed data to optimization format
   if (nomap) {
     opts <- opts %>% p2opts(init) %>% obs2opts(obs)
   } else {
     opts <- map(seq_along(opts),function(i) opts[[i]] %>% p2opts(init) %>% obs2opts(obs[[i]]))
   }
 
+  # Initialize results data frame to store iteration history
   res <- tibble(p=vector("list",maxiter),
                 nll=NA,
                 appr_nll=NA,
                 time=Sys.time(),
                 iter=1)
+  
+  # Store initial values and compute initial negative log-likelihood
   res$p[[1]] <- init
   res$time[1] <- Sys.time()
   res$nll[1] <- compute_nll(opts, init, nomap)
   res$appr_nll[1] <- res$nll[1]
   message(paste0("iteration ",1,", nll=",res$nll[1]))
+  
+  # Initialize p-values for convergence checking
   pvals <- rep(0,length(init)+1)
+  
+  # Main optimization loop
   for (i in 2:maxiter) {
+    # Generate objective function for optimization
     if (nomap) {
       ff <- maxfunc(p2opts(opts,init))
     } else {
@@ -130,22 +139,25 @@ timedIRMC <- function(init, opts, obs, maxiter = 100, convcrit_nll = 5e-04, noma
       ff <- function(p) Reduce('+',map(ffs,~.(p)))
     }
 
+    # Create wrapper function for nloptr
     ff_nloptr <- function(params) {
       ff(params)
     }
 
+    # Run BOBYQA optimization with bounds
     m0 <- nloptr::nloptr(
       x0 = init,
       eval_f = ff_nloptr,
-      lb = init - 2,
-      ub = init + 2,
+      lb = init - 2,  # Lower bounds: 2 units below initial values
+      ub = init + 2,  # Upper bounds: 2 units above initial values
       opts = list(
         algorithm = "NLOPT_LN_BOBYQA",
-        ftol_rel=.Machine$double.eps^2,
-        maxeval = 5000
+        ftol_rel=.Machine$double.eps^2,  # Relative function tolerance
+        maxeval = 5000  # Maximum number of function evaluations
       )
     )
 
+    # Update parameters and store results
     init <- m0$solution
     res$p[[i]] <- init
     res$time[i] <- Sys.time()
@@ -153,17 +165,25 @@ timedIRMC <- function(init, opts, obs, maxiter = 100, convcrit_nll = 5e-04, noma
     res$appr_nll[i] <- m0$objective
     res$iter[i] <- i
     message(paste0("iteration ",i,", nll=",res$nll[i]))
+    
+    # Check for parameter stationarity after 10 iterations
     if (i>10) {
+      # Extract last 10 iterations of parameters and objective function
       pset <- do.call(rbind,res$p) %>% cbind(res$nll[!is.na(res$nll)]) %>% tail(10)
+      # Compute p-values for linear trend in each parameter
       pvals <- map(1:ncol(pset),function(colN) {
         xx <- 1:10
         yy <- pset[,colN]
         summary(lm(yy~xx))$coef[2,4]
       })
     }
+    
+    # Check convergence criteria
     if (all(pvals>0.05)) {message("should break now due to stationary ofv+parameters");break()}
     if (abs(res$nll[i]-res$appr_nll[i]) <convcrit_nll) {message("should break now due to no difference between OFV and appr OFV");break()}
   }
+  
+  # Return results for successful iterations
   res[!is.na(res$nll),]
 }
 

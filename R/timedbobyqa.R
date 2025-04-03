@@ -100,17 +100,20 @@
 #'
 #' @export
 timedbobyqa <- function(init, opts, obs, nomap = TRUE) {
-
+  # Convert initial parameters and observed data to optimization format
   if (nomap) {
     opts <- opts %>% p2opts(init) %>% obs2opts(obs)
   } else {
     opts <- map(seq_along(opts),function(i) opts[[i]] %>% p2opts(init) %>% obs2opts(obs[[i]]))
   }
 
+  # Initialize results data frame with larger size for more iterations
   res <- tibble(p=vector("list",1e4),nll=NA,time=Sys.time(),iter=NA)
 
+  # Initialize iteration counter
   i <- 1
 
+  # Generate objective function based on number of models
   if (nomap) {
     fitfun <- genfitfunc(opts, obs)
   } else {
@@ -118,6 +121,7 @@ timedbobyqa <- function(init, opts, obs, nomap = TRUE) {
     fitfun <- function(p) Reduce('+', map(fitfuns, ~ .(p)))
   }
 
+  # Create wrapper function to track optimization progress
   fitfun2 <- function(p) {
     nllNow <- fitfun(p)
     res$p[[i]] <<- p
@@ -125,6 +129,7 @@ timedbobyqa <- function(init, opts, obs, nomap = TRUE) {
     res$nll[i] <<- nllNow
     res$iter[i] <<- i
 
+    # Print progress every 50 iterations
     if (i %% 50 == 0) {
       cat("Iteration:", i, "- NLL:", nllNow, "\n")
     }
@@ -132,15 +137,16 @@ timedbobyqa <- function(init, opts, obs, nomap = TRUE) {
     nllNow
   }
 
+  # Run BOBYQA optimization with bounds
   est <- nloptr::nloptr(init,
                         fitfun2,
-                        lb=init-2,
-                        ub=init+2,
+                        lb=init-2,  # Lower bounds: 2 units below initial values
+                        ub=init+2,  # Upper bounds: 2 units above initial values
                         opts=list(
                           algorithm="NLOPT_LN_BOBYQA",
-                          ftol_rel=.Machine$double.eps^2,
+                          ftol_rel=.Machine$double.eps^2,  # Relative function tolerance
                           maxeval = 5000,                    # max number of evaluations
-                          check_derivatives = F))
+                          check_derivatives = F))  # Skip derivative checking for performance
   est$solution
   res[!is.na(res$nll),]
 }

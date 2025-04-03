@@ -20,70 +20,113 @@
 #'          `nsim` x `length(time)`. If `nlmixrform` is TRUE, returns a data frame in nlmixr
 #'          format with columns:
 #'          \itemize{
-#'            \item `dv`: Observed value
-#'            \item `time`: Observation time
-#'            \item `id`: Subject ID
-#'            \item `amt`: Dose amount (NA for observations)
-#'            \item `evid`: Event type (101 for dosing, 0 for observation)
-#'            \item `cmt`: Compartment number (1 for depot, 2 for central)
+#'            \item `dv`: Dependent variable (e.g., concentration measurements)
+#'            \item `time`: Observation time points
+#'            \item `id`: Subject identifier
+#'            \item `amt`: Dose amount (NA for observations, typically in mg)
+#'            \item `evid`: Event identifier (101 for dosing, 0 for observation)
+#'            \item `cmt`: Compartment number (1 for depot/dosing, 2 for central/observation)
 #'          }
 #'
 #' @details
-#' The function generates simulated data by:
+#' The function generates simulated data following these steps:
 #' \itemize{
-#'   \item Generating random effects from the specified distribution
-#'   \item Computing individual parameters using the transformation function
-#'   \item Simulating observations using the prediction function
-#'   \item Adding residual error if requested
-#'   \item Formatting the output according to the specified format
+#'   \item Generating random effects (η) from a multivariate normal distribution
+#'   \item Computing individual parameters (θᵢ) using log-normal transformations
+#'   \item Simulating concentration-time profiles using the prediction function
+#'   \item Adding residual error components if requested:
+#'     - Proportional error: y = f(t,θ)(1 + ε), where ε ~ N(0,σ²_prop)
+#'     - Additive error: y = f(t,θ) + ε, where ε ~ N(0,σ²_add)
+#'   \item Formatting output in either raw matrix or nlmixr-compatible format
 #' }
 #'
-#' The residual error can be either proportional (Sigma_prop) or additive (Sigma_add), or both.
-#' The function uses the random number generator seed to ensure reproducibility.
+#' The residual error model can include:
+#' \itemize{
+#'   \item Proportional error only (specified by Sigma_prop)
+#'   \item Additive error only (specified by Sigma_add)
+#'   \item Combined error model (both Sigma_prop and Sigma_add)
+#' }
+#'
+#' The function supports reproducible simulations through the seed parameter
+#' and is compatible with both population PK modeling and simulation workflows.
 #'
 #' @examples
-#' # Create model options
+#' # Create model options for a two-compartment model with first-order absorption
 #' opts <- genopts(
-#'   f = predder,
-#'   time = c(.1, .25, .5, 1, 2, 3, 5, 8, 12),
+#'   f = predder,  # Prediction function (defined elsewhere)
+#'   time = c(.1, .25, .5, 1, 2, 3, 5, 8, 12),  # Sampling times
 #'   p = list(
+#'     # Population parameters (fixed effects)
 #'     beta = c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1),
+#'     # Between-subject variability (random effects)
 #'     Omega = matrix(c(0.09, 0, 0, 0, 0,
 #'                     0, 0.09, 0, 0, 0,
 #'                     0, 0, 0.09, 0, 0,
 #'                     0, 0, 0, 0.09, 0,
 #'                     0, 0, 0, 0, 0.09), nrow = 5, ncol = 5),
+#'     # Proportional residual error (20% CV)
 #'     Sigma_prop = 0.04
 #'   ),
-#'   nsim = 2500,
-#'   n = 500
+#'   nsim = 2500,  # Number of simulated subjects
+#'   n = 500       # Number of Monte Carlo samples
 #' )
 #'
-#' # Generate dataset in raw format
+#' # Generate dataset in raw matrix format
 #' data_raw <- gendataset(opts)
 #'
-#' # Generate dataset in nlmixr format
+#' # Generate dataset in nlmixr format (for use with nlmixr2)
 #' data_nlmixr <- gendataset(opts, nlmixrform = TRUE)
 #'
 #' @export
 gendataset <- function(opts, seed = 1, reserr = TRUE, nlmixrform = FALSE) {
+  # Set random seed for reproducibility
   set.seed(seed)
-  bi <- gen_bi(opts,FALSE)
-  nsimobs <- length(opts$time)*opts$nsim
-  theta_i <- g_iter(opts,bi)
-  res <- opts$f(opts$time,theta_i)
+  
+  # Generate random effects (between-subject variability)
+  # bi contains the random effects for each simulated individual
+  bi <- gen_bi(opts, FALSE)
+  
+  # Calculate total number of observations to simulate
+  # nsimobs = number of time points * number of subjects
+  nsimobs <- length(opts$time) * opts$nsim
+  
+  # Compute individual parameters using random effects
+  # theta_i contains the individual parameter values
+  theta_i <- g_iter(opts, bi)
+  
+  # Generate predictions using the model function
+  # res contains the simulated concentrations without error
+  res <- opts$f(opts$time, theta_i)
+  
+  # Return clean predictions if no residual error is requested
   if (!reserr) return(res)
+  
+  # Add proportional error if specified
+  # y = f(t,θ)(1 + ε), where ε ~ N(0,σ²_prop)
   if (!is.null(opts$p$Sigma_prop))
-    res <- res*(1+rnorm(nsimobs,sd=sqrt(opts$p$Sigma_prop)))
+    res <- res * (1 + rnorm(nsimobs, sd = sqrt(opts$p$Sigma_prop)))
+  
+  # Add additive error if specified
+  # y = f(t,θ) + ε, where ε ~ N(0,σ²_add)
   if (!is.null(opts$p$Sigma_add))
-    res <- res+rnorm(nsimobs,sd=sqrt(opts$p$Sigma_add))
+    res <- res + rnorm(nsimobs, sd = sqrt(opts$p$Sigma_add))
+  
+  # Return results in requested format
   if (!nlmixrform) {
+    # Return raw matrix of observations
     return(res)
   } else {
-    tibble(dv=c(t(cbind(NA,res))),time=rep(c(0,opts$time),times=opts$nsim),
-           id=rep(seq_len(opts$nsim),each=1+length(opts$time)),
-           amt=rep(c(100,rep(NA,length(opts$time))),opts$nsim),
-           evid=101*as.integer(!is.na(.data$amt)),
-           cmt=ifelse(is.na(.data$amt),2,1))
+    # Return data frame in nlmixr format
+    # - Add dosing records at time 0
+    # - Reshape to long format
+    # - Add required columns for nlmixr compatibility
+    tibble(
+      dv = c(t(cbind(NA, res))),  # NA for dosing records
+      time = rep(c(0, opts$time), times = opts$nsim),  # Add time 0 for dosing
+      id = rep(seq_len(opts$nsim), each = 1 + length(opts$time)),  # Subject IDs
+      amt = rep(c(100, rep(NA, length(opts$time))), opts$nsim),  # Dosing amount
+      evid = 101 * as.integer(!is.na(.data$amt)),  # Event type
+      cmt = ifelse(is.na(.data$amt), 2, 1)  # Compartment numbers
+    )
   }
 }

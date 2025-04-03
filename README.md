@@ -2,9 +2,6 @@ admr: Aggregate Data Modeling in R
 ================
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
-
-# admr: Aggregate Data Modeling in R <img src="man/figures/logo.png" width="120" align="right" />
-
 <!-- badges: start -->
 <!-- badges: end -->
 
@@ -181,7 +178,7 @@ result <- fitIRMC(opts = opts, obs = examplomycin_aggregated)
 #>   14: -1845.280    1.601    2.307    3.405    2.285    0.018   -2.286   -2.201   -2.343   -2.265   -2.410   -3.235
 #> Phase Precision Phase converged at iteration 14.
 #> 
-#> Chain 1 Complete: Final NLL = -1845.280, Time Elapsed = 6.28 seconds
+#> Chain 1 Complete: Final NLL = -1845.280, Time Elapsed = 5.93 seconds
 #> 
 print(result)
 #> -- FitIRMC Summary --
@@ -194,10 +191,10 @@ print(result)
 #> Condition#(Cor): 202.97
 #> 
 #> -- Timing Information --
-#>      Best Chain: 6.2810 seconds
-#>      All Chains: 6.2834 seconds
-#>      Covariance: 28.8993 seconds
-#>         Elapsed: 35.18 seconds
+#>      Best Chain: 5.9257 seconds
+#>      All Chains: 5.9279 seconds
+#>      Covariance: 28.1302 seconds
+#>         Elapsed: 34.06 seconds
 #> 
 #> -- Population Parameters --
 #> # A tibble: 6 × 6

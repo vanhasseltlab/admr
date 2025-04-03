@@ -124,23 +124,27 @@ fitIRMC <- function(opts, obs, maxiter = 100, convcrit_nll = 1e-05,
                     single_dataframe = TRUE, phase_fractions = c(0.2, 0.4, 0.2, 0.2),
                     max_worse_iterations = 10, chains = 1, pertubation = 0.1, seed = 1) {
 
+  # Set random seed for reproducibility
   set.seed(seed)
   nomap <- single_dataframe
 
+  # Get initial parameter values
   if (nomap){
     init <- opts$pt
   } else{
     init <- opts[[1]]$pt
   }
 
-  # Ensure phase_fractions sum to 1
+  # Validate phase fractions
   if (abs(sum(phase_fractions) - 1) > .Machine$double.eps^0.5) {
     stop("The sum of phase_fractions must be 1.")
   }
 
+  # Initialize timing and results storage
   start_time <- Sys.time()  # Start time for the entire process
   chain_results <- vector("list", chains)  # Store results for each chain
 
+  # Run optimization chains in parallel
   for (chain in seq_len(chains)) {
     chain_results[[chain]] <- run_chain(
       chain = chain,
@@ -156,14 +160,14 @@ fitIRMC <- function(opts, obs, maxiter = 100, convcrit_nll = 1e-05,
     )
   }
 
-  # Select the best chain based on NLL
+  # Select best chain based on negative log-likelihood
   best_chain <- which.min(sapply(chain_results, function(x) x$best_nll))
   final_result <- chain_results[[best_chain]]
   final_params <- final_result$best_params
   final_nll <- final_result$best_nll
   final_res <- final_result$res  # Final iteration history
 
-  # Covariance computation
+  # Compute covariance matrix for fixed effects
   cov_start_time <- Sys.time()
   func_fixed <- function(beta) {
     p_full <- final_params
@@ -173,6 +177,7 @@ fitIRMC <- function(opts, obs, maxiter = 100, convcrit_nll = 1e-05,
     sum(sapply(seq_along(opts_list), function(i) genfitfunc(opts_list[[i]], obs_list[[i]])(p_full)))
   }
 
+  # Compute Hessian matrix using Richardson method
   cov_matrix_fixed <- tryCatch(
     solve(numDeriv::hessian(func_fixed, final_params[1:length(if (nomap) opts$p$beta else opts[[2]]$p$beta)],
                             method = "Richardson", method.args = list(r=6, v=2))),
@@ -181,6 +186,7 @@ fitIRMC <- function(opts, obs, maxiter = 100, convcrit_nll = 1e-05,
 
   cov_time <- as.numeric(difftime(Sys.time(), cov_start_time, units = "secs"))
 
+  # Compute standard errors for fixed effects
   tryCatch(
     se_fixed <- if (is.matrix(cov_matrix_fixed)) {
       sqrt(diag(cov_matrix_fixed))
@@ -188,28 +194,31 @@ fitIRMC <- function(opts, obs, maxiter = 100, convcrit_nll = 1e-05,
       rep(NA, length(if (nomap) opts$p$beta else opts[[1]]$p$beta))
     }, error = function(e) NULL)
 
+  # Back-transform parameters to original scale
   back_transformed_params <- tryCatch(
     if (nomap) opts$ptrans(final_params) else opts[[1]]$ptrans(final_params),
     error = function(e) NA
   )
 
+  # Compute BIC for model selection
   bic <- if (nomap) {
     -2 * final_nll + log(opts$n) * length(final_params)
   } else {
     -2 * final_nll + (log(opts[[1]]$n) + log(opts[[2]]$n)) * length(final_params)
   }
 
+  # Extract parameter names and values
   param_names <- names(back_transformed_params$beta)
   beta_params <- final_params[1:length(se_fixed)]
   beta_se <- se_fixed
   residual_error <- exp(final_params[length(final_params)])
 
-  # Transformations and confidence intervals
+  # Compute confidence intervals for back-transformed parameters
   beta_estimates_original <- back_transformed_params$beta[1:length(beta_params)]
   confint_low_original <- exp(beta_params - 1.96 * beta_se)
   confint_high_original <- exp(beta_params + 1.96 * beta_se)
 
-  # Generate output
+  # Generate comprehensive output object
   output <- list(
     final_params = final_params,
     transformed_params = back_transformed_params,
@@ -226,7 +235,7 @@ fitIRMC <- function(opts, obs, maxiter = 100, convcrit_nll = 1e-05,
         ),
         sprintf("%.4f", residual_error)
       ),
-      `BSV(CV%)` = c(calculate_bsv(back_transformed_params), NA) # Use the adjusted function here
+      `BSV(CV%)` = c(calculate_bsv(back_transformed_params), NA)
     ),
     covariance_matrix = cov_matrix_fixed,
     convergence_info = list(
@@ -254,8 +263,9 @@ fitIRMC <- function(opts, obs, maxiter = 100, convcrit_nll = 1e-05,
     )
   )
 
+  # Set class and return results
   class(output) <- "fitIRMC_result"
-  return(output)
+  output
 }
 
 #' Print fitIRMC results
