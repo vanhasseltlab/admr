@@ -58,39 +58,60 @@ random effects in pharmacometric models.</p>
 
 <dl><dt id="arg-diag">diag<a class="anchor" aria-label="anchor" href="#arg-diag"></a></dt>
 <dd><p>Value for the diagonal elements of the matrix. This represents the
-variance of each random effect.</p></dd>
+variance of each random effect. For log-normal distributions, this is
+typically the squared coefficient of variation (CV²) on the log scale.</p></dd>
 
 
 <dt id="arg-offdiag">offdiag<a class="anchor" aria-label="anchor" href="#arg-offdiag"></a></dt>
 <dd><p>Value for the off-diagonal elements of the matrix. This represents
-the covariance between random effects.</p></dd>
+the covariance between random effects. A value of 0 indicates
+independence between random effects.</p></dd>
 
 
 <dt id="arg-n-om">n_om<a class="anchor" aria-label="anchor" href="#arg-n-om"></a></dt>
-<dd><p>Size of the matrix (number of random effects).</p></dd>
+<dd><p>Size of the matrix (number of random effects). This should match the
+number of random effects in your model (e.g., 2 for CL and V in a
+one-compartment model).</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A symmetric matrix of size <code>n_om</code> x <code>n_om</code> with:</p><ul><li><p>Diagonal elements equal to <code>diag</code></p></li>
-<li><p>Off-diagonal elements equal to <code>offdiag</code></p></li>
+    <p>A symmetric matrix of size <code>n_om</code> x <code>n_om</code> with:</p><ul><li><p>Diagonal elements equal to <code>diag</code> (variances)</p></li>
+<li><p>Off-diagonal elements equal to <code>offdiag</code> (covariances)</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The function creates a symmetric matrix where:</p><ul><li><p>All diagonal elements are set to <code>diag</code></p></li>
-<li><p>All off-diagonal elements are set to <code>offdiag</code></p></li>
-</ul><p>This is particularly useful for creating:</p><ul><li><p>Initial covariance matrices for optimization</p></li>
-<li><p>Fixed covariance matrices for simulation</p></li>
-<li><p>Simple covariance structures for testing</p></li>
+    <p>The function creates a symmetric covariance matrix for random effects where:</p><ul><li><p>Diagonal elements (ω²) represent the between-subject variability</p></li>
+<li><p>Off-diagonal elements (ω_ij) represent correlations between parameters</p></li>
+<li><p>The resulting matrix must be positive definite for valid computations</p></li>
+</ul><p>Common use cases include:</p><ul><li><p>Initial estimates for model fitting:
+- Setting diagonal elements to expected variability (e.g., 0.09 for 30% CV)
+- Starting with zero correlations (offdiag = 0)</p></li>
+<li><p>Simulation studies:
+- Specifying known parameter variability
+- Testing impact of parameter correlations</p></li>
+<li><p>Sensitivity analysis:
+- Evaluating model behavior under different variability assumptions
+- Assessing impact of parameter correlations</p></li>
+</ul><p>Mathematical details:</p><ul><li><p>For log-normal distributions: CV ≈ sqrt(exp(ω²) - 1)</p></li>
+<li><p>Correlation ρ_ij = ω_ij / sqrt(ω_ii * ω_jj)</p></li>
+<li><p>Matrix must be positive definite: all eigenvalues &gt; 0</p></li>
 </ul></div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Create a 3x3 matrix with diagonal = 0.09 and off-diagonal = 0</span></span></span>
-<span class="r-in"><span><span class="va">omega1</span> <span class="op">&lt;-</span> <span class="fu">omegas</span><span class="op">(</span><span class="fl">0.09</span>, <span class="fl">0</span>, <span class="fl">3</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Create a diagonal matrix for a one-compartment model</span></span></span>
+<span class="r-in"><span><span class="co"># 30% CV on CL and V (ω² = 0.09 for each)</span></span></span>
+<span class="r-in"><span><span class="va">omega1</span> <span class="op">&lt;-</span> <span class="fu">omegas</span><span class="op">(</span><span class="fl">0.09</span>, <span class="fl">0</span>, <span class="fl">2</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Create a 5x5 matrix with diagonal = 0.09 and off-diagonal = 0.01</span></span></span>
-<span class="r-in"><span><span class="va">omega2</span> <span class="op">&lt;-</span> <span class="fu">omegas</span><span class="op">(</span><span class="fl">0.09</span>, <span class="fl">0.01</span>, <span class="fl">5</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Create a matrix with correlations for a two-compartment model</span></span></span>
+<span class="r-in"><span><span class="co"># 30% CV on all parameters (CL, V1, Q, V2)</span></span></span>
+<span class="r-in"><span><span class="co"># Correlation of 0.3 between parameters</span></span></span>
+<span class="r-in"><span><span class="va">omega2</span> <span class="op">&lt;-</span> <span class="fu">omegas</span><span class="op">(</span><span class="fl">0.09</span>, <span class="fl">0.03</span>, <span class="fl">4</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Create a matrix for testing parameter correlations</span></span></span>
+<span class="r-in"><span><span class="co"># High variability (50% CV, ω² = 0.25) and strong correlations (0.1)</span></span></span>
+<span class="r-in"><span><span class="va">omega3</span> <span class="op">&lt;-</span> <span class="fu">omegas</span><span class="op">(</span><span class="fl">0.25</span>, <span class="fl">0.1</span>, <span class="fl">3</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

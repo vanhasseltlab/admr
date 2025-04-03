@@ -82,49 +82,57 @@ Default is FALSE.</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>If <code>nlmixrform</code> is FALSE, returns a matrix of simulated observations with dimensions
 <code>nsim</code> x <code>length(time)</code>. If <code>nlmixrform</code> is TRUE, returns a data frame in nlmixr
-format with columns:</p><ul><li><p><code>dv</code>: Observed value</p></li>
-<li><p><code>time</code>: Observation time</p></li>
-<li><p><code>id</code>: Subject ID</p></li>
-<li><p><code>amt</code>: Dose amount (NA for observations)</p></li>
-<li><p><code>evid</code>: Event type (101 for dosing, 0 for observation)</p></li>
-<li><p><code>cmt</code>: Compartment number (1 for depot, 2 for central)</p></li>
+format with columns:</p><ul><li><p><code>dv</code>: Dependent variable (e.g., concentration measurements)</p></li>
+<li><p><code>time</code>: Observation time points</p></li>
+<li><p><code>id</code>: Subject identifier</p></li>
+<li><p><code>amt</code>: Dose amount (NA for observations, typically in mg)</p></li>
+<li><p><code>evid</code>: Event identifier (101 for dosing, 0 for observation)</p></li>
+<li><p><code>cmt</code>: Compartment number (1 for depot/dosing, 2 for central/observation)</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The function generates simulated data by:</p><ul><li><p>Generating random effects from the specified distribution</p></li>
-<li><p>Computing individual parameters using the transformation function</p></li>
-<li><p>Simulating observations using the prediction function</p></li>
-<li><p>Adding residual error if requested</p></li>
-<li><p>Formatting the output according to the specified format</p></li>
-</ul><p>The residual error can be either proportional (Sigma_prop) or additive (Sigma_add), or both.
-The function uses the random number generator seed to ensure reproducibility.</p>
+    <p>The function generates simulated data following these steps:</p><ul><li><p>Generating random effects (η) from a multivariate normal distribution</p></li>
+<li><p>Computing individual parameters (θᵢ) using log-normal transformations</p></li>
+<li><p>Simulating concentration-time profiles using the prediction function</p></li>
+<li><p>Adding residual error components if requested:
+- Proportional error: y = f(t,θ)(1 + ε), where ε ~ N(0,σ²_prop)
+- Additive error: y = f(t,θ) + ε, where ε ~ N(0,σ²_add)</p></li>
+<li><p>Formatting output in either raw matrix or nlmixr-compatible format</p></li>
+</ul><p>The residual error model can include:</p><ul><li><p>Proportional error only (specified by Sigma_prop)</p></li>
+<li><p>Additive error only (specified by Sigma_add)</p></li>
+<li><p>Combined error model (both Sigma_prop and Sigma_add)</p></li>
+</ul><p>The function supports reproducible simulations through the seed parameter
+and is compatible with both population PK modeling and simulation workflows.</p>
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Create model options</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Create model options for a two-compartment model with first-order absorption</span></span></span>
 <span class="r-in"><span><span class="va">opts</span> <span class="op">&lt;-</span> <span class="fu"><a href="genopts.html">genopts</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  f <span class="op">=</span> <span class="va">predder</span>,</span></span>
-<span class="r-in"><span>  time <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.1</span>, <span class="fl">.25</span>, <span class="fl">.5</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">5</span>, <span class="fl">8</span>, <span class="fl">12</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  f <span class="op">=</span> <span class="va">predder</span>,  <span class="co"># Prediction function (defined elsewhere)</span></span></span>
+<span class="r-in"><span>  time <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.1</span>, <span class="fl">.25</span>, <span class="fl">.5</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">5</span>, <span class="fl">8</span>, <span class="fl">12</span><span class="op">)</span>,  <span class="co"># Sampling times</span></span></span>
 <span class="r-in"><span>  p <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>    <span class="co"># Population parameters (fixed effects)</span></span></span>
 <span class="r-in"><span>    beta <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>cl <span class="op">=</span> <span class="fl">5</span>, v1 <span class="op">=</span> <span class="fl">10</span>, v2 <span class="op">=</span> <span class="fl">30</span>, q <span class="op">=</span> <span class="fl">10</span>, ka <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    <span class="co"># Between-subject variability (random effects)</span></span></span>
 <span class="r-in"><span>    Omega <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.09</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>,</span></span>
 <span class="r-in"><span>                    <span class="fl">0</span>, <span class="fl">0.09</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>,</span></span>
 <span class="r-in"><span>                    <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0.09</span>, <span class="fl">0</span>, <span class="fl">0</span>,</span></span>
 <span class="r-in"><span>                    <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0.09</span>, <span class="fl">0</span>,</span></span>
 <span class="r-in"><span>                    <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0.09</span><span class="op">)</span>, nrow <span class="op">=</span> <span class="fl">5</span>, ncol <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>    <span class="co"># Proportional residual error (20% CV)</span></span></span>
 <span class="r-in"><span>    Sigma_prop <span class="op">=</span> <span class="fl">0.04</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span>,</span></span>
-<span class="r-in"><span>  nsim <span class="op">=</span> <span class="fl">2500</span>,</span></span>
-<span class="r-in"><span>  n <span class="op">=</span> <span class="fl">500</span></span></span>
+<span class="r-in"><span>  nsim <span class="op">=</span> <span class="fl">2500</span>,  <span class="co"># Number of simulated subjects</span></span></span>
+<span class="r-in"><span>  n <span class="op">=</span> <span class="fl">500</span>       <span class="co"># Number of Monte Carlo samples</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'predder' not found</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Generate dataset in raw format</span></span></span>
+<span class="r-in"><span><span class="co"># Generate dataset in raw matrix format</span></span></span>
 <span class="r-in"><span><span class="va">data_raw</span> <span class="op">&lt;-</span> <span class="fu">gendataset</span><span class="op">(</span><span class="va">opts</span><span class="op">)</span></span></span>
 <span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'opts' not found</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Generate dataset in nlmixr format</span></span></span>
+<span class="r-in"><span><span class="co"># Generate dataset in nlmixr format (for use with nlmixr2)</span></span></span>
 <span class="r-in"><span><span class="va">data_nlmixr</span> <span class="op">&lt;-</span> <span class="fu">gendataset</span><span class="op">(</span><span class="va">opts</span>, nlmixrform <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'opts' not found</span>
 <span class="r-in"><span></span></span>

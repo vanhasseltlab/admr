@@ -57,49 +57,77 @@ both fixed and random effect parameters.</p>
 
 
 <dl><dt id="arg-p">p<a class="anchor" aria-label="anchor" href="#arg-p"></a></dt>
-<dd><p>A list containing the parameter structure:</p><ul><li><p><code>beta</code>: Vector of population parameters</p></li>
-<li><p><code>Omega</code>: Covariance matrix for random effects</p></li>
-<li><p><code>Sigma_prop</code>: Proportional error variance (optional)</p></li>
-<li><p><code>Sigma_add</code>: Additive error variance (optional)</p></li>
+<dd><p>A list containing the parameter structure:</p><ul><li><p><code>beta</code>: Vector of population parameters (fixed effects)
+e.g., clearance (CL), volume (V), absorption rate (ka)</p></li>
+<li><p><code>Omega</code>: Covariance matrix for random effects (between-subject variability)
+diagonal elements are variances, off-diagonal are covariances</p></li>
+<li><p><code>Sigma_prop</code>: Proportional error variance (optional)
+represents CV² of residual error</p></li>
+<li><p><code>Sigma_add</code>: Additive error variance (optional)
+represents constant error magnitude</p></li>
 </ul></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A list containing:</p><ul><li><p><code>values</code>: Transformed parameter values</p></li>
-<li><p><code>backtransformfunc</code>: Function to back-transform parameters</p></li>
-<li><p><code>d_psi_d_psitrans_long</code>: Derivatives of the transformation</p></li>
-<li><p><code>d_bi_d_omega</code>: Derivatives of random effects with respect to Omega</p></li>
-<li><p><code>d_omega_d_Omega</code>: Derivatives of omega with respect to Omega</p></li>
+    <p>A list containing:</p><ul><li><p><code>values</code>: Vector of transformed parameter values on optimization scale</p></li>
+<li><p><code>backtransformfunc</code>: Function to convert optimized values back to original scale</p></li>
+<li><p><code>d_psi_d_psitrans_long</code>: Function for computing long-form parameter derivatives</p></li>
+<li><p><code>d_psi_d_psitrans_short</code>: Function for computing short-form parameter derivatives</p></li>
+<li><p><code>d_bi_d_omega</code>: Derivatives of random effects with respect to Omega elements</p></li>
+<li><p><code>d_omega_d_Omega</code>: Derivatives of transformed Omega with respect to untransformed</p></li>
 </ul></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The function performs several transformations:</p><ul><li><p>Log-transforms positive parameters (beta and diagonal elements of Omega)</p></li>
-<li><p>Transforms correlation parameters using the inverse hyperbolic tangent</p></li>
-<li><p>Computes derivatives for the transformation</p></li>
-<li><p>Handles fixed parameters (specified as strings)</p></li>
-</ul><p>The back-transformation function can be used to convert the optimized parameters back to
-their original scale. The derivatives are used in the optimization process to compute
-gradients and Hessians.</p>
-    </div>
+    <p>Parameter Transformations:</p><ul><li><p>Population Parameters (beta):
+- Log transformation for positive parameters
+- Identity transformation for unrestricted parameters
+- Logit transformation for parameters bounded between 0 and 1</p></li>
+<li><p>Variance Components (Omega diagonal):
+- Log transformation to ensure positivity
+- Typically represents between-subject variability</p></li>
+<li><p>Correlation Components (Omega off-diagonal):
+- Inverse hyperbolic tangent (atanh) transformation
+- Ensures correlations remain between -1 and 1</p></li>
+<li><p>Residual Error (Sigma):
+- Log transformation for variance parameters
+- Handles both proportional and additive error structures</p></li>
+</ul><p>Derivative Computations:</p><ul><li><p>First-order derivatives for optimization algorithms</p></li>
+<li><p>Chain rule applied for composed transformations</p></li>
+<li><p>Separate handling of variance and correlation parameters</p></li>
+<li><p>Support for both dense and sparse matrices</p></li>
+</ul><p>Special Features:</p><ul><li><p>Handles fixed parameters (specified as character strings)</p></li>
+<li><p>Preserves parameter names throughout transformations</p></li>
+<li><p>Automatic conversion of exponential error to proportional</p></li>
+<li><p>Validates parameter values and transformations</p></li>
+</ul></div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Define parameters</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Define a two-compartment model parameters</span></span></span>
 <span class="r-in"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  beta <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>cl <span class="op">=</span> <span class="fl">5</span>, v1 <span class="op">=</span> <span class="fl">10</span>, v2 <span class="op">=</span> <span class="fl">30</span>, q <span class="op">=</span> <span class="fl">10</span>, ka <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  <span class="co"># Population parameters (fixed effects)</span></span></span>
+<span class="r-in"><span>  beta <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>cl <span class="op">=</span> <span class="fl">5</span>,    <span class="co"># Clearance (L/h)</span></span></span>
+<span class="r-in"><span>          v1 <span class="op">=</span> <span class="fl">10</span>,    <span class="co"># Central volume (L)</span></span></span>
+<span class="r-in"><span>          v2 <span class="op">=</span> <span class="fl">30</span>,    <span class="co"># Peripheral volume (L)</span></span></span>
+<span class="r-in"><span>          q <span class="op">=</span> <span class="fl">10</span>,     <span class="co"># Inter-compartmental clearance (L/h)</span></span></span>
+<span class="r-in"><span>          ka <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,    <span class="co"># Absorption rate (1/h)</span></span></span>
+<span class="r-in"><span>  </span></span>
+<span class="r-in"><span>  <span class="co"># Between-subject variability (30% CV on all parameters)</span></span></span>
 <span class="r-in"><span>  Omega <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.09</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>,</span></span>
 <span class="r-in"><span>                  <span class="fl">0</span>, <span class="fl">0.09</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>,</span></span>
 <span class="r-in"><span>                  <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0.09</span>, <span class="fl">0</span>, <span class="fl">0</span>,</span></span>
 <span class="r-in"><span>                  <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0.09</span>, <span class="fl">0</span>,</span></span>
 <span class="r-in"><span>                  <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0.09</span><span class="op">)</span>, nrow <span class="op">=</span> <span class="fl">5</span>, ncol <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  </span></span>
+<span class="r-in"><span>  <span class="co"># Residual error (20% CV)</span></span></span>
 <span class="r-in"><span>  Sigma_prop <span class="op">=</span> <span class="fl">0.04</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Convert to optimizable form</span></span></span>
+<span class="r-in"><span><span class="co"># Convert to optimization scale</span></span></span>
 <span class="r-in"><span><span class="va">p_optim</span> <span class="op">&lt;-</span> <span class="fu">p_to_optim</span><span class="op">(</span><span class="va">p</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Back-transform parameters</span></span></span>
+<span class="r-in"><span><span class="co"># Back-transform to original scale</span></span></span>
 <span class="r-in"><span><span class="va">p_orig</span> <span class="op">&lt;-</span> <span class="va">p_optim</span><span class="op">$</span><span class="fu">backtransformfunc</span><span class="op">(</span><span class="va">p_optim</span><span class="op">$</span><span class="va">values</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
