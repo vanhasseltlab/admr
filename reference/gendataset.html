@@ -107,34 +107,68 @@ and is compatible with both population PK modeling and simulation workflows.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Create model options for a two-compartment model with first-order absorption</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Define the two-compartment model using RxODE</span></span></span>
+<span class="r-in"><span><span class="va">rxModel</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/rxode2.html" class="external-link">RxODE</a></span><span class="op">(</span><span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="co"># Central compartment</span></span></span>
+<span class="r-in"><span>  <span class="va">d</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/stats/TDist.html" class="external-link">dt</a></span><span class="op">(</span><span class="va">centr</span><span class="op">)</span> <span class="op">=</span> <span class="op">-</span><span class="va">cl</span> <span class="op">*</span> <span class="va">centr</span> <span class="op">-</span> <span class="va">q</span> <span class="op">*</span> <span class="va">centr</span> <span class="op">+</span> <span class="va">q</span> <span class="op">*</span> <span class="va">periph</span> <span class="op">+</span> <span class="va">ka</span> <span class="op">*</span> <span class="va">depot</span></span></span>
+<span class="r-in"><span>  <span class="co"># Peripheral compartment</span></span></span>
+<span class="r-in"><span>  <span class="va">d</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/stats/TDist.html" class="external-link">dt</a></span><span class="op">(</span><span class="va">periph</span><span class="op">)</span> <span class="op">=</span> <span class="va">q</span> <span class="op">*</span> <span class="va">centr</span> <span class="op">-</span> <span class="va">q</span> <span class="op">*</span> <span class="va">periph</span></span></span>
+<span class="r-in"><span>  <span class="co"># Depot compartment</span></span></span>
+<span class="r-in"><span>  <span class="va">d</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/stats/TDist.html" class="external-link">dt</a></span><span class="op">(</span><span class="va">depot</span><span class="op">)</span> <span class="op">=</span> <span class="op">-</span><span class="va">ka</span> <span class="op">*</span> <span class="va">depot</span></span></span>
+<span class="r-in"><span>  <span class="co"># Concentration in central compartment</span></span></span>
+<span class="r-in"><span>  <span class="va">cp</span> <span class="op">=</span> <span class="va">centr</span> <span class="op">/</span> <span class="va">v1</span></span></span>
+<span class="r-in"><span><span class="op">}</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  </span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Define prediction function for a two-compartment model</span></span></span>
+<span class="r-in"><span><span class="va">predder</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">time</span>, <span class="va">theta_i</span>, <span class="va">dose</span> <span class="op">=</span> <span class="fl">100</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="va">n_individuals</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">theta_i</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">n_individuals</span><span class="op">)</span><span class="op">)</span> <span class="va">n_individuals</span> <span class="op">&lt;-</span> <span class="fl">1</span></span></span>
+<span class="r-in"><span>  </span></span>
+<span class="r-in"><span>  <span class="co"># Create event table for dosing and sampling</span></span></span>
+<span class="r-in"><span>  <span class="va">ev</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/eventTable.html" class="external-link">eventTable</a></span><span class="op">(</span>amount.units<span class="op">=</span><span class="st">"mg"</span>, time.units<span class="op">=</span><span class="st">"hours"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">ev</span><span class="op">$</span><span class="fu">add.dosing</span><span class="op">(</span>dose <span class="op">=</span> <span class="va">dose</span>, nbr.doses <span class="op">=</span> <span class="fl">1</span>, start.time <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">ev</span><span class="op">$</span><span class="fu">add.sampling</span><span class="op">(</span><span class="va">time</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  </span></span>
+<span class="r-in"><span>  <span class="co"># Solve ODE system</span></span></span>
+<span class="r-in"><span>  <span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/rxSolve.html" class="external-link">rxSolve</a></span><span class="op">(</span><span class="va">rxModel</span>, params <span class="op">=</span> <span class="va">theta_i</span>, events <span class="op">=</span> <span class="va">ev</span>, cores <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  </span></span>
+<span class="r-in"><span>  <span class="co"># Return matrix of predictions</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="va">out</span><span class="op">$</span><span class="va">cp</span>, nrow <span class="op">=</span> <span class="va">n_individuals</span>, ncol <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">time</span><span class="op">)</span>, byrow <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Create options for a two-compartment model</span></span></span>
 <span class="r-in"><span><span class="va">opts</span> <span class="op">&lt;-</span> <span class="fu"><a href="genopts.html">genopts</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  f <span class="op">=</span> <span class="va">predder</span>,  <span class="co"># Prediction function (defined elsewhere)</span></span></span>
-<span class="r-in"><span>  time <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.1</span>, <span class="fl">.25</span>, <span class="fl">.5</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">5</span>, <span class="fl">8</span>, <span class="fl">12</span><span class="op">)</span>,  <span class="co"># Sampling times</span></span></span>
+<span class="r-in"><span>  f <span class="op">=</span> <span class="va">predder</span>,</span></span>
+<span class="r-in"><span>  time <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.1</span>, <span class="fl">.25</span>, <span class="fl">.5</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">5</span>, <span class="fl">8</span>, <span class="fl">12</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  p <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span>    <span class="co"># Population parameters (fixed effects)</span></span></span>
-<span class="r-in"><span>    beta <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>cl <span class="op">=</span> <span class="fl">5</span>, v1 <span class="op">=</span> <span class="fl">10</span>, v2 <span class="op">=</span> <span class="fl">30</span>, q <span class="op">=</span> <span class="fl">10</span>, ka <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>    <span class="co"># Between-subject variability (random effects)</span></span></span>
+<span class="r-in"><span>    beta <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>cl <span class="op">=</span> <span class="fl">5</span>,    <span class="co"># Clearance (L/h)</span></span></span>
+<span class="r-in"><span>            v1 <span class="op">=</span> <span class="fl">10</span>,    <span class="co"># Central volume (L)</span></span></span>
+<span class="r-in"><span>            v2 <span class="op">=</span> <span class="fl">30</span>,    <span class="co"># Peripheral volume (L)</span></span></span>
+<span class="r-in"><span>            q <span class="op">=</span> <span class="fl">10</span>,     <span class="co"># Inter-compartmental clearance (L/h)</span></span></span>
+<span class="r-in"><span>            ka <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,    <span class="co"># Absorption rate (1/h)</span></span></span>
+<span class="r-in"><span>    </span></span>
+<span class="r-in"><span>    <span class="co"># Between-subject variability (30% CV on all parameters)</span></span></span>
 <span class="r-in"><span>    Omega <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.09</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>,</span></span>
 <span class="r-in"><span>                    <span class="fl">0</span>, <span class="fl">0.09</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>,</span></span>
 <span class="r-in"><span>                    <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0.09</span>, <span class="fl">0</span>, <span class="fl">0</span>,</span></span>
 <span class="r-in"><span>                    <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0.09</span>, <span class="fl">0</span>,</span></span>
 <span class="r-in"><span>                    <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0.09</span><span class="op">)</span>, nrow <span class="op">=</span> <span class="fl">5</span>, ncol <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>    <span class="co"># Proportional residual error (20% CV)</span></span></span>
+<span class="r-in"><span>    </span></span>
+<span class="r-in"><span>    <span class="co"># Residual error (20% CV)</span></span></span>
 <span class="r-in"><span>    Sigma_prop <span class="op">=</span> <span class="fl">0.04</span></span></span>
 <span class="r-in"><span>  <span class="op">)</span>,</span></span>
-<span class="r-in"><span>  nsim <span class="op">=</span> <span class="fl">2500</span>,  <span class="co"># Number of simulated subjects</span></span></span>
-<span class="r-in"><span>  n <span class="op">=</span> <span class="fl">500</span>       <span class="co"># Number of Monte Carlo samples</span></span></span>
+<span class="r-in"><span>  nsim <span class="op">=</span> <span class="fl">2500</span>,  <span class="co"># Number of Monte Carlo samples</span></span></span>
+<span class="r-in"><span>  n <span class="op">=</span> <span class="fl">500</span>,      <span class="co"># Number of individuals</span></span></span>
+<span class="r-in"><span>  fo_appr <span class="op">=</span> <span class="cn">FALSE</span>  <span class="co"># Use Monte Carlo approximation</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'predder' not found</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Generate dataset in raw matrix format</span></span></span>
-<span class="r-in"><span><span class="va">data_raw</span> <span class="op">&lt;-</span> <span class="fu">gendataset</span><span class="op">(</span><span class="va">opts</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'opts' not found</span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Generate dataset in nlmixr format (for use with nlmixr2)</span></span></span>
-<span class="r-in"><span><span class="va">data_nlmixr</span> <span class="op">&lt;-</span> <span class="fu">gendataset</span><span class="op">(</span><span class="va">opts</span>, nlmixrform <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'opts' not found</span>
+<span class="r-in"><span><span class="co"># Generate a dataset with 100 individuals</span></span></span>
+<span class="r-in"><span><span class="va">dataset</span> <span class="op">&lt;-</span> <span class="fu">gendataset</span><span class="op">(</span><span class="va">opts</span>, n <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">expect_named</span><span class="op">(</span><span class="va">dataset</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"time"</span>, <span class="st">"value"</span>, <span class="st">"id"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in expect_named(dataset, c("time", "value", "id")):</span> could not find function "expect_named"</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
