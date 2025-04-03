@@ -65,19 +65,31 @@
 #' - Number of available Monte Carlo samples
 #'
 #' @examples
+#' # Define the two-compartment model using RxODE
+#' rxModel <- RxODE({
+#'   # Central compartment
+#'   d/dt(centr) = -cl * centr - q * centr + q * periph + ka * depot
+#'   # Peripheral compartment
+#'   d/dt(periph) = q * centr - q * periph
+#'   # Depot compartment
+#'   d/dt(depot) = -ka * depot
+#'   # Concentration in central compartment
+#'   cp = centr / v1
+#' })
+#'
 #' # Define prediction function for a two-compartment model
 #' predder <- function(time, theta_i, dose = 100) {
 #'   n_individuals <- nrow(theta_i)
 #'   if (is.null(n_individuals)) n_individuals <- 1
-#'   
+#'
 #'   # Create event table for dosing and sampling
 #'   ev <- eventTable(amount.units="mg", time.units="hours")
 #'   ev$add.dosing(dose = dose, nbr.doses = 1, start.time = 0)
 #'   ev$add.sampling(time)
-#'   
+#'
 #'   # Solve ODE system
 #'   out <- rxSolve(rxModel, params = theta_i, events = ev, cores = 0)
-#'   
+#'
 #'   # Return matrix of predictions
 #'   matrix(out$cp, nrow = n_individuals, ncol = length(time), byrow = TRUE)
 #' }
@@ -93,69 +105,59 @@
 #'             v2 = 30,    # Peripheral volume (L)
 #'             q = 10,     # Inter-compartmental clearance (L/h)
 #'             ka = 1),    # Absorption rate (1/h)
-#'     
+#'
 #'     # Between-subject variability (30% CV on all parameters)
 #'     Omega = matrix(c(0.09, 0, 0, 0, 0,
 #'                     0, 0.09, 0, 0, 0,
 #'                     0, 0, 0.09, 0, 0,
 #'                     0, 0, 0, 0.09, 0,
 #'                     0, 0, 0, 0, 0.09), nrow = 5, ncol = 5),
-#'     
+#'
 #'     # Residual error (20% CV)
 #'     Sigma_prop = 0.04
 #'   ),
 #'   nsim = 2500,  # Number of Monte Carlo samples
 #'   n = 500,      # Number of individuals
-#'   fo_appr = FALSE,  # Use Monte Carlo approximation
-#'   omega_expansion = 1.2  # Expand covariance during estimation
+#'   fo_appr = FALSE  # Use Monte Carlo approximation
 #' )
 #'
-#' # Compute expectations using FO approximation
-#' # Useful for quick approximations or when nsim is small
-#' opts$fo_appr <- TRUE
-#' ev_fo <- gen_pop_EV(opts)
-#' expect_named(ev_fo, c("E", "V"))
-#'
-#' # Compute expectations using MC approximation
-#' # More accurate but computationally intensive
-#' opts$fo_appr <- FALSE
-#' ev_mc <- gen_pop_EV(opts)
-#' expect_named(ev_mc, c("E", "V"))
+#' # Generate population expectations
+#' ev <- gen_pop_EV(opts)
 #'
 #' @export
 gen_pop_EV <- function(opts) {
   if (opts$fo_appr) {
     # First-Order Conditional Estimation (FOCE) approach
-    
+
     # Generate random effects samples
     bi <- gen_bi(opts)
-    
+
     # Compute importance sampling weights for random effects
     # logweights = log density of samples under target distribution
     logweights <- samplogdensfun(bi, opts$p, opts$omega_expansion)
     weights <- logweights %>% logdens2wt()  # Convert to normalized weights
-    
+
     # Compute FOCE approximation for each individual
     # Map over each row of random effects matrix
-    rawres <- map(1:nrow(bi), 
-                  ~foceapprEV_single(opts, 
+    rawres <- map(1:nrow(bi),
+                  ~foceapprEV_single(opts,
                                    bi[.,,drop=FALSE],  # Random effects for one individual
                                    opts$biseq[.,,drop=FALSE]))  # Sequential random effects
-    
+
     # Compute weighted means of expectations and covariances
     E_pred <- Reduce('+', map2(rawres, weights, ~.x$E * .y))  # Weighted mean
     V_pred <- Reduce('+', map2(rawres, weights, ~.x$V * .y))  # Weighted covariance
-    
+
   } else {
     # Monte Carlo approach
-    
+
     # Compute expectations using direct Monte Carlo simulation
     res <- MCapprEV(opts)
     E_pred <- res$E  # Monte Carlo estimate of mean
     V_pred <- res$V  # Monte Carlo estimate of covariance
   }
-  
+
   # Return population-level expectations
   return(list(E = E_pred,  # Expected mean at each time point
               V = V_pred)) # Expected covariance matrix
-} 
+}

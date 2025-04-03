@@ -76,19 +76,69 @@
 #' }
 #'
 #' @examples
-#' # Create test data with a one-compartment model
-#' test_data <- create_test_data()
-#' opts <- test_data$opts
-#' obs <- test_data$obs
+#' # Define the two-compartment model using RxODE
+#' rxModel <- RxODE({
+#'   # Central compartment
+#'   d/dt(centr) = -cl * centr - q * centr + q * periph + ka * depot
+#'   # Peripheral compartment
+#'   d/dt(periph) = q * centr - q * periph
+#'   # Depot compartment
+#'   d/dt(depot) = -ka * depot
+#'   # Concentration in central compartment
+#'   cp = centr / v1
+#' })
 #'
-#' # Generate fitting function with aggregate data
-#' fitfun <- genfitfunc(opts, obs)
+#' # Define prediction function for a two-compartment model
+#' predder <- function(time, theta_i, dose = 100) {
+#'   n_individuals <- nrow(theta_i)
+#'   if (is.null(n_individuals)) n_individuals <- 1
+#'   
+#'   # Create event table for dosing and sampling
+#'   ev <- eventTable(amount.units="mg", time.units="hours")
+#'   ev$add.dosing(dose = dose, nbr.doses = 1, start.time = 0)
+#'   ev$add.sampling(time)
+#'   
+#'   # Solve ODE system
+#'   out <- rxSolve(rxModel, params = theta_i, events = ev, cores = 0)
+#'   
+#'   # Return matrix of predictions
+#'   matrix(out$cp, nrow = n_individuals, ncol = length(time), byrow = TRUE)
+#' }
 #'
-#' # Evaluate likelihood at initial parameters
-#' nll <- fitfun(opts$pt)
+#' # Create options for a two-compartment model
+#' opts <- genopts(
+#'   f = predder,
+#'   time = c(.1, .25, .5, 1, 2, 3, 5, 8, 12),
+#'   p = list(
+#'     # Population parameters (fixed effects)
+#'     beta = c(cl = 5,    # Clearance (L/h)
+#'             v1 = 10,    # Central volume (L)
+#'             v2 = 30,    # Peripheral volume (L)
+#'             q = 10,     # Inter-compartmental clearance (L/h)
+#'             ka = 1),    # Absorption rate (1/h)
+#'     
+#'     # Between-subject variability (30% CV on all parameters)
+#'     Omega = matrix(c(0.09, 0, 0, 0, 0,
+#'                     0, 0.09, 0, 0, 0,
+#'                     0, 0, 0.09, 0, 0,
+#'                     0, 0, 0, 0.09, 0,
+#'                     0, 0, 0, 0, 0.09), nrow = 5, ncol = 5),
+#'     
+#'     # Residual error (20% CV)
+#'     Sigma_prop = 0.04
+#'   ),
+#'   nsim = 2500,  # Number of Monte Carlo samples
+#'   n = 500,      # Number of individuals
+#'   fo_appr = FALSE  # Use Monte Carlo approximation
+#' )
 #'
-#' # Get detailed output including expected values
-#' nll_detailed <- fitfun(opts$pt, givedetails = TRUE)
+#' # Generate objective function for optimization
+#' objfun <- genfitfunc(opts)
+#'
+#' # Test the objective function with initial parameters
+#' init_params <- opts$p$beta
+#' nll <- objfun(init_params)
+#' expect_type(nll, "double")
 #'
 #' @export
 genfitfunc <- function(opts, obs) {

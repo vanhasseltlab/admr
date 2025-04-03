@@ -62,30 +62,64 @@ The function supports reproducible simulations through the seed parameter
 and is compatible with both population PK modeling and simulation workflows.
 }
 \examples{
-# Create model options for a two-compartment model with first-order absorption
+# Define the two-compartment model using RxODE
+rxModel <- RxODE({
+  # Central compartment
+  d/dt(centr) = -cl * centr - q * centr + q * periph + ka * depot
+  # Peripheral compartment
+  d/dt(periph) = q * centr - q * periph
+  # Depot compartment
+  d/dt(depot) = -ka * depot
+  # Concentration in central compartment
+  cp = centr / v1
+})
+
+# Define prediction function for a two-compartment model
+predder <- function(time, theta_i, dose = 100) {
+  n_individuals <- nrow(theta_i)
+  if (is.null(n_individuals)) n_individuals <- 1
+  
+  # Create event table for dosing and sampling
+  ev <- eventTable(amount.units="mg", time.units="hours")
+  ev$add.dosing(dose = dose, nbr.doses = 1, start.time = 0)
+  ev$add.sampling(time)
+  
+  # Solve ODE system
+  out <- rxSolve(rxModel, params = theta_i, events = ev, cores = 0)
+  
+  # Return matrix of predictions
+  matrix(out$cp, nrow = n_individuals, ncol = length(time), byrow = TRUE)
+}
+
+# Create options for a two-compartment model
 opts <- genopts(
-  f = predder,  # Prediction function (defined elsewhere)
-  time = c(.1, .25, .5, 1, 2, 3, 5, 8, 12),  # Sampling times
+  f = predder,
+  time = c(.1, .25, .5, 1, 2, 3, 5, 8, 12),
   p = list(
     # Population parameters (fixed effects)
-    beta = c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1),
-    # Between-subject variability (random effects)
+    beta = c(cl = 5,    # Clearance (L/h)
+            v1 = 10,    # Central volume (L)
+            v2 = 30,    # Peripheral volume (L)
+            q = 10,     # Inter-compartmental clearance (L/h)
+            ka = 1),    # Absorption rate (1/h)
+    
+    # Between-subject variability (30\% CV on all parameters)
     Omega = matrix(c(0.09, 0, 0, 0, 0,
                     0, 0.09, 0, 0, 0,
                     0, 0, 0.09, 0, 0,
                     0, 0, 0, 0.09, 0,
                     0, 0, 0, 0, 0.09), nrow = 5, ncol = 5),
-    # Proportional residual error (20\% CV)
+    
+    # Residual error (20\% CV)
     Sigma_prop = 0.04
   ),
-  nsim = 2500,  # Number of simulated subjects
-  n = 500       # Number of Monte Carlo samples
+  nsim = 2500,  # Number of Monte Carlo samples
+  n = 500,      # Number of individuals
+  fo_appr = FALSE  # Use Monte Carlo approximation
 )
 
-# Generate dataset in raw matrix format
-data_raw <- gendataset(opts)
-
-# Generate dataset in nlmixr format (for use with nlmixr2)
-data_nlmixr <- gendataset(opts, nlmixrform = TRUE)
+# Generate a dataset with 100 individuals
+dataset <- gendataset(opts, n = 100)
+expect_named(dataset, c("time", "value", "id"))
 
 }
