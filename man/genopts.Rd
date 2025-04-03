@@ -27,19 +27,26 @@ genopts(
 )
 }
 \arguments{
-\item{f}{The prediction function that simulates the model output given parameters and time points.}
+\item{f}{The prediction function that simulates the model output given parameters and time points.
+This function should have the signature \verb{function(time, theta_i, ...)} where:
+\itemize{
+\item \code{time}: Vector of time points
+\item \code{theta_i}: Matrix of individual parameters
+\item Returns: Matrix of predictions
+}}
 
 \item{time}{Vector of time points at which to evaluate the model predictions.}
 
 \item{p}{List containing initial parameter values and structure:
 \itemize{
-\item \code{beta}: Vector of population parameters
-\item \code{Omega}: Covariance matrix for random effects
+\item \code{beta}: Vector of population parameters (fixed effects)
+\item \code{Omega}: Covariance matrix for random effects (between-subject variability)
 \item \code{Sigma_prop}: Proportional error variance (optional)
 \item \code{Sigma_add}: Additive error variance (optional)
 }}
 
-\item{h}{The error function that computes the variance of the predictions.}
+\item{h}{The error function that computes the variance of the predictions. If not provided,
+a default function is used that adds proportional and additive error components.}
 
 \item{nsim}{Number of Monte Carlo samples per iteration. Default is 1.}
 
@@ -84,41 +91,92 @@ A list containing:
 \item \code{p_thetai}: Random effects density function
 \item \code{g}: Parameter transformation function
 \item \code{pt}: Transformed initial parameters
+\item \code{ptrans}: Function to back-transform parameters
+\item \code{pderiv}: Function to compute parameter derivatives
+\item \code{d_g_d_beta}: Derivative of g with respect to beta
+\item \code{d_g_d_bi}: Derivative of g with respect to random effects
+\item \code{d_bi_d_omega}: Derivative of random effects with respect to Omega
+\item \code{d_omega_d_Omega}: Derivative of transformed Omega with respect to untransformed
 }
 }
 \description{
 \code{genopts} initializes and generates core options and settings for aggregate data modeling
 and optimization. It creates a comprehensive options object that contains all necessary
 information for model fitting, including random effects, simulation settings, and
-likelihood approximations.
+likelihood approximations. This function is the main entry point for setting up aggregate
+data modeling in the package.
 }
 \details{
-This function is the main entry point for setting up aggregate data modeling. It creates
-an options object that contains all necessary information for model fitting, including
-the prediction function, parameter structure, and various settings for the optimization
-algorithm.
-}
-\examples{
-# Define prediction function
-predder <- function(time, theta_i, dose = 100) {
-  # ... prediction function implementation ...
+The function performs several key operations:
+\itemize{
+\item Parameter Transformation:
+- Converts parameters to optimization scale
+- Computes derivatives for optimization
+- Handles fixed parameters
+
+\item Random Effects Generation:
+- Uses Sobol sequences for quasi-random sampling
+- Applies normal quantile transformation
+- Supports custom distributions
+
+\item Error Function Setup:
+- Handles proportional error: y = f(t,θ)(1 + ε)
+- Handles additive error: y = f(t,θ) + ε
+- Combines both error types
 }
 
-# Create options
+Key features:
+\itemize{
+\item Automatic derivative computation for parameter transformations
+\item Support for multiple models and parameter structures
+\item Flexible error model specification
+\item Efficient random effects generation
+}
+}
+\examples{
+# Define prediction function for a two-compartment model
+predder <- function(time, theta_i, dose = 100) {
+  n_individuals <- nrow(theta_i)
+  if (is.null(n_individuals)) n_individuals <- 1
+  
+  # Create event table for dosing and sampling
+  ev <- eventTable(amount.units="mg", time.units="hours")
+  ev$add.dosing(dose = dose, nbr.doses = 1, start.time = 0)
+  ev$add.sampling(time)
+  
+  # Solve ODE system
+  out <- rxSolve(rxModel, params = theta_i, events = ev, cores = 0)
+  
+  # Return matrix of predictions
+  matrix(out$cp, nrow = n_individuals, ncol = length(time), byrow = TRUE)
+}
+
+# Create options for a two-compartment model
 opts <- genopts(
   f = predder,
   time = c(.1, .25, .5, 1, 2, 3, 5, 8, 12),
   p = list(
-    beta = c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1),
+    # Population parameters (fixed effects)
+    beta = c(cl = 5,    # Clearance (L/h)
+            v1 = 10,    # Central volume (L)
+            v2 = 30,    # Peripheral volume (L)
+            q = 10,     # Inter-compartmental clearance (L/h)
+            ka = 1),    # Absorption rate (1/h)
+    
+    # Between-subject variability (30\% CV on all parameters)
     Omega = matrix(c(0.09, 0, 0, 0, 0,
                     0, 0.09, 0, 0, 0,
                     0, 0, 0.09, 0, 0,
                     0, 0, 0, 0.09, 0,
                     0, 0, 0, 0, 0.09), nrow = 5, ncol = 5),
+    
+    # Residual error (20\% CV)
     Sigma_prop = 0.04
   ),
-  nsim = 2500,
-  n = 500
+  nsim = 2500,  # Number of Monte Carlo samples
+  n = 500,      # Number of individuals
+  fo_appr = FALSE,  # Use Monte Carlo approximation
+  omega_expansion = 1.2  # Expand covariance during estimation
 )
 
 }

@@ -8,16 +8,19 @@ meancov(m, wt)
 }
 \arguments{
 \item{m}{A numeric matrix or data frame containing the observations.
-Each row represents an individual, and each column represents a time point.}
+Each row represents an individual, and each column represents a time point.
+For pharmacometric data, columns typically represent concentration measurements
+at different time points.}
 
 \item{wt}{Optional vector of weights for each observation. If not provided,
-all observations are weighted equally.}
+all observations are weighted equally. Weights can be used to account for
+different sample sizes or reliability of different data sources.}
 }
 \value{
 A list containing:
 \itemize{
-\item \code{E}: Vector of means for each time point
-\item \code{V}: Covariance matrix of the observations
+\item \code{E}: Vector of means for each time point (population typical values)
+\item \code{V}: Covariance matrix representing the variability between individuals
 }
 }
 \description{
@@ -28,23 +31,40 @@ for use in aggregate data modeling.
 \details{
 The function computes:
 \itemize{
-\item The mean of each column (time point) using \code{colMeans}
-\item The covariance matrix using \code{cov.wt} with maximum likelihood estimation
+\item The mean of each column (time point) using \code{colMeans} for unweighted data
+or weighted means for weighted data
+\item The covariance matrix using \code{cov.wt} with maximum likelihood estimation,
+which provides unbiased estimates of the population covariance
 }
 
-If weights are provided, they are used in both the mean and covariance calculations.
-The function uses maximum likelihood estimation for the covariance matrix, which
-is appropriate for aggregate data modeling.
+The maximum likelihood estimation method is used because:
+\itemize{
+\item It provides unbiased estimates of the covariance matrix
+\item It is appropriate for aggregate data modeling where we want to estimate
+population parameters
+\item It handles both balanced and unbalanced designs through optional weights
+}
+
+Key features:
+\itemize{
+\item Handles missing data automatically through the underlying \code{cov.wt} function
+\item Provides numerically stable computations
+\item Can be used with both raw PK data and simulated data
+\item Supports weighted calculations for meta-analysis or combined analysis
+}
 }
 \examples{
-# Create a matrix of observations
+# Create a matrix of concentration measurements
+# 10 subjects measured at 10 time points
 m <- matrix(rnorm(100), nrow = 10, ncol = 10)
 
-# Compute mean and covariance without weights
+# Compute unweighted mean and covariance
+# Useful for single-study analysis
 result <- meancov(m)
 
-# Compute mean and covariance with weights
-weights <- runif(10)
+# Compute weighted mean and covariance
+# Useful for meta-analysis or when combining studies
+weights <- runif(10)  # weights could represent study sizes
 result_weighted <- meancov(m, weights)
 
 }

@@ -65,9 +65,50 @@
 #' - Number of available Monte Carlo samples
 #'
 #' @examples
-#' # Create test data with a two-compartment model
-#' test_data <- create_test_data()
-#' opts <- test_data$opts
+#' # Define prediction function for a two-compartment model
+#' predder <- function(time, theta_i, dose = 100) {
+#'   n_individuals <- nrow(theta_i)
+#'   if (is.null(n_individuals)) n_individuals <- 1
+#'   
+#'   # Create event table for dosing and sampling
+#'   ev <- eventTable(amount.units="mg", time.units="hours")
+#'   ev$add.dosing(dose = dose, nbr.doses = 1, start.time = 0)
+#'   ev$add.sampling(time)
+#'   
+#'   # Solve ODE system
+#'   out <- rxSolve(rxModel, params = theta_i, events = ev, cores = 0)
+#'   
+#'   # Return matrix of predictions
+#'   matrix(out$cp, nrow = n_individuals, ncol = length(time), byrow = TRUE)
+#' }
+#'
+#' # Create options for a two-compartment model
+#' opts <- genopts(
+#'   f = predder,
+#'   time = c(.1, .25, .5, 1, 2, 3, 5, 8, 12),
+#'   p = list(
+#'     # Population parameters (fixed effects)
+#'     beta = c(cl = 5,    # Clearance (L/h)
+#'             v1 = 10,    # Central volume (L)
+#'             v2 = 30,    # Peripheral volume (L)
+#'             q = 10,     # Inter-compartmental clearance (L/h)
+#'             ka = 1),    # Absorption rate (1/h)
+#'     
+#'     # Between-subject variability (30% CV on all parameters)
+#'     Omega = matrix(c(0.09, 0, 0, 0, 0,
+#'                     0, 0.09, 0, 0, 0,
+#'                     0, 0, 0.09, 0, 0,
+#'                     0, 0, 0, 0.09, 0,
+#'                     0, 0, 0, 0, 0.09), nrow = 5, ncol = 5),
+#'     
+#'     # Residual error (20% CV)
+#'     Sigma_prop = 0.04
+#'   ),
+#'   nsim = 2500,  # Number of Monte Carlo samples
+#'   n = 500,      # Number of individuals
+#'   fo_appr = FALSE,  # Use Monte Carlo approximation
+#'   omega_expansion = 1.2  # Expand covariance during estimation
+#' )
 #'
 #' # Compute expectations using FO approximation
 #' # Useful for quick approximations or when nsim is small

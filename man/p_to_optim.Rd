@@ -9,20 +9,25 @@ p_to_optim(p)
 \arguments{
 \item{p}{A list containing the parameter structure:
 \itemize{
-\item \code{beta}: Vector of population parameters
-\item \code{Omega}: Covariance matrix for random effects
+\item \code{beta}: Vector of population parameters (fixed effects)
+e.g., clearance (CL), volume (V), absorption rate (ka)
+\item \code{Omega}: Covariance matrix for random effects (between-subject variability)
+diagonal elements are variances, off-diagonal are covariances
 \item \code{Sigma_prop}: Proportional error variance (optional)
+represents CV² of residual error
 \item \code{Sigma_add}: Additive error variance (optional)
+represents constant error magnitude
 }}
 }
 \value{
 A list containing:
 \itemize{
-\item \code{values}: Transformed parameter values
-\item \code{backtransformfunc}: Function to back-transform parameters
-\item \code{d_psi_d_psitrans_long}: Derivatives of the transformation
-\item \code{d_bi_d_omega}: Derivatives of random effects with respect to Omega
-\item \code{d_omega_d_Omega}: Derivatives of omega with respect to Omega
+\item \code{values}: Vector of transformed parameter values on optimization scale
+\item \code{backtransformfunc}: Function to convert optimized values back to original scale
+\item \code{d_psi_d_psitrans_long}: Function for computing long-form parameter derivatives
+\item \code{d_psi_d_psitrans_short}: Function for computing short-form parameter derivatives
+\item \code{d_bi_d_omega}: Derivatives of random effects with respect to Omega elements
+\item \code{d_omega_d_Omega}: Derivatives of transformed Omega with respect to untransformed
 }
 }
 \description{
@@ -31,34 +36,67 @@ the parameters and computing their derivatives. This function handles the transf
 both fixed and random effect parameters.
 }
 \details{
-The function performs several transformations:
+Parameter Transformations:
 \itemize{
-\item Log-transforms positive parameters (beta and diagonal elements of Omega)
-\item Transforms correlation parameters using the inverse hyperbolic tangent
-\item Computes derivatives for the transformation
-\item Handles fixed parameters (specified as strings)
+\item Population Parameters (beta):
+- Log transformation for positive parameters
+- Identity transformation for unrestricted parameters
+- Logit transformation for parameters bounded between 0 and 1
+
+\item Variance Components (Omega diagonal):
+- Log transformation to ensure positivity
+- Typically represents between-subject variability
+
+\item Correlation Components (Omega off-diagonal):
+- Inverse hyperbolic tangent (atanh) transformation
+- Ensures correlations remain between -1 and 1
+
+\item Residual Error (Sigma):
+- Log transformation for variance parameters
+- Handles both proportional and additive error structures
 }
 
-The back-transformation function can be used to convert the optimized parameters back to
-their original scale. The derivatives are used in the optimization process to compute
-gradients and Hessians.
+Derivative Computations:
+\itemize{
+\item First-order derivatives for optimization algorithms
+\item Chain rule applied for composed transformations
+\item Separate handling of variance and correlation parameters
+\item Support for both dense and sparse matrices
+}
+
+Special Features:
+\itemize{
+\item Handles fixed parameters (specified as character strings)
+\item Preserves parameter names throughout transformations
+\item Automatic conversion of exponential error to proportional
+\item Validates parameter values and transformations
+}
 }
 \examples{
-# Define parameters
+# Define a two-compartment model parameters
 p <- list(
-  beta = c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1),
+  # Population parameters (fixed effects)
+  beta = c(cl = 5,    # Clearance (L/h)
+          v1 = 10,    # Central volume (L)
+          v2 = 30,    # Peripheral volume (L)
+          q = 10,     # Inter-compartmental clearance (L/h)
+          ka = 1),    # Absorption rate (1/h)
+  
+  # Between-subject variability (30\% CV on all parameters)
   Omega = matrix(c(0.09, 0, 0, 0, 0,
                   0, 0.09, 0, 0, 0,
                   0, 0, 0.09, 0, 0,
                   0, 0, 0, 0.09, 0,
                   0, 0, 0, 0, 0.09), nrow = 5, ncol = 5),
+  
+  # Residual error (20\% CV)
   Sigma_prop = 0.04
 )
 
-# Convert to optimizable form
+# Convert to optimization scale
 p_optim <- p_to_optim(p)
 
-# Back-transform parameters
+# Back-transform to original scale
 p_orig <- p_optim$backtransformfunc(p_optim$values)
 
 }

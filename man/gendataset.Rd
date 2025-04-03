@@ -26,12 +26,12 @@ If \code{nlmixrform} is FALSE, returns a matrix of simulated observations with d
 \code{nsim} x \code{length(time)}. If \code{nlmixrform} is TRUE, returns a data frame in nlmixr
 format with columns:
 \itemize{
-\item \code{dv}: Observed value
-\item \code{time}: Observation time
-\item \code{id}: Subject ID
-\item \code{amt}: Dose amount (NA for observations)
-\item \code{evid}: Event type (101 for dosing, 0 for observation)
-\item \code{cmt}: Compartment number (1 for depot, 2 for central)
+\item \code{dv}: Dependent variable (e.g., concentration measurements)
+\item \code{time}: Observation time points
+\item \code{id}: Subject identifier
+\item \code{amt}: Dose amount (NA for observations, typically in mg)
+\item \code{evid}: Event identifier (101 for dosing, 0 for observation)
+\item \code{cmt}: Compartment number (1 for depot/dosing, 2 for central/observation)
 }
 }
 \description{
@@ -40,40 +40,52 @@ specified in the options. The function can generate data in either raw format or
 with optional residual error.
 }
 \details{
-The function generates simulated data by:
+The function generates simulated data following these steps:
 \itemize{
-\item Generating random effects from the specified distribution
-\item Computing individual parameters using the transformation function
-\item Simulating observations using the prediction function
-\item Adding residual error if requested
-\item Formatting the output according to the specified format
+\item Generating random effects (η) from a multivariate normal distribution
+\item Computing individual parameters (θᵢ) using log-normal transformations
+\item Simulating concentration-time profiles using the prediction function
+\item Adding residual error components if requested:
+- Proportional error: y = f(t,θ)(1 + ε), where ε ~ N(0,σ²_prop)
+- Additive error: y = f(t,θ) + ε, where ε ~ N(0,σ²_add)
+\item Formatting output in either raw matrix or nlmixr-compatible format
 }
 
-The residual error can be either proportional (Sigma_prop) or additive (Sigma_add), or both.
-The function uses the random number generator seed to ensure reproducibility.
+The residual error model can include:
+\itemize{
+\item Proportional error only (specified by Sigma_prop)
+\item Additive error only (specified by Sigma_add)
+\item Combined error model (both Sigma_prop and Sigma_add)
+}
+
+The function supports reproducible simulations through the seed parameter
+and is compatible with both population PK modeling and simulation workflows.
 }
 \examples{
-# Create model options
+# Create model options for a two-compartment model with first-order absorption
 opts <- genopts(
-  f = predder,
-  time = c(.1, .25, .5, 1, 2, 3, 5, 8, 12),
+  f = predder,  # Prediction function (defined elsewhere)
+  time = c(.1, .25, .5, 1, 2, 3, 5, 8, 12),  # Sampling times
   p = list(
+    # Population parameters (fixed effects)
     beta = c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1),
+    # Between-subject variability (random effects)
     Omega = matrix(c(0.09, 0, 0, 0, 0,
                     0, 0.09, 0, 0, 0,
                     0, 0, 0.09, 0, 0,
                     0, 0, 0, 0.09, 0,
                     0, 0, 0, 0, 0.09), nrow = 5, ncol = 5),
+    # Proportional residual error (20\% CV)
     Sigma_prop = 0.04
   ),
-  nsim = 2500,
-  n = 500
+  nsim = 2500,  # Number of simulated subjects
+  n = 500       # Number of Monte Carlo samples
 )
 
-# Generate dataset in raw format
+# Generate dataset in raw matrix format
 data_raw <- gendataset(opts)
 
-# Generate dataset in nlmixr format
+# Generate dataset in nlmixr format (for use with nlmixr2)
 data_nlmixr <- gendataset(opts, nlmixrform = TRUE)
 
 }

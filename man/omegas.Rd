@@ -8,18 +8,22 @@ omegas(diag, offdiag, n_om)
 }
 \arguments{
 \item{diag}{Value for the diagonal elements of the matrix. This represents the
-variance of each random effect.}
+variance of each random effect. For log-normal distributions, this is
+typically the squared coefficient of variation (CV²) on the log scale.}
 
 \item{offdiag}{Value for the off-diagonal elements of the matrix. This represents
-the covariance between random effects.}
+the covariance between random effects. A value of 0 indicates
+independence between random effects.}
 
-\item{n_om}{Size of the matrix (number of random effects).}
+\item{n_om}{Size of the matrix (number of random effects). This should match the
+number of random effects in your model (e.g., 2 for CL and V in a
+one-compartment model).}
 }
 \value{
 A symmetric matrix of size \code{n_om} x \code{n_om} with:
 \itemize{
-\item Diagonal elements equal to \code{diag}
-\item Off-diagonal elements equal to \code{offdiag}
+\item Diagonal elements equal to \code{diag} (variances)
+\item Off-diagonal elements equal to \code{offdiag} (covariances)
 }
 }
 \description{
@@ -28,24 +32,45 @@ This function is useful for creating initial or fixed covariance matrices for
 random effects in pharmacometric models.
 }
 \details{
-The function creates a symmetric matrix where:
+The function creates a symmetric covariance matrix for random effects where:
 \itemize{
-\item All diagonal elements are set to \code{diag}
-\item All off-diagonal elements are set to \code{offdiag}
+\item Diagonal elements (ω²) represent the between-subject variability
+\item Off-diagonal elements (ω_ij) represent correlations between parameters
+\item The resulting matrix must be positive definite for valid computations
 }
 
-This is particularly useful for creating:
+Common use cases include:
 \itemize{
-\item Initial covariance matrices for optimization
-\item Fixed covariance matrices for simulation
-\item Simple covariance structures for testing
+\item Initial estimates for model fitting:
+- Setting diagonal elements to expected variability (e.g., 0.09 for 30\% CV)
+- Starting with zero correlations (offdiag = 0)
+\item Simulation studies:
+- Specifying known parameter variability
+- Testing impact of parameter correlations
+\item Sensitivity analysis:
+- Evaluating model behavior under different variability assumptions
+- Assessing impact of parameter correlations
+}
+
+Mathematical details:
+\itemize{
+\item For log-normal distributions: CV ≈ sqrt(exp(ω²) - 1)
+\item Correlation ρ_ij = ω_ij / sqrt(ω_ii * ω_jj)
+\item Matrix must be positive definite: all eigenvalues > 0
 }
 }
 \examples{
-# Create a 3x3 matrix with diagonal = 0.09 and off-diagonal = 0
-omega1 <- omegas(0.09, 0, 3)
+# Create a diagonal matrix for a one-compartment model
+# 30\% CV on CL and V (ω² = 0.09 for each)
+omega1 <- omegas(0.09, 0, 2)
 
-# Create a 5x5 matrix with diagonal = 0.09 and off-diagonal = 0.01
-omega2 <- omegas(0.09, 0.01, 5)
+# Create a matrix with correlations for a two-compartment model
+# 30\% CV on all parameters (CL, V1, Q, V2)
+# Correlation of 0.3 between parameters
+omega2 <- omegas(0.09, 0.03, 4)
+
+# Create a matrix for testing parameter correlations
+# High variability (50\% CV, ω² = 0.25) and strong correlations (0.1)
+omega3 <- omegas(0.25, 0.1, 3)
 
 }
