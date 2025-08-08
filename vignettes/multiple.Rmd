@@ -1,0 +1,455 @@
+---
+title: "Combining multiple datasets with admr"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Combining multiple datasets with admr}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  markdown: 
+    wrap: sentence
+---
+
+# Introduction to Aggregate Data Modeling with `admr`
+
+This vignette provides an introduction to using multiple datasets with the `admr` package in R. The `admr` package is designed for aggregate data modeling, particularly in pharmacokinetics. It allows users to fit complex models to aggregate data, which can be derived from individual-level observations, published models, or summary statistics.
+
+
+## Required Packages
+
+```{r setup, message = FALSE, warning = FALSE}
+library(admr)
+library(rxode2)
+library(nlmixr2)
+library(dplyr)
+library(tidyr)
+library(mnorm)
+library(ggplot2)  # For visualization
+```
+
+## Understanding the Data Format
+
+The `admr` package works with two types of data formats:
+
+1. **Raw Data**: Individual-level observations in a wide or long format
+2. **Aggregate Data**: Summary statistics (mean and covariance) computed from raw data
+
+Let's look at the examplomycin dataset, which we'll use throughout this vignette:
+
+```{r, cache=TRUE}
+# Load the dataset
+data(examplomycin)
+head(examplomycin)
+
+# Basic dataset information
+cat("Number of subjects:", length(unique(examplomycin$ID)), "\n")
+cat("Number of time points:", length(unique(examplomycin$TIME)), "\n")
+cat("Time points:", paste(sort(unique(examplomycin$TIME)), collapse = ", "), "\n")
+```
+
+## Data Preparation
+
+### Converting Raw Data to Aggregate Format
+
+The first step is to convert your raw data into aggregate format. Here's how to do it:
+
+```{r, cache=TRUE}
+# Convert to wide format
+examplomycin_wide <- examplomycin %>%
+  filter(EVID != 101) %>%  # Remove dosing events
+  dplyr::select(ID, TIME, DV) %>%  # Select relevant columns
+  pivot_wider(names_from = TIME, values_from = DV) %>%  # Convert to wide format
+  dplyr::select(-c(1))  # Remove ID column
+
+# Create aggregated data and filter timepoints 1 to 4
+examplomycin_aggregated1 <- examplomycin_wide %>%
+  dplyr::select(c(1:4)) %>%
+  meancov()
+
+examplomycin_aggregated2 <- examplomycin_wide %>%
+  dplyr::select(c(5:9)) %>%
+  meancov()
+  
+# View the structure of aggregated data
+str(examplomycin_aggregated1)
+str(examplomycin_aggregated2)
+```
+
+### Visualizing the Data
+
+Before fitting the model, it's helpful to visualize the data:
+
+```{r, cache=TRUE}
+# Give different colours to 1-4 and 5-9
+examplomycin <- admr::examplomycin %>%
+  filter(EVID != 101) %>%  # Remove dosing events
+  mutate(TIME = factor(TIME, levels = c(0.1, 0.25, 0.5, 1, 2, 3, 5, 8, 12))) %>%
+  mutate(group = ifelse(TIME %in% c(0.1, 0.25, 0.5, 1), "Dataset 1", "Dataset 2"))
+
+# Plot the data
+ggplot(examplomycin, aes(x = TIME, y = DV, color = group)) +
+  geom_point() +
+  labs(
+    title = "Examplomycin Concentration Data",
+    x = "Time (hours)",
+    y = "Concentration (mg/L)"
+  ) +
+  theme_minimal() +
+  scale_color_manual(values = c("Dataset 1" = "blue", "Dataset 2" = "red"))
+```
+
+## Model Specification
+
+### Defining the Pharmacokinetic Model
+
+We'll use a two-compartment model with first-order absorption. We use a solved model approach for simplicity. The model parameters include:
+```{r, message = FALSE, warning = FALSE}
+rxModel <- function(){
+    model({
+      cp = linCmt(
+    cl,           # Clearance
+    v1,           # Volume of central compartment
+    v2,           # Volume of peripheral compartment
+    q,            # Inter-compartmental clearance
+    ka            # Absorption rate constant
+  )})
+}
+
+rxModel <- rxode2(rxModel)
+rxModel <- rxModel$simulationModel
+```
+
+### Creating the Prediction Function
+
+The prediction function is crucial for the `admr` package. It:
+- Constructs the event table for dosing and sampling
+- Solves the RxODE model
+- Returns predicted concentrations in the required format
+
+```{r, cache=TRUE}
+predder <- function(time, theta_i, dose = 100) {
+    n_individuals <- nrow(theta_i)
+    
+    if (is.null(n_individuals)) {
+      n_individuals <- 1
+    }
+
+    # Create event table
+    ev <- eventTable(amount.units="mg", time.units="hours")
+    ev$add.dosing(dose = dose, nbr.doses = 1, start.time = 0)
+    ev$add.sampling(time)
+    
+    # Solve model
+    out <- rxSolve(rxModel, params = theta_i, events = ev, cores = 0)
+    
+    # Format output
+    cp_matrix <- matrix(out$cp, nrow = n_individuals, ncol = length(time), 
+                        byrow = TRUE)
+    
+    return(cp_matrix)
+}
+```
+
+## Model Fitting
+
+### Setting Up Model Options
+
+The `genopts` function creates an options object that controls the model fitting process:
+
+```{r, cache=TRUE}
+opts1 <- genopts(
+  time = c(.1, .25, .5, 1),  # Observation times
+  p = list(
+    beta = c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1),  # Population parameters
+    Omega = matrix(c(0.09, 0, 0, 0, 0,
+                    0, 0.09, 0, 0, 0,
+                    0, 0, 0.09, 0, 0,
+                    0, 0, 0, 0.09, 0,
+                    0, 0, 0, 0, 0.09), nrow = 5, ncol = 5),  # Random effects
+    Sigma_prop = 0.04  # Proportional error
+  ),
+  nsim = 10000,  # Number of Monte Carlo samples
+  n = 500,      # Number of individuals
+  fo_appr = FALSE,  # Disable first-order approximation
+  omega_expansion = 1,  # Omega expansion factor
+  f = predder    # Prediction function
+)
+
+
+
+opts2 <- genopts(
+  time = c(2, 3, 5, 8, 12),  # Observation times
+  p = list(
+    beta = c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1),  # Population parameters
+    Omega = matrix(c(0.09, 0, 0, 0, 0,
+                    0, 0.09, 0, 0, 0,
+                    0, 0, 0.09, 0, 0,
+                    0, 0, 0, 0.09, 0,
+                    0, 0, 0, 0, 0.09), nrow = 5, ncol = 5),  # Random effects
+    Sigma_prop = 0.04  # Proportional error
+  ),
+  nsim = 10000,  # Number of Monte Carlo samples
+  n = 500,      # Number of individuals
+  fo_appr = FALSE,  # Disable first-order approximation
+  omega_expansion = 1,  # Omega expansion factor
+  f = predder    # Prediction function
+)
+
+```
+
+### Fitting the Model
+
+The `fitIRMC` function fits the model using the IRMC algorithm:
+
+```{r, cache=TRUE}
+fit.admrMC <- admr::fitMC(
+  opts = opts,
+  obs = examplomycin_aggregated,
+  chains = 1,  # Number of parallel chains
+  maxiter = 2000  # Maximum iterations
+)
+
+
+opts <- list(opts1,opts2)
+examplomycin_aggregated <- list(examplomycin_aggregated1, examplomycin_aggregated2)
+
+fit.admr <- fitIRMC(
+  opts = opts,
+  obs = examplomycin_aggregated,
+  chains = 2,  # Number of parallel chains
+  maxiter = 2000,  # Maximum iterations
+  single_dataframe = FALSE  # Use separate data frames for each dataset
+)
+```
+
+## Model Diagnostics
+
+### Basic Diagnostics
+
+The `print` method provides a summary of the model fit:
+
+```{r}
+print(fit.admr)
+```
+
+
+### Convergence Assessment
+
+The `plot` method visualizes the convergence of the model fit:
+
+```{r}
+plot(fit.admr)
+```
+
+### Parameter Estimates
+
+Let's examine the parameter estimates and their uncertainty:
+
+```{r}
+# Extract parameter estimates
+params <- fit.admr$final_params
+cat("Final parameter estimates:\n")
+print(params)
+
+# Extract covariance matrix
+cov_matrix <- fit.admr$covariance_matrix
+cat("\nParameter covariance matrix:\n")
+print(cov_matrix)
+```
+
+## Advanced Features
+
+### Multiple Chains
+
+The `fitIRMC` function supports multiple chains to improve optimization:
+
+```{r, eval=FALSE}
+# Run with multiple chains
+result <- fitIRMC(
+  opts = opts,
+  obs = examplomycin_aggregated,
+  chains = 3,  # Number of chains
+  pertubation = 0.1  # Perturbation factor
+)
+
+```
+
+### Phase-Based Optimization
+
+You can customize the optimization phases:
+
+```{r, eval=FALSE}
+# Custom phase fractions
+result <- fitIRMC(
+  opts = opts,
+  obs = examplomycin_aggregated,
+  phase_fractions = c(0.3, 0.3, 0.2, 0.2)  # Custom phase distribution
+)
+```
+
+### Creating a dosing plot
+To visualize the dosing regimen and predicted concentrations, you can create a dosing plot. Here's how to do it using the `randtoolbox` package for pseudo-random sampling:
+```{r}
+library(randtoolbox)
+
+# Create a dosing plot
+n_subjects <- 2000  # Number of subjects
+time_points <- seq(0, 24, by = 0.1)  # Dense time points for smooth curves
+
+beta <- fit.admr$transformed_params$beta  # Extract population parameters
+omega <- fit.admr$transformed_params$Omega  # Extract covariance matrix
+
+# Create parameter matrix for all subjects
+z <- qnorm(sobol(n = n_subjects, dim = 5))
+L <- omega
+mv <- z %*% chol(L)
+
+theta_i <- matrix(nrow = n_subjects, ncol = 5)
+
+
+for(i in 1:n_subjects) {
+  theta_i[i,] <- c(
+    beta["cl"] * exp(mv[i,1]),
+    beta["v1"] * exp(mv[i,2]),
+    beta["v2"] * exp(mv[i,3]),
+    beta["q"]  * exp(mv[i,4]),
+    beta["ka"] * exp(mv[i,5])
+  )
+}
+
+ev <- eventTable(amount.units="mg", time.units="hours")
+ev$add.dosing(dose = 100, nbr.doses = 4, dosing.interval = 6)
+ev$add.sampling(time_points)
+sim <- rxSolve(rxModel, params = theta_i, events = ev, cores = 0, nSub = 1) 
+confint(sim, "cp", level=0.95) %>%
+    plot(ylab="Central Concentration")
+```
+
+Or using the `rxode2` package:
+```{r}
+rxModel2 <- function(){
+  ini({
+    cl <- 4.958792  # Clearance
+    v1 <- 10.155736 # Volume of central compartment
+    v2 <- 29.998821 # Volume of peripheral compartment
+    q <- 9.826382   # Inter-compartmental clearance
+    ka <- 1.027525  # Absorption rate constant
+
+    eta_cl ~ 0.102043
+    eta_v1 ~ 0.1092146
+    eta_v2 ~ 0.09671472
+    eta_q ~ 0.106602
+    eta_ka ~ 0.09167618
+  })
+  model({
+    cl <- cl * exp(eta_cl)
+    v1 <- v1 * exp(eta_v1)
+    v2 <- v2 * exp(eta_v2)
+    q <- q * exp(eta_q)
+    ka <- ka * exp(eta_ka)
+    cp = linCmt(cl, v1, v2, q, ka)
+  })
+}
+
+rxModel2 <- rxode2(rxModel2)
+rxModel2 <- rxModel2$simulationModel
+
+sim2 <- rxSolve(rxModel2, events = ev, cores = 0, nSub = 2000)
+
+confint(sim2, "cp", level=0.95) %>%
+    plot(ylab="Central Concentration")
+
+```
+
+
+```{r}
+predder <- function(time, theta_i, dose = 200) {
+
+    
+    # Solve model
+    
+  
+    # Format output
+
+    
+    return(cp_matrix)
+}
+
+pred <- predder(time_points, theta_i)
+
+pred_df <- data.frame(
+  time = rep(time_points, each = n_subjects),
+  concentration = as.vector(pred),
+  sim.id = rep(1:n_subjects, times = length(time_points)))
+
+percentiles_df <- pred_df %>%
+  group_by(time) %>%
+  summarize(
+    median = median(concentration),
+    lower = quantile(concentration, 0.05),
+    upper = quantile(concentration, 0.95)
+  ) %>%
+  ungroup()
+
+
+dosing_plot <- ggplot() +
+  # Shaded 95% prediction interval
+  geom_ribbon(data = percentiles_df, 
+              aes(x = time, ymin = lower, ymax = upper), 
+              fill = "#cce5df", alpha = 0.6) +
+  
+  # Median line
+  geom_line(data = percentiles_df, 
+            aes(x = time, y = median), 
+            color = "#1b9e77", size = 1.2) +
+  labs(
+    x = "Time (hours)",
+    y = "Plasma concentration (mg/L)"
+  ) +
+  theme_bw(base_size=16) +
+  theme(
+    panel.border = element_rect(color = "black", fill = NA, size = 0.5),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  ) +
+  scale_x_continuous(breaks = seq(0, 36, by = 4))
+
+print(dosing_plot)
+
+
+```
+
+
+
+## Best Practices
+
+1. **Data Preparation**:
+   - Always check your data for missing values and outliers
+   - Ensure time points are consistent across subjects
+   - Consider the impact of dosing events on your analysis
+
+2. **Model Specification**:
+   - Start with a simple model and gradually add complexity
+   - Use meaningful initial values for parameters
+   - Consider parameter transformations for better estimation
+
+3. **Model Fitting**:
+   - Use multiple chains to improve optimization
+   - Monitor convergence carefully
+   - Check parameter estimates for biological plausibility
+
+4. **Diagnostics**:
+   - Always examine convergence plots
+   - Validate model predictions against observed data
+
+## Next Steps
+
+After mastering the basics, you might want to explore:
+
+1. **Advanced modelling**:
+   - Adjusting Monte Carlo sample size
+   - Residual analysis
+   - Parameter sensitivity analysis
+   - Model comparison
+
+For more information, see the package documentation and other vignettes.

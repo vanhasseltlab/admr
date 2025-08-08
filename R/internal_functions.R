@@ -54,11 +54,20 @@ foceapprEV_single <- function(opts,bi,biseq # Uses the First-Order Conditional E
 }
 
 #' @noRd
-g_iter <- function(opts,bi) { # Applies the model g to generate individual-specific parameter values theta_i based on random effects bi.
+g_iter2 <- function(opts,bi) { # Applies the model g to generate individual-specific parameter values theta_i based on random effects bi.
   if (!is.matrix(bi)) {
     opts$g(opts$p$beta,bi,opts$ai)
   } else {
     t(apply(bi,1,function(i) opts$g(opts$p$beta,i,opts$ai)))
+  }
+}
+
+#' @noRd
+g_iter <- function(opts, bi) {
+  if (!is.matrix(bi)) {
+    opts$g(opts$p$beta, bi, opts$ai[1])  # single individual
+  } else {
+    t(sapply(seq_len(nrow(bi)), function(j) opts$g(opts$p$beta, bi[j,], opts$ai[j,1])))
   }
 }
 
@@ -366,10 +375,13 @@ upd_opts <- function(opts0,optslist) { # Initializes and generates core options 
   update_biseq <- TRUE
   if ("biseq" %in% names(optslist)) update_biseq <- FALSE
   for (i in names(optslist)) opts0[[i]] <- optslist[[i]]
-  if (update_biseq) opts0$biseq <- NA;
+  if (update_biseq) opts0$biseq <- NA
+
   opts0$adist <- NULL
-  opts0$ptrans <- NULL;opts0$pderiv <- NULL;
-  opts0$ai <- NULL;opts0$pt <- NULL
+  opts0$ptrans <- NULL
+  opts0$pderiv <- NULL
+  opts0$ai <- NULL
+  opts0$pt <- NULL
   opts0$obs <- NULL
   opts0$d_g_d_beta <- NULL
   opts0$d_g_d_bi <- NULL
@@ -516,6 +528,75 @@ run_chain <- function(chain, opts, obs, init, maxiter, phase_fractions, convcrit
 }
 
 #' @noRd
+run_chainMC <- function(chain, opts, obs, init, maxiter, convcrit_nll, pertubation, nomap) {
+  chain_start_time <- Sys.time()  # Start time for the chain
+  chain_init <- if (chain == 1) init else perturb_init(init, pertubation)
+
+  if (nomap) {
+    opts <- opts %>% p2opts(chain_init) %>% obs2opts(obs)
+  } else {
+    opts <- map(seq_along(opts), function(i) opts[[i]] %>% p2opts(chain_init) %>% obs2opts(obs[[i]]))
+  }
+
+  res <- tibble(
+    iter = 1,
+    parameters = vector("list", maxiter),
+    nll = NA_real_,
+    iteration_time = 0
+  )
+
+  i <- 1  # Initialize iteration counter for fitfun2
+
+
+  # Generate objective function based on number of models
+  if (nomap) {
+    fitfun <- genfitfunc(opts, obs)
+  } else {
+    fitfuns <- map(seq_along(opts), ~ genfitfunc(opts[[.x]], obs[[.x]]))
+    fitfun <- function(p) Reduce('+', map(fitfuns, ~ .(p)))
+  }
+
+  # Create wrapper function to track optimization progress
+  fitfun2 <- function(p) {
+    nllNow <- fitfun(p)
+    res$parameters[[i]] <<- p
+    res$iteration_time[i] <<- Sys.time()
+    res$nll[i] <<- nllNow
+    res$iter[i] <<- i
+
+    # Print progress every 50 iterations
+    if (i %% 50 == 0) {
+      cat("Iteration:", i, "- NLL:", nllNow, "\n")
+    }
+    i <<- i + 1
+    nllNow
+  }
+
+  # Run BOBYQA optimization with bounds
+  est <- nloptr::nloptr(chain_init,
+                        fitfun2,
+                        lb=chain_init-2,  # Lower bounds: 2 units below initial values
+                        ub=chain_init+2,  # Upper bounds: 2 units above initial values
+                        opts=list(
+                          algorithm="NLOPT_LN_BOBYQA",
+                          ftol_rel=.Machine$double.eps^2,  # Relative function tolerance
+                          maxeval = maxiter-2,                    # max number of evaluations
+                          check_derivatives = F))  # Skip derivative checking for performance
+
+
+  # Update variables for the next phase
+  best_params <- est$solution
+  best_nll <- fitfun(best_params)
+  res <- res[!is.na(res$nll), ]
+  chain_time <- as.numeric(difftime(Sys.time(), chain_start_time, units = "secs"))
+
+  cat(sprintf("\nChain %d Complete: Final NLL = %.3f, Time Elapsed = %.2f seconds\n \n",
+              chain, best_nll, chain_time))
+
+  return(list(res = res, best_nll = best_nll, best_params = best_params, time = chain_time))
+}
+
+#' @noRd
 handle_phase <- function(current_phase, opts, chain_init, best_params, best_nll, current_iter, phase_end_iter,
                          nomap, convcrit_nll, max_worse_iterations, res, maxiter, chain) {
   phase_converged <- FALSE
@@ -590,4 +671,42 @@ handle_phase <- function(current_phase, opts, chain_init, best_params, best_nll,
     phase_converged = phase_converged,
     current_iter = current_iter
   ))
+}
+
+#' @noRd
+prepare_boxplot_df <- function(E, V, time_points) { # Function to convert E and V to plot-ready data frame
+  mu <- as.numeric(E)
+  sd <- sqrt(diag(V))
+
+  data.frame(
+    time = time_points,
+    mean = mu,
+    lower_q1 = mu - 0.674 * sd,
+    upper_q3 = mu + 0.674 * sd,
+    lower_95 = mu - 1.96 * sd,
+    upper_95 = mu + 1.96 * sd
+  )
+}
+
+#' @noRd
+prepare_E_df <- function(E, label, time_points) {
+  data.frame(
+    time = time_points,
+    mean = as.numeric(E),
+    source = label
+  )
+}
+
+#' @noRd
+prepare_V_df <- function(V, label, time_points) {
+  V_mat <- as.matrix(V)
+
+  # Extract time points from row/col names
+  time_points_row <- rownames(V_mat)
+  time_points_col <- colnames(V_mat)
+  expand.grid(
+    time1 = time_points,
+    time2 = time_points
+  ) |>
+    transform(value = as.vector(V_mat), source = label)
 }
