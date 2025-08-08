@@ -48,7 +48,8 @@ generate_data <- function(n, times, seed = 1) {
   set.seed(seed)
   
   # Define the pharmacokinetic model
-  mod <- RxODE({
+  mod <- function(){
+    model({
     # Parameters
     ke = cl / v1             # Elimination rate constant
     k12 = q / v1             # Rate constant for central to peripheral transfer
@@ -64,7 +65,12 @@ generate_data <- function(n, times, seed = 1) {
     
     # Concentration in the central compartment
     cp = central / v1
-  })
+    })
+
+  }
+  
+  mod <- rxode2(mod)
+  mod <- mod$simulationModel
 
   # Population parameters
   theta <- c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1)

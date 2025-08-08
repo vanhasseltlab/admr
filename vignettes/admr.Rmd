@@ -87,13 +87,15 @@ Before fitting the model, it's helpful to visualize the data:
 # Create a concentration-time plot
 ggplot(examplomycin, aes(x = TIME, y = DV)) +
   geom_point(alpha = 0.5) +
-  geom_smooth(method = "loess", se = TRUE) +
   labs(
     title = "Concentration-Time Profile",
     x = "Time (hours)",
     y = "Concentration (mg/L)"
   ) +
   theme_minimal()
+
+
+
 ```
 
 ## Model Specification
@@ -122,15 +124,20 @@ rxModel <- RxODE({
 
 2. Using the solved model approach (simpler):
 ```{r, message = FALSE, warning = FALSE}
-rxModel <- RxODE({
-  cp = linCmt(
-    cl,           # Clearance
-    v1,           # Volume of central compartment
-    v2,           # Volume of peripheral compartment
-    q,            # Inter-compartmental clearance
-    ka            # Absorption rate constant
-  )
-})
+# Define RxODE model
+rxModel <- function(){
+  model({
+    cp = linCmt(
+      cl,           # Clearance
+      v1,           # Volume of central compartment
+      v2,           # Volume of peripheral compartment
+      q,            # Inter-compartmental clearance
+      ka            # Absorption rate constant
+    )})
+}
+
+rxModel <- rxode2(rxModel)
+rxModel <- rxModel$simulationModel
 ```
 
 ### Creating the Prediction Function
@@ -182,10 +189,10 @@ opts <- genopts(
                     0, 0, 0, 0, 0.09), nrow = 5, ncol = 5),  # Random effects
     Sigma_prop = 0.04  # Proportional error
   ),
-  nsim = 2500,  # Number of Monte Carlo samples
+  nsim = 10000,  # Number of Monte Carlo samples
   n = 500,      # Number of individuals
   fo_appr = FALSE,  # Disable first-order approximation
-  omega_expansion = 1.2,  # Omega expansion factor
+  omega_expansion = 1,  # Omega expansion factor
   f = predder    # Prediction function
 )
 ```
@@ -195,11 +202,19 @@ opts <- genopts(
 The `fitIRMC` function fits the model using the IRMC algorithm:
 
 ```{r, cache=TRUE}
+fit.admrMC <- admr::fitMC(
+  opts = opts,
+  obs = examplomycin_aggregated,
+  chains = 1,  # Number of parallel chains
+  maxiter = 2000  # Maximum iterations
+)
+
+
 fit.admr <- admr::fitIRMC(
   opts = opts,
   obs = examplomycin_aggregated,
-  chains = 3,  # Number of parallel chains
-  maxiter = 100  # Maximum iterations
+  chains = 1,  # Number of parallel chains
+  maxiter = 200  # Maximum iterations
 )
 ```
 
@@ -212,6 +227,7 @@ The `print` method provides a summary of the model fit:
 ```{r}
 print(fit.admr)
 ```
+
 
 ### Convergence Assessment
 
@@ -227,7 +243,7 @@ Let's examine the parameter estimates and their uncertainty:
 
 ```{r}
 # Extract parameter estimates
-params <- fit.admr$final_params
+params <- fit.admr$transformed_params
 cat("Final parameter estimates:\n")
 print(params)
 
@@ -235,35 +251,6 @@ print(params)
 cov_matrix <- fit.admr$covariance_matrix
 cat("\nParameter covariance matrix:\n")
 print(cov_matrix)
-```
-
-## Advanced Features
-
-### Multiple Chains
-
-The `fitIRMC` function supports multiple chains to improve optimization:
-
-```{r, eval=FALSE}
-# Run with multiple chains
-result <- fitIRMC(
-  opts = opts,
-  obs = examplomycin_aggregated,
-  chains = 3,  # Number of chains
-  pertubation = 0.1  # Perturbation factor
-)
-```
-
-### Phase-Based Optimization
-
-You can customize the optimization phases:
-
-```{r, eval=FALSE}
-# Custom phase fractions
-result <- fitIRMC(
-  opts = opts,
-  obs = examplomycin_aggregated,
-  phase_fractions = c(0.3, 0.3, 0.2, 0.2)  # Custom phase distribution
-)
 ```
 
 ## Best Practices
@@ -285,24 +272,14 @@ result <- fitIRMC(
 
 4. **Diagnostics**:
    - Always examine convergence plots
-   - Check parameter correlations
    - Validate model predictions against observed data
 
 ## Next Steps
 
 After mastering the basics, you might want to explore:
 
-1. Advanced modeling features:
-   - Custom error models
-   - Parameter transformations
-   - Complex dosing regimens
-
-2. Performance optimization:
+1. **Advanced modelling**:
    - Adjusting Monte Carlo sample size
-   - Using first-order approximations
-   - Parallel computing options
-
-3. Additional diagnostics:
    - Residual analysis
    - Parameter sensitivity analysis
    - Model comparison

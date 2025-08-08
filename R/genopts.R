@@ -97,15 +97,15 @@
 #' predder <- function(time, theta_i, dose = 100) {
 #'   n_individuals <- nrow(theta_i)
 #'   if (is.null(n_individuals)) n_individuals <- 1
-#'   
+#'
 #'   # Create event table for dosing and sampling
 #'   ev <- eventTable(amount.units="mg", time.units="hours")
 #'   ev$add.dosing(dose = dose, nbr.doses = 1, start.time = 0)
 #'   ev$add.sampling(time)
-#'   
+#'
 #'   # Solve ODE system
 #'   out <- rxSolve(rxModel, params = theta_i, events = ev, cores = 0)
-#'   
+#'
 #'   # Return matrix of predictions
 #'   matrix(out$cp, nrow = n_individuals, ncol = length(time), byrow = TRUE)
 #' }
@@ -121,14 +121,14 @@
 #'             v2 = 30,    # Peripheral volume (L)
 #'             q = 10,     # Inter-compartmental clearance (L/h)
 #'             ka = 1),    # Absorption rate (1/h)
-#'     
+#'
 #'     # Between-subject variability (30% CV on all parameters)
 #'     Omega = matrix(c(0.09, 0, 0, 0, 0,
 #'                     0, 0.09, 0, 0, 0,
 #'                     0, 0, 0.09, 0, 0,
 #'                     0, 0, 0, 0.09, 0,
 #'                     0, 0, 0, 0, 0.09), nrow = 5, ncol = 5),
-#'     
+#'
 #'     # Residual error (20% CV)
 #'     Sigma_prop = 0.04
 #'   ),
@@ -151,7 +151,7 @@ genopts <- function(f, time, p, h, nsim = 1, n = 30, adist = NULL,
                     }) {
   # Validate input parameters
   if (is.null(n)) stop("n is null, breaking early")
-  
+
   # Set up default error function if not provided
   if (missing(h)) {
     h <- function(EV,p) {
@@ -164,45 +164,48 @@ genopts <- function(f, time, p, h, nsim = 1, n = 30, adist = NULL,
       EV
     }
   }
-  
+
   # Validate simulation settings
   if (nsim==1 & !fo_appr) stop("Error! nsim=1 but FO_appr is false!")
-  
+
   # Generate Sobol sequences for random effects
   totseq <- sobol(nsim,nrow(p$Omega)+length(adist))
   if (!is.matrix(totseq)) totseq <- matrix(totseq,nsim,nrow(p$Omega)+length(adist))
-  
+
   # Transform parameters for optimization
   p_res <- p_to_optim(p)
   ptrans <- p_res$backtransformfunc
   pderiv <- p_res$d_psi_d_psitrans_long
   pt <- p_res$values
   p2 <- ptrans(p_res$values) ## to remove fixed parameters as strings
-  
+
   # Compute derivatives of parameter transformation function
   d_g_d_beta_expr <- tryCatch(D(body(g)[[2]],"beta"),error=function(e) NA)
   d_g_d_beta <- tryCatch(function(beta,bi,...) eval(d_g_d_beta_expr),error=function(e) NA)
   d_g_d_bi_expr <- tryCatch(D(body(g)[[2]],"bi"),error=function(e) NA)
   d_g_d_bi <- tryCatch(function(beta,bi,...) eval(d_g_d_bi_expr),error=function(e) NA)
-  
+
   # Generate random effects sequence if not provided
   if (any(is.na(biseq))) {
     biseq <- apply(totseq[,1:nrow(p$Omega),drop=F],2,qnorm)
     biseq <- matrix(biseq,nsim,nrow(p$Omega))
   }
-  
+
   # Handle additional random effects if specified
   ai <- NULL
   if (!is.null(adist)) {
-    aiseq <- totseq[,nrow(p$Omega)+seq_along(adist),drop=F]
+    aiseq <- totseq[, nrow(p$Omega) + seq_along(adist), drop=F]
+    # Apply qnorm to the aiseq quantiles for each column
+    aiseq_qnorm <- apply(aiseq, 2, qnorm)
+
     if (!is.list(adist)) adist <- list(adist)
-    ai <- do.call(cbind,map(seq_along(adist),~adist[[.]](aiseq[,.])))
+    ai <- do.call(cbind, map(seq_along(adist), ~adist[[.]](aiseq_qnorm[, .])))
   }
-  
+
   # Return comprehensive options list
   list(f=f,g=g,time=time,p=p2,h=h,ptrans=ptrans,pderiv=pderiv,
        nsim=nsim,n=n,interact=interact,fo_appr=fo_appr,
-       ai=ai,biseq=biseq,pt=pt,
+       ai=ai,biseq=biseq,pt=pt, adist = adist,
        d_g_d_beta=d_g_d_beta,d_g_d_bi=d_g_d_bi,
        omega_expansion=omega_expansion,
        p_thetai=p_thetai,single_betas=single_betas,

@@ -40,14 +40,13 @@
 #' It includes several advanced features:
 #' \itemize{
 #'   \item Multiple optimization phases with different convergence criteria
-#'   \item Parallel chains with perturbed starting values
+#'   \item Chains with perturbed starting values
 #'   \item Phase-based optimization with automatic phase skipping
 #'   \item Convergence checking based on both likelihood and parameter stationarity
 #' }
 #'
 #' The optimization process is divided into phases, each with its own convergence criteria and
 #' settings. The algorithm can automatically skip phases if the optimization is not progressing.
-#' Multiple chains can be run in parallel to improve the chances of finding the global optimum.
 #'
 #' @examples
 #' # Load required libraries
@@ -57,7 +56,7 @@
 #' library(dplyr)
 #' library(tidyr)
 #' library(mnorm)
-#' 
+#'
 #' # Load and prepare data
 #' data(examplomycin)
 #' examplomycin_wide <- examplomycin %>%
@@ -65,11 +64,11 @@
 #'   dplyr::select(ID, TIME, DV) %>%
 #'   pivot_wider(names_from = TIME, values_from = DV) %>%
 #'   dplyr::select(-c(1))
-#' 
+#'
 #' # Create aggregated data
 #' examplomycin_aggregated <- examplomycin_wide %>%
 #'   admr::meancov()
-#' 
+#'
 #' # Define RxODE model
 #' rxModel <- RxODE({
 #'   cp = linCmt(
@@ -80,22 +79,22 @@
 #'     ka            # Absorption rate constant
 #'   )
 #' })
-#' 
+#'
 #' # Define prediction function
 #' predder <- function(time, theta_i, dose = 100) {
 #'   n_individuals <- nrow(theta_i)
 #'   if (is.null(n_individuals)) n_individuals <- 1
-#'   
+#'
 #'   ev <- eventTable(amount.units="mg", time.units="hours")
 #'   ev$add.dosing(dose = dose, nbr.doses = 1, start.time = 0)
 #'   ev$add.sampling(time)
-#'   
+#'
 #'   out <- rxSolve(rxModel, params = theta_i, events = ev, cores = 0)
 #'   cp_matrix <- matrix(out$cp, nrow = n_individuals, ncol = length(time),
 #'                       byrow = TRUE)
 #'   return(cp_matrix)
 #' }
-#' 
+#'
 #' # Create options
 #' opts <- genopts(
 #'   time = c(.1, .25, .5, 1, 2, 3, 5, 8, 12),
@@ -114,7 +113,7 @@
 #'   omega_expansion = 1.2,
 #'   f = predder
 #' )
-#' 
+#'
 #' # Run optimization
 #' result <- fitIRMC(opts, examplomycin_aggregated)
 #' print(result)
@@ -144,7 +143,7 @@ fitIRMC <- function(opts, obs, maxiter = 100, convcrit_nll = 1e-05,
   start_time <- Sys.time()  # Start time for the entire process
   chain_results <- vector("list", chains)  # Store results for each chain
 
-  # Run optimization chains in parallel
+  # Run optimization chains
   for (chain in seq_len(chains)) {
     chain_results[[chain]] <- run_chain(
       chain = chain,
@@ -260,6 +259,16 @@ fitIRMC <- function(opts, obs, maxiter = 100, convcrit_nll = 1e-05,
     data = list(
       opts = opts,
       obs = obs
+    ),
+    settings = list(
+      maxiter = maxiter,
+      convcrit_nll = convcrit_nll,
+      single_dataframe = single_dataframe,
+      phase_fractions = phase_fractions,
+      max_worse_iterations = max_worse_iterations,
+      chains = chains,
+      pertubation = pertubation,
+      seed = seed
     )
   )
 
@@ -362,6 +371,8 @@ plot.fitIRMC_result <- function(x, ...) {
   }
 
   chain_results <- x$chain_results
+  nomap <- x$settings$single_dataframe
+  opts <- x$data$opts
 
   # Prepare data for NLL trace
   nll_data <- do.call(rbind, lapply(seq_along(chain_results), function(chain) {
@@ -406,6 +417,7 @@ plot.fitIRMC_result <- function(x, ...) {
     }))
   }))
 
+
   # Reset row names to avoid mismatched indexing
   row.names(param_data) <- NULL
 
@@ -418,6 +430,7 @@ plot.fitIRMC_result <- function(x, ...) {
     theme_minimal() +
     scale_color_viridis_d() +
     theme(plot.title = element_text(hjust = 0.5))
+  print(p1)
 
   # Plot 2: Parameter Convergence
   p2 <- ggplot(param_data, aes(x = .data$Iteration, y = .data$Value, color = .data$Chain, group = interaction(.data$Chain, .data$Parameter))) +
@@ -432,10 +445,219 @@ plot.fitIRMC_result <- function(x, ...) {
     theme_minimal() +
     scale_color_viridis_d() +
     theme(plot.title = element_text(hjust = 0.5))
-
-  # Plot 3: Sensitivity Convergence
-
-  # Print the plots
-  print(p1)
   print(p2)
+
+  if (nomap == T) {
+    # Extract observations from the fitIRMC result
+    time_points <- x$data$opts$time
+    observations <- x$data$obs
+    predictions <- MCapprEV(upd_opts(x$data$opts, list(p = x$transformed_params)))
+
+    # Create plot-ready boxplot data for observations and predictions
+    obs_boxplot <- prepare_boxplot_df(observations$E, observations$V, time_points)
+    pred_boxplot <- prepare_boxplot_df(predictions$E, predictions$V, time_points)
+    obs_boxplot$source <- "Observed"
+    pred_boxplot$source <- "Predicted"
+    combined_boxplot <- rbind(obs_boxplot, pred_boxplot)
+
+    # Prepare data frames for E and V heatmaps
+    obs_E_df <- prepare_E_df(observations$E, "Observed", time_points)
+    pred_E_df <- prepare_E_df(predictions$E, "Predicted", time_points)
+    obs_V_df <- prepare_V_df(observations$V, "Observed", time_points)
+    pred_V_df <- prepare_V_df(predictions$V, "Predicted", time_points)
+
+
+    # Plot 3: Combined Boxplot with Mean and Variance Bands
+    p3 <- ggplot(combined_boxplot, aes(x = time)) +
+      # 95% interval ribbons
+      geom_ribbon(
+        aes(ymin = lower_95, ymax = upper_95, fill = source),
+        alpha = 0.2,
+        show.legend = FALSE
+      ) +
+      # IQR ribbons
+      geom_ribbon(
+        aes(ymin = lower_q1, ymax = upper_q3, fill = source),
+        alpha = 0.35
+      ) +
+      # Mean lines
+      geom_line(
+        aes(y = mean, color = source, linetype = source),
+        linewidth = 1
+      ) +
+      scale_fill_manual(values = c("Observed" = "#3B8AC4", "Predicted" = "#D1495B")) +
+      scale_color_manual(values = c("Observed" = "#3B8AC4", "Predicted" = "#D1495B")) +
+      scale_linetype_manual(values = c("Observed" = "solid", "Predicted" = "dashed")) +
+      labs(
+        title = "Observed vs Predicted: Mean and Variance Bands",
+        x = "Time (h)",
+        y = "Concentration",
+        fill = "",
+        color = "",
+        linetype = ""
+      ) +
+      theme_minimal(base_size = 14) +
+      theme(
+        plot.title = element_text(face = "bold", size = 16),
+        plot.subtitle = element_text(size = 13, margin = margin(b = 10)),
+        legend.position = "top",
+        legend.title = element_blank(),
+        legend.text = element_text(size = 13)
+      )
+
+
+    p_E <- ggplot(rbind(obs_E_df, pred_E_df), aes(x = time, y = 1, fill = mean)) +
+      geom_tile() +
+      facet_wrap(~source, ncol = 1) +
+      scale_fill_gradient2(
+        low = "blue", mid = "white", high = "red", midpoint = median(c(obs_E_df$mean, pred_E_df$mean))
+      ) +
+      labs(title = "Mean Vector (E)", x = "Time", y = "", fill = "Mean Value") +
+      theme_minimal() +
+      theme(axis.text.y = element_blank(), axis.ticks.y = element_blank())
+
+
+    combined_V_df <- rbind(obs_V_df, pred_V_df)
+    combined_V_df$time1 <- factor(combined_V_df$time1, levels = sort(unique(combined_V_df$time1)))
+    combined_V_df$time2 <- factor(combined_V_df$time2, levels = sort(unique(combined_V_df$time2)))
+
+    p_V <- ggplot(combined_V_df, aes(x = time1, y = time2, fill = value)) +
+      geom_tile(color = NA) +  # remove borders between tiles
+      facet_wrap(~source, ncol = 2) +
+      scale_fill_gradient2(
+        low = "blue", mid = "white", high = "red", midpoint = 0
+      ) +
+      labs(
+        title = "Variance-Covariance Matrix (V)",
+        x = "Time 1", y = "Time 2", fill = "Value"
+      ) +
+      coord_fixed() +
+      theme_minimal() +
+      theme(
+        panel.grid = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.ticks = element_blank()
+      )
+
+    print(p3)
+    print(p_E)
+    print(p_V)
+
+  } else {
+    for (i in 1:length(opts)){
+      # Extract observations from the fitIRMC result
+      time_points <- x$data$opts[[i]]$time
+      observations <- x$data$obs[[i]]
+      predictions <- MCapprEV(upd_opts(x$data$opts[[i]], list(p = x$transformed_params)))
+
+      # Create plot-ready boxplot data for observations and predictions
+      obs_boxplot <- prepare_boxplot_df(observations$E, observations$V, time_points)
+      pred_boxplot <- prepare_boxplot_df(predictions$E, predictions$V, time_points)
+      obs_boxplot$source <- "Observed"
+      pred_boxplot$source <- "Predicted"
+      combined_boxplot <- rbind(obs_boxplot, pred_boxplot)
+
+      # Prepare data frames for E and V heatmaps
+      obs_E_df <- prepare_E_df(observations$E, "Observed", time_points)
+      pred_E_df <- prepare_E_df(predictions$E, "Predicted", time_points)
+      obs_V_df <- prepare_V_df(observations$V, "Observed", time_points)
+      pred_V_df <- prepare_V_df(predictions$V, "Predicted", time_points)
+
+
+      res_E_df <- obs_E_df
+      res_E_df$mean <- obs_E_df$mean - pred_E_df$mean
+      res_E_df$source <- "Residual"
+
+      std_res_E_df <- obs_E_df
+      std_res_E_df$mean <- (obs_E_df$mean - pred_E_df$mean) / sqrt(pred_E_df$mean)
+      std_res_E_df$source <- "Standardized Residual"
+
+      combined_E_df <- rbind(obs_E_df, pred_E_df, res_E_df, std_res_E_df)
+
+
+      res_V_df <- obs_V_df
+      res_V_df$value <- obs_V_df$value - pred_V_df$value
+      res_V_df$source <- "Residual"
+
+      std_res_V_df <- pred_V_df
+      std_res_V_df$value <- (obs_V_df$value - pred_V_df$value) / sqrt(abs(pred_V_df$value))
+      std_res_V_df$source <- "Standardized Residual"
+
+      combined_V_df <- rbind(obs_V_df, pred_V_df, res_V_df, std_res_V_df)
+
+
+      # Plot 3: Combined Boxplot with Mean and Variance Bands
+      p3 <- ggplot(combined_boxplot, aes(x = time)) +
+        # 95% interval ribbons
+        geom_ribbon(
+          aes(ymin = lower_95, ymax = upper_95, fill = source),
+          alpha = 0.2,
+          show.legend = FALSE
+        ) +
+        # IQR ribbons
+        geom_ribbon(
+          aes(ymin = lower_q1, ymax = upper_q3, fill = source),
+          alpha = 0.35
+        ) +
+        # Mean lines
+        geom_line(
+          aes(y = mean, color = source, linetype = source),
+          linewidth = 1
+        ) +
+        scale_fill_manual(values = c("Observed" = "#3B8AC4", "Predicted" = "#D1495B")) +
+        scale_color_manual(values = c("Observed" = "#3B8AC4", "Predicted" = "#D1495B")) +
+        scale_linetype_manual(values = c("Observed" = "solid", "Predicted" = "dashed")) +
+        labs(
+          title = paste("Observed vs Predicted: Mean and Variance Bands (Dataframe", i, ")"),
+          x = "Time (h)",
+          y = "Concentration",
+          fill = "",
+          color = "",
+          linetype = ""
+        ) +
+        theme_minimal(base_size = 14) +
+        theme(
+          plot.title = element_text(face = "bold", size = 16),
+          plot.subtitle = element_text(size = 13, margin = margin(b = 10)),
+          legend.position = "top",
+          legend.title = element_blank(),
+          legend.text = element_text(size = 13)
+        )
+      print(p3)
+
+      p_E <- ggplot(combined_E_df, aes(x = time, y = 1, fill = mean)) +
+        geom_tile() +
+        facet_wrap(~source, ncol = 1) +
+        scale_fill_gradient2(
+          low = "blue", mid = "white", high = "red",
+          midpoint = median(combined_E_df$mean, na.rm = TRUE)
+        ) +
+        labs(title = "Mean Vector (E)", x = "Time", y = "", fill = "Value") +
+        theme_minimal() +
+        theme(axis.text.y = element_blank(), axis.ticks.y = element_blank())
+
+      print(p_E)
+
+      combined_V_df$time1 <- factor(combined_V_df$time1, levels = sort(unique(combined_V_df$time1)))
+      combined_V_df$time2 <- factor(combined_V_df$time2, levels = sort(unique(combined_V_df$time2)))
+
+      p_V <- ggplot(combined_V_df, aes(x = time1, y = time2, fill = value)) +
+        geom_tile(color = NA) +
+        facet_wrap(~source, ncol = 2) +
+        scale_fill_gradient2(low = "blue", mid = "white", high = "red", midpoint = 0) +
+        labs(
+          title = "Variance-Covariance Matrix (V)",
+          x = "Time 1", y = "Time 2", fill = "Value"
+        ) +
+        coord_fixed() +
+        theme_minimal() +
+        theme(
+          panel.grid = element_blank(),
+          axis.text.x = element_text(angle = 45, hjust = 1),
+          axis.ticks = element_blank()
+        )
+
+      print(p_V)
+    }
+  }
 }

@@ -36,7 +36,7 @@
 #' library(dplyr)
 #' library(tidyr)
 #' library(mnorm)
-#' 
+#'
 #' # Load and prepare data
 #' data(examplomycin)
 #' examplomycin_wide <- examplomycin %>%
@@ -44,11 +44,11 @@
 #'   dplyr::select(ID, TIME, DV) %>%
 #'   pivot_wider(names_from = TIME, values_from = DV) %>%
 #'   dplyr::select(-c(1))
-#' 
+#'
 #' # Create aggregated data
 #' examplomycin_aggregated <- examplomycin_wide %>%
 #'   admr::meancov()
-#' 
+#'
 #' # Define RxODE model
 #' rxModel <- RxODE({
 #'   cp = linCmt(
@@ -59,22 +59,22 @@
 #'     ka            # Absorption rate constant
 #'   )
 #' })
-#' 
+#'
 #' # Define prediction function
 #' predder <- function(time, theta_i, dose = 100) {
 #'   n_individuals <- nrow(theta_i)
 #'   if (is.null(n_individuals)) n_individuals <- 1
-#'   
+#'
 #'   ev <- eventTable(amount.units="mg", time.units="hours")
 #'   ev$add.dosing(dose = dose, nbr.doses = 1, start.time = 0)
 #'   ev$add.sampling(time)
-#'   
+#'
 #'   out <- rxSolve(rxModel, params = theta_i, events = ev, cores = 0)
 #'   cp_matrix <- matrix(out$cp, nrow = n_individuals, ncol = length(time),
 #'                       byrow = TRUE)
 #'   return(cp_matrix)
 #' }
-#' 
+#'
 #' # Create options
 #' opts <- genopts(
 #'   time = c(.1, .25, .5, 1, 2, 3, 5, 8, 12),
@@ -93,7 +93,7 @@
 #'   omega_expansion = 1.2,
 #'   f = predder
 #' )
-#' 
+#'
 #' # Run optimization
 #' result <- timedbobyqa(opts$pt, opts, examplomycin_aggregated)
 #' print(result)

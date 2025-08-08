@@ -3,6 +3,7 @@
 S3method(plot,fitIRMC_result)
 S3method(print,fitIRMC_result)
 export(fitIRMC)
+export(fitMC)
 export(gen_pop_EV)
 export(gendataset)
 export(genfitfunc)
