@@ -92,15 +92,15 @@
 #' predder <- function(time, theta_i, dose = 100) {
 #'   n_individuals <- nrow(theta_i)
 #'   if (is.null(n_individuals)) n_individuals <- 1
-#'   
+#'
 #'   # Create event table for dosing and sampling
 #'   ev <- eventTable(amount.units="mg", time.units="hours")
 #'   ev$add.dosing(dose = dose, nbr.doses = 1, start.time = 0)
 #'   ev$add.sampling(time)
-#'   
+#'
 #'   # Solve ODE system
 #'   out <- rxSolve(rxModel, params = theta_i, events = ev, cores = 0)
-#'   
+#'
 #'   # Return matrix of predictions
 #'   matrix(out$cp, nrow = n_individuals, ncol = length(time), byrow = TRUE)
 #' }
@@ -116,14 +116,14 @@
 #'             v2 = 30,    # Peripheral volume (L)
 #'             q = 10,     # Inter-compartmental clearance (L/h)
 #'             ka = 1),    # Absorption rate (1/h)
-#'     
+#'
 #'     # Between-subject variability (30% CV on all parameters)
 #'     Omega = matrix(c(0.09, 0, 0, 0, 0,
 #'                     0, 0.09, 0, 0, 0,
 #'                     0, 0, 0.09, 0, 0,
 #'                     0, 0, 0, 0.09, 0,
 #'                     0, 0, 0, 0, 0.09), nrow = 5, ncol = 5),
-#'     
+#'
 #'     # Residual error (20% CV)
 #'     Sigma_prop = 0.04
 #'   ),
@@ -143,37 +143,37 @@
 #' @export
 genfitfunc <- function(opts, obs) {
   # Validate input data format
-  if (!(is.matrix(obs) && nrow(obs) == opts$nsim && ncol(obs) == opts$time) && 
+  if (!(is.matrix(obs) && nrow(obs) == opts$nsim && ncol(obs) == opts$time) &&
       !all(names(obs) == c("E", "V"))) {
     stop("obs argument should give the data in aggregate form or as an nsim x Xi matrix!")
   }
-  
+
   # Handle missing observations by using expected data
   if (missing(obs)) {
     message("genfitfunc message: Obs not supplied, using expected data as obs...")
     obs <- gen_pop_EV(opts)[1:2]  # Extract mean and covariance
   }
-  
+
   # Convert raw data to aggregate form if needed
   if (is.matrix(obs)) {
     message("genfitfunc message: Converting obs from raw data to aggregate E and V...")
     obs <- meancov(obs)  # Compute mean and covariance
   }
-  
+
   # Ensure observed mean is a vector (not matrix)
   obs$E <- c(obs$E)
-  
+
   # Store observed data in model options
   opts$obs <- obs
-  
+
   # Return fitting function
   function(pp, givedetails = FALSE, opts_overrides) {
     # Handle option overrides if provided
     if (!missing(opts_overrides)) opts <- opts_overrides
-    
+
     # Use default parameters if none provided
     if (missing(pp)) pp <- opts$pt
-    
+
     # Process parameters based on input type
     if (!is.list(pp)) {
       # Handle transformed parameters
@@ -184,33 +184,41 @@ genfitfunc <- function(opts, obs) {
       opts$p <- pp  # Store original parameters
       opts$pt <- p_to_optim(pp)$values  # Transform to optimization scale
     }
-    
+
     # Generate expected values (mean and covariance)
     EV <- gen_pop_EV(opts)
-    
-    # Compute inverse of covariance matrix
-    invV <- tryCatch(
-      solve(EV[[2]]),
-      error = function(e) return(NA)
-    )
-    
-    # Check for matrix inversion problems
-    if (any(is.na(invV))) {
-      stop("Problems inverting V, V=", paste(signif(EV[[2]], 5), collapse="\n"),
-           "\n solve(V)=", paste(signif(invV, 5), collapse="\n"))
-    }
-    
+
     # Compute negative log-likelihood
-    var_nll <- nllfun(opts$obs, EV, invV, opts$n)
-    
+    if (opts$no_cov) {
+      var_nll <- nllfun_var(obs, EV, n = opts$n)
+      nllfun_used <- function(EV) nllfun_var(obs, EV, n = opts$n)
+    } else {
+
+      # Compute inverse of covariance matrix
+      invV <- tryCatch(
+        solve(EV[[2]]),
+        error = function(e) return(NA)
+      )
+
+      # Check for matrix inversion problems
+      if (any(is.na(invV))) {
+        stop("Problems inverting V, V=", paste(signif(EV[[2]], 5), collapse="\n"),
+             "\n solve(V)=", paste(signif(invV, 5), collapse="\n"))
+      }
+
+      var_nll <- nllfun(opts$obs, EV, invV, opts$n)
+      nllfun_used <- function(EV) nllfun(obs, EV, n = opts$n)
+    }
+
     # Add attributes if detailed output requested
     if (givedetails) {
-      attr(var_nll, "EV") <- EV  # Expected values
-      attr(var_nll, "obs") <- obs  # Observed data
-      attr(var_nll, "nllfun") <- function(EV) nllfun(obs, EV, n=opts$n)  # NLL function
-      attr(var_nll, "opts") <- opts  # Model options
+      attr(var_nll, "EV") <- EV          # Expected values
+      attr(var_nll, "obs") <- obs        # Observed data
+      attr(var_nll, "nllfun") <- nllfun_used  # Correct likelihood function
+      attr(var_nll, "opts") <- opts      # Model options
     }
-    
+
+
     return(var_nll)
   }
 }

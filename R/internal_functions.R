@@ -150,6 +150,7 @@ maxfunc <- function(opts) {
   rawpreds <- opts$f(opts$time,g_iter(opts,bi))
   NAfilters <- apply(rawpreds,1,function(i) !any(is.na(i)))
   adjust <- !any(is.na(opts$single_betas))
+  #adjust = F
   propdens <- mnorm::dmnorm(bi,mean=rep(0,nrow(opts$p$Omega)),sigma=opts$p$Omega*opts$omega_expansion,log=TRUE)$den
 
   function(pnew,returnEV=FALSE) {
@@ -162,7 +163,14 @@ maxfunc <- function(opts) {
       kappa <- opts$f(opts$time,opts$g(ifelse(opts$single_betas,pneww$beta,origbeta))) - rawpreds[1,]
       EVnow$E <- EVnow$E + kappa
     }
-    if (returnEV) EVnow else nllfun(opts$obs,EVnow,n=opts$n)
+
+    if (returnEV) {
+      EVnow
+    } else if (opts$no_cov) {
+      nllfun_var(opts$obs, EVnow, n = opts$n)
+    } else {
+      nllfun(opts$obs, EVnow, n = opts$n)
+    }
   }
 }
 
@@ -188,6 +196,20 @@ nllfun <- function(obsEV,predEV,invpredV,n=1) {   # Computes the negative log-li
   if (missing(invpredV)) invpredV <- solve(predEV$V)
   resids <- c(obsEV$E-predEV$E) ## force to simple vector
   c(1/2*n*(log(det(predEV$V))+sum(diag(obsEV$V %*% invpredV))+t(resids) %*% invpredV %*% resids))
+}
+
+#' @noRd
+nllfun_var <- function(obsEV,predEV,n=1) {   # Computes the negative log-likelihood given observed and predicted expected values and their covariance.
+  obs_mean <- obsEV$E
+  obs_var  <- diag(obsEV$V)
+  pred_mean <- predEV$E
+  pred_var  <- diag(predEV$V)
+
+  ll_components <- (obs_var / pred_var) +
+    ((obs_mean - pred_mean)^2 / pred_var) +
+    log(pred_var)
+  total_ll <- -n * sum(ll_components)
+  return(-total_ll)  # Return negative log-likelihood
 }
 
 #' @noRd
@@ -415,8 +437,8 @@ calculate_bsv <- function(back_transformed_params) {
 }
 
 #' @noRd
-perturb_init <- function(init, pertubation) {
-  init + rnorm(length(init), mean = 0, sd = pertubation * abs(init))  # Slight perturbation
+perturb_init <- function(init, perturbation) {
+  init + rnorm(length(init), mean = 0, sd = perturbation * abs(init))  # Slight perturbation
 }
 
 #' @noRd
@@ -430,9 +452,9 @@ compute_nll <- function(opts, params, nomap) {
 
 #' @noRd
 run_chain <- function(chain, opts, obs, init, maxiter, phase_fractions, convcrit_nll,
-                      max_worse_iterations, pertubation, nomap) {
+                      max_worse_iterations, perturbation, nomap) {
   chain_start_time <- Sys.time()  # Start time for the chain
-  chain_init <- if (chain == 1) init else perturb_init(init, pertubation)
+  chain_init <- if (chain == 1) init else perturb_init(init, perturbation)
 
   if (nomap) {
     opts <- opts %>% p2opts(chain_init) %>% obs2opts(obs)
@@ -528,9 +550,9 @@ run_chain <- function(chain, opts, obs, init, maxiter, phase_fractions, convcrit
 }
 
 #' @noRd
-run_chainMC <- function(chain, opts, obs, init, maxiter, convcrit_nll, pertubation, nomap) {
+run_chainMC <- function(chain, opts, obs, init, maxiter, convcrit_nll, perturbation, nomap) {
   chain_start_time <- Sys.time()  # Start time for the chain
-  chain_init <- if (chain == 1) init else perturb_init(init, pertubation)
+  chain_init <- if (chain == 1) init else perturb_init(init, perturbation)
 
   if (nomap) {
     opts <- opts %>% p2opts(chain_init) %>% obs2opts(obs)

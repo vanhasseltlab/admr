@@ -21,7 +21,7 @@
 #' @param max_worse_iterations Maximum number of consecutive worse iterations before skipping a phase.
 #'                            Default is 10.
 #' @param chains Number of parallel chains to run. Default is 1.
-#' @param pertubation Perturbation factor for the initial parameter values of each chain.
+#' @param perturbation Perturbation factor for the initial parameter values of each chain.
 #'                    Default is 0.1.
 #' @param seed Random seed for reproducibility. Default is 1.
 #'
@@ -121,7 +121,7 @@
 #' @export
 fitIRMC <- function(opts, obs, maxiter = 100, convcrit_nll = 1e-05,
                     single_dataframe = TRUE, phase_fractions = c(0.2, 0.4, 0.2, 0.2),
-                    max_worse_iterations = 10, chains = 1, pertubation = 0.1, seed = 1) {
+                    max_worse_iterations = 10, chains = 1, perturbation = 0.1, seed = 1) {
 
   # Set random seed for reproducibility
   set.seed(seed)
@@ -154,7 +154,7 @@ fitIRMC <- function(opts, obs, maxiter = 100, convcrit_nll = 1e-05,
       phase_fractions = phase_fractions,
       convcrit_nll = convcrit_nll,
       max_worse_iterations = max_worse_iterations,
-      pertubation = pertubation,
+      perturbation = perturbation,
       nomap = nomap
     )
   }
@@ -217,6 +217,17 @@ fitIRMC <- function(opts, obs, maxiter = 100, convcrit_nll = 1e-05,
   confint_low_original <- exp(beta_params - 1.96 * beta_se)
   confint_high_original <- exp(beta_params + 1.96 * beta_se)
 
+  # Identify which betas have BSV (FALSE = random, TRUE = fixed)
+  if (nomap) {
+    has_bsv <- !opts$single_betas
+  } else {
+    has_bsv <- !opts[[1]]$single_betas | !opts[[2]]$single_betas
+  }
+
+  # Fill BSV only where applicable
+  bsv_vals <- rep(NA_real_, length(beta_params))
+  bsv_vals[has_bsv] <- calculate_bsv(back_transformed_params)
+
   # Generate comprehensive output object
   output <- list(
     final_params = final_params,
@@ -234,7 +245,7 @@ fitIRMC <- function(opts, obs, maxiter = 100, convcrit_nll = 1e-05,
         ),
         sprintf("%.4f", residual_error)
       ),
-      `BSV(CV%)` = c(calculate_bsv(back_transformed_params), NA)
+      `BSV(CV%)` = c(bsv_vals, NA)
     ),
     covariance_matrix = cov_matrix_fixed,
     convergence_info = list(
@@ -267,7 +278,7 @@ fitIRMC <- function(opts, obs, maxiter = 100, convcrit_nll = 1e-05,
       phase_fractions = phase_fractions,
       max_worse_iterations = max_worse_iterations,
       chains = chains,
-      pertubation = pertubation,
+      perturbation = perturbation,
       seed = seed
     )
   )

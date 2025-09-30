@@ -148,7 +148,9 @@ genopts <- function(f, time, p, h, nsim = 1, n = 30, adist = NULL,
                     },
                     g = function(beta, bi = rep(0, length(beta)), ai) {
                       beta * exp(bi)
-                    }) {
+                    },
+                    no_cov = F
+                    ) {
   # Validate input parameters
   if (is.null(n)) stop("n is null, breaking early")
 
@@ -209,5 +211,6 @@ genopts <- function(f, time, p, h, nsim = 1, n = 30, adist = NULL,
        d_g_d_beta=d_g_d_beta,d_g_d_bi=d_g_d_bi,
        omega_expansion=omega_expansion,
        p_thetai=p_thetai,single_betas=single_betas,
-       d_bi_d_omega=p_res$d_bi_d_omega,d_omega_d_Omega=p_res$d_omega_d_Omega)
+       d_bi_d_omega=p_res$d_bi_d_omega,d_omega_d_Omega=p_res$d_omega_d_Omega,
+       no_cov = no_cov)
 }
