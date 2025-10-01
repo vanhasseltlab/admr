@@ -1,8 +1,8 @@
 ---
-title: "Examplomycin Dataset: A Pharmacokinetic Example"
+title: "Examplomycin dataset: a pharmacokinetic example"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Examplomycin Dataset: A Pharmacokinetic Example}
+  %\VignetteIndexEntry{Examplomycin dataset: a pharmacokinetic example}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

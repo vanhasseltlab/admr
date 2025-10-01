@@ -6,12 +6,11 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Aggregate data modelling in R • admr</title>
-<!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-<link rel="apple-touch-icon" type="image/png" sizes="180x180" href="apple-touch-icon.png">
-<link rel="apple-touch-icon" type="image/png" sizes="120x120" href="apple-touch-icon-120x120.png">
-<link rel="apple-touch-icon" type="image/png" sizes="76x76" href="apple-touch-icon-76x76.png">
-<link rel="apple-touch-icon" type="image/png" sizes="60x60" href="apple-touch-icon-60x60.png">
+<!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png">
+<link rel="icon" type="”image/svg+xml”" href="favicon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="icon" sizes="any" href="favicon.ico">
+<link rel="manifest" href="site.webmanifest">
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
@@ -43,7 +42,9 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="articles/examplomycin.html">Examplomycin Dataset: A Pharmacokinetic Example</a></li>
+<li><a class="dropdown-item" href="articles/examplomycin.html">Examplomycin dataset: a pharmacokinetic example</a></li>
+    <li><a class="dropdown-item" href="articles/multiple.html">Combining multiple datasets with admr</a></li>
+    <li><a class="dropdown-item" href="articles/variance.html">Variance-only based modelling with admr</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="news/index.html">Changelog</a></li>
@@ -66,7 +67,6 @@
 </h1>
 </div>
 <!-- README.md is generated from README.Rmd. Please edit that file -->
-<p><img src="reference/figures/logo.png" width="120" align="right"></p>
 <!-- badges: start -->
 <!-- badges: end -->
 <p>admr (Aggregate Data Modeling in R) is an open-source R package designed to facilitate pharmacometric modeling using summary-level data. It enables users to work with aggregate data, such as mean observations and variance-covariance matrices, to fit pharmacokinetic and pharmacodynamic (PK/PD) models efficiently. This package implements a newly developed Expectation-Maximization (EM) algorithm to enhance computational performance and provides tools for advanced modeling applications.</p>
@@ -220,7 +220,7 @@
 <span><span class="co">#&gt;   14: -1845.280    1.601    2.307    3.405    2.285    0.018   -2.286   -2.201   -2.343   -2.265   -2.410   -3.235</span></span>
 <span><span class="co">#&gt; Phase Precision Phase converged at iteration 14.</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Chain 1 Complete: Final NLL = -1845.280, Time Elapsed = 5.59 seconds</span></span>
+<span><span class="co">#&gt; Chain 1 Complete: Final NLL = -1845.280, Time Elapsed = 5.93 seconds</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
 <span><span class="co">#&gt; -- FitIRMC Summary --</span></span>
@@ -233,10 +233,10 @@
 <span><span class="co">#&gt; Condition#(Cor): 202.97</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; -- Timing Information --</span></span>
-<span><span class="co">#&gt;      Best Chain: 5.5858 seconds</span></span>
-<span><span class="co">#&gt;      All Chains: 5.5881 seconds</span></span>
-<span><span class="co">#&gt;      Covariance: 28.3428 seconds</span></span>
-<span><span class="co">#&gt;         Elapsed: 33.93 seconds</span></span>
+<span><span class="co">#&gt;      Best Chain: 5.9257 seconds</span></span>
+<span><span class="co">#&gt;      All Chains: 5.9279 seconds</span></span>
+<span><span class="co">#&gt;      Covariance: 28.1302 seconds</span></span>
+<span><span class="co">#&gt;         Elapsed: 34.06 seconds</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; -- Population Parameters --</span></span>
 <span><span class="co">#&gt; # A tibble: 6 × 6</span></span>
@@ -341,7 +341,7 @@
 <div class="developers">
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
-<li>H. van de Beek <br><small class="roles"> Maintainer </small>  </li>
+<li>H. van de Beek <br><small class="roles"> Maintainer </small>   </li>
 </ul>
 </div>
 
@@ -356,7 +356,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
 </div>
 
     </footer>

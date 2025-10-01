@@ -10,6 +10,7 @@ fitMC(
   maxiter = 5000,
   convcrit_nll = 1e-05,
   single_dataframe = TRUE,
+  chains = 1,
   perturbation = 0.1,
   seed = 1
 )
@@ -29,6 +30,8 @@ Default is 1e-05.}
 
 \item{single_dataframe}{Logical indicating whether to use a single data frame (TRUE) or multiple
 data frames (FALSE). Default is TRUE.}
+
+\item{chains}{Number of chains to run. Default is 1.}
 
 \item{perturbation}{Perturbation factor for the initial parameter values of each chain.
 Default is 0.1.}

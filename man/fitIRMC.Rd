@@ -39,7 +39,7 @@ Default is c(0.2, 0.4, 0.2, 0.2).}
 \item{max_worse_iterations}{Maximum number of consecutive worse iterations before skipping a phase.
 Default is 10.}
 
-\item{chains}{Number of parallel chains to run. Default is 1.}
+\item{chains}{Number of chains to run. Default is 1.}
 
 \item{perturbation}{Perturbation factor for the initial parameter values of each chain.
 Default is 0.1.}

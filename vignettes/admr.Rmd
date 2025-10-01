@@ -148,6 +148,8 @@ The prediction function is crucial for the `admr` package. It:
 - Returns predicted concentrations in the required format
 
 ```{r, cache=TRUE}
+rxSetSilentErr(1)
+
 predder <- function(time, theta_i, dose = 100) {
     n_individuals <- nrow(theta_i)
     
@@ -281,7 +283,7 @@ After mastering the basics, you might want to explore:
 1. **Advanced modelling**:
    - Adjusting Monte Carlo sample size
    - Residual analysis
-   - Parameter sensitivity analysis
+   - Parameter initial sensitivity analysis
    - Model comparison
 
 For more information, see the package documentation and other vignettes.

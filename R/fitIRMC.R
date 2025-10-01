@@ -466,7 +466,7 @@ plot.fit_admr_result <- function(x, ...) {
     theme(plot.title = element_text(hjust = 0.5))
   print(p2)
 
-  if (nomap == T) {
+  if (nomap == TRUE) {
     # Extract observations from the fitIRMC result
     time_points <- x$data$opts$time
     observations <- x$data$obs
@@ -485,83 +485,66 @@ plot.fit_admr_result <- function(x, ...) {
     obs_V_df <- prepare_V_df(observations$V, "Observed", time_points)
     pred_V_df <- prepare_V_df(predictions$V, "Predicted", time_points)
 
+    # --- Add residuals and standardized residuals ---
+    res_E_df <- obs_E_df
+    res_E_df$mean <- obs_E_df$mean - pred_E_df$mean
+    res_E_df$source <- "Residual"
 
-    # Plot 3: Combined Boxplot with Mean and Variance Bands
+    std_res_E_df <- obs_E_df
+    std_res_E_df$mean <- (obs_E_df$mean - pred_E_df$mean) / sqrt(pred_E_df$mean)
+    std_res_E_df$source <- "Standardized Residual"
+
+    combined_E_df <- rbind(obs_E_df, pred_E_df, res_E_df, std_res_E_df)
+
+    res_V_df <- obs_V_df
+    res_V_df$value <- obs_V_df$value - pred_V_df$value
+    res_V_df$source <- "Residual"
+
+    std_res_V_df <- pred_V_df
+    std_res_V_df$value <- (obs_V_df$value - pred_V_df$value) / sqrt(abs(pred_V_df$value))
+    std_res_V_df$source <- "Standardized Residual"
+
+    combined_V_df <- rbind(obs_V_df, pred_V_df, res_V_df, std_res_V_df)
+
+    # --- Plots ---
+    # Boxplot
     p3 <- ggplot(combined_boxplot, aes(x = time)) +
-      # 95% interval ribbons
-      geom_ribbon(
-        aes(ymin = lower_95, ymax = upper_95, fill = source),
-        alpha = 0.2,
-        show.legend = FALSE
-      ) +
-      # IQR ribbons
-      geom_ribbon(
-        aes(ymin = lower_q1, ymax = upper_q3, fill = source),
-        alpha = 0.35
-      ) +
-      # Mean lines
-      geom_line(
-        aes(y = mean, color = source, linetype = source),
-        linewidth = 1
-      ) +
+      geom_ribbon(aes(ymin = lower_95, ymax = upper_95, fill = source), alpha = 0.2, show.legend = FALSE) +
+      geom_ribbon(aes(ymin = lower_q1, ymax = upper_q3, fill = source), alpha = 0.35) +
+      geom_line(aes(y = mean, color = source, linetype = source), linewidth = 1) +
       scale_fill_manual(values = c("Observed" = "#3B8AC4", "Predicted" = "#D1495B")) +
       scale_color_manual(values = c("Observed" = "#3B8AC4", "Predicted" = "#D1495B")) +
       scale_linetype_manual(values = c("Observed" = "solid", "Predicted" = "dashed")) +
-      labs(
-        title = "Observed vs Predicted: Mean and Variance Bands",
-        x = "Time (h)",
-        y = "Concentration",
-        fill = "",
-        color = "",
-        linetype = ""
-      ) +
-      theme_minimal(base_size = 14) +
-      theme(
-        plot.title = element_text(face = "bold", size = 16),
-        plot.subtitle = element_text(size = 13, margin = margin(b = 10)),
-        legend.position = "top",
-        legend.title = element_blank(),
-        legend.text = element_text(size = 13)
-      )
+      labs(title = "Observed vs Predicted: Mean and Variance Bands", x = "Time (h)", y = "Concentration") +
+      theme_minimal(base_size = 14)
+    print(p3)
 
-
-    p_E <- ggplot(rbind(obs_E_df, pred_E_df), aes(x = time, y = 1, fill = mean)) +
+    # E heatmaps with residuals
+    p_E <- ggplot(combined_E_df, aes(x = time, y = 1, fill = mean)) +
       geom_tile() +
       facet_wrap(~source, ncol = 1) +
       scale_fill_gradient2(
-        low = "blue", mid = "white", high = "red", midpoint = median(c(obs_E_df$mean, pred_E_df$mean))
+        low = "blue", mid = "white", high = "red",
+        midpoint = median(combined_E_df$mean, na.rm = TRUE)
       ) +
-      labs(title = "Mean Vector (E)", x = "Time", y = "", fill = "Mean Value") +
+      labs(title = "Mean Vector (E) with Residuals", x = "Time", y = "", fill = "Value") +
       theme_minimal() +
       theme(axis.text.y = element_blank(), axis.ticks.y = element_blank())
+    print(p_E)
 
-
-    combined_V_df <- rbind(obs_V_df, pred_V_df)
+    # V heatmaps with residuals
     combined_V_df$time1 <- factor(combined_V_df$time1, levels = sort(unique(combined_V_df$time1)))
     combined_V_df$time2 <- factor(combined_V_df$time2, levels = sort(unique(combined_V_df$time2)))
 
     p_V <- ggplot(combined_V_df, aes(x = time1, y = time2, fill = value)) +
-      geom_tile(color = NA) +  # remove borders between tiles
+      geom_tile(color = NA) +
       facet_wrap(~source, ncol = 2) +
-      scale_fill_gradient2(
-        low = "blue", mid = "white", high = "red", midpoint = 0
-      ) +
-      labs(
-        title = "Variance-Covariance Matrix (V)",
-        x = "Time 1", y = "Time 2", fill = "Value"
-      ) +
+      scale_fill_gradient2(low = "blue", mid = "white", high = "red", midpoint = 0) +
+      labs(title = "Variance-Covariance Matrix (V) with Residuals", x = "Time 1", y = "Time 2", fill = "Value") +
       coord_fixed() +
       theme_minimal() +
-      theme(
-        panel.grid = element_blank(),
-        axis.text.x = element_text(angle = 45, hjust = 1),
-        axis.ticks = element_blank()
-      )
-
-    print(p3)
-    print(p_E)
+      theme(panel.grid = element_blank(), axis.text.x = element_text(angle = 45, hjust = 1), axis.ticks = element_blank())
     print(p_V)
-
   } else {
     for (i in 1:length(opts)){
       # Extract observations from the fitIRMC result
