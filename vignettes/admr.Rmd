@@ -148,7 +148,7 @@ The prediction function is crucial for the `admr` package. It:
 - Returns predicted concentrations in the required format
 
 ```{r, cache=TRUE}
-rxSetSilentErr(1)
+rxode2::rxSetSilentErr(1)
 
 predder <- function(time, theta_i, dose = 100) {
     n_individuals <- nrow(theta_i)
