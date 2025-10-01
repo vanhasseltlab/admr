@@ -16,6 +16,7 @@
 #'                     Default is 1e-05.
 #' @param single_dataframe Logical indicating whether to use a single data frame (TRUE) or multiple
 #'                        data frames (FALSE). Default is TRUE.
+#' @param chains Number of chains to run. Default is 1.
 #' @param perturbation Perturbation factor for the initial parameter values of each chain.
 #'                    Default is 0.1.
 #' @param seed Random seed for reproducibility. Default is 1.
@@ -108,12 +109,11 @@
 #'
 #' @export
 fitMC <- function(opts, obs, maxiter = 5000, convcrit_nll = 1e-05,
-                  single_dataframe = TRUE, perturbation = 0.1, seed = 1) {
+                  single_dataframe = TRUE, chains = 1, perturbation = 0.1, seed = 1) {
 
   # Set random seed for reproducibility
   set.seed(seed)
   nomap <- single_dataframe
-  chains <- 1  # Number of chains for optimization
 
   # Get initial parameter values
   if (nomap){
@@ -133,7 +133,7 @@ fitMC <- function(opts, obs, maxiter = 5000, convcrit_nll = 1e-05,
   start_time <- Sys.time()  # Start time for the entire process
   chain_results <- vector("list", chains)  # Store results for each chain
 
-  # Run optimization chains in parallel
+  # Run optimization chains
   for (chain in seq_len(chains)) {
     chain_results[[chain]] <- run_chainMC(
       chain = chain,

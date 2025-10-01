@@ -198,20 +198,20 @@ opts2 <- genopts(
 ```
 
 ### Fitting the Model
-
 The `fitIRMC` function fits the model using the IRMC algorithm:
 
 ```{r, cache=TRUE}
+opts <- list(opts1,opts2)
+examplomycin_aggregated <- list(examplomycin_aggregated1, examplomycin_aggregated2)
+
 fit.admrMC <- admr::fitMC(
   opts = opts,
   obs = examplomycin_aggregated,
   chains = 1,  # Number of parallel chains
-  maxiter = 2000  # Maximum iterations
+  maxiter = 2000,  # Maximum iterations
+  single_dataframe = FALSE  # Use separate data frames for each dataset
 )
 
-
-opts <- list(opts1,opts2)
-examplomycin_aggregated <- list(examplomycin_aggregated1, examplomycin_aggregated2)
 
 fit.admr <- fitIRMC(
   opts = opts,
@@ -247,7 +247,7 @@ Let's examine the parameter estimates and their uncertainty:
 
 ```{r}
 # Extract parameter estimates
-params <- fit.admr$final_params
+params <- fit.admr$transformed_params
 cat("Final parameter estimates:\n")
 print(params)
 
@@ -258,34 +258,6 @@ print(cov_matrix)
 ```
 
 ## Advanced Features
-
-### Multiple Chains
-
-The `fitIRMC` function supports multiple chains to improve optimization:
-
-```{r, eval=FALSE}
-# Run with multiple chains
-result <- fitIRMC(
-  opts = opts,
-  obs = examplomycin_aggregated,
-  chains = 3,  # Number of chains
-  pertubation = 0.1  # Perturbation factor
-)
-
-```
-
-### Phase-Based Optimization
-
-You can customize the optimization phases:
-
-```{r, eval=FALSE}
-# Custom phase fractions
-result <- fitIRMC(
-  opts = opts,
-  obs = examplomycin_aggregated,
-  phase_fractions = c(0.3, 0.3, 0.2, 0.2)  # Custom phase distribution
-)
-```
 
 ### Creating a dosing plot
 To visualize the dosing regimen and predicted concentrations, you can create a dosing plot. Here's how to do it using the `randtoolbox` package for pseudo-random sampling:
@@ -329,17 +301,17 @@ Or using the `rxode2` package:
 ```{r}
 rxModel2 <- function(){
   ini({
-    cl <- 4.958792  # Clearance
-    v1 <- 10.155736 # Volume of central compartment
-    v2 <- 29.998821 # Volume of peripheral compartment
-    q <- 9.826382   # Inter-compartmental clearance
-    ka <- 1.027525  # Absorption rate constant
+    cl <- params$beta["cl"]  # Clearance
+    v1 <- params$beta["v1"]  # Volume of central compartment
+    v2 <- params$beta["v2"] # Volume of peripheral compartment
+    q <- params$beta["q"]    # Inter-compartmental clearance
+    ka <- params$beta["ka"]   # Absorption rate constant
 
-    eta_cl ~ 0.102043
-    eta_v1 ~ 0.1092146
-    eta_v2 ~ 0.09671472
-    eta_q ~ 0.106602
-    eta_ka ~ 0.09167618
+    eta_cl ~ params$Omega[1,1]
+    eta_v1 ~ params$Omega[2,2]
+    eta_v2 ~ params$Omega[3,3]
+    eta_q ~ params$Omega[4,4]
+    eta_ka ~ params$Omega[5,5]
   })
   model({
     cl <- cl * exp(eta_cl)
@@ -355,71 +327,14 @@ rxModel2 <- rxode2(rxModel2)
 rxModel2 <- rxModel2$simulationModel
 
 sim2 <- rxSolve(rxModel2, events = ev, cores = 0, nSub = 2000)
+sim3 <- rxSolve(rxModel2, events = ev, cores = 0, nSub = 20000)
 
 confint(sim2, "cp", level=0.95) %>%
     plot(ylab="Central Concentration")
+confint(sim3, "cp", level=0.95) %>%
+    plot(ylab="Central Concentration")
 
 ```
-
-
-```{r}
-predder <- function(time, theta_i, dose = 200) {
-
-    
-    # Solve model
-    
-  
-    # Format output
-
-    
-    return(cp_matrix)
-}
-
-pred <- predder(time_points, theta_i)
-
-pred_df <- data.frame(
-  time = rep(time_points, each = n_subjects),
-  concentration = as.vector(pred),
-  sim.id = rep(1:n_subjects, times = length(time_points)))
-
-percentiles_df <- pred_df %>%
-  group_by(time) %>%
-  summarize(
-    median = median(concentration),
-    lower = quantile(concentration, 0.05),
-    upper = quantile(concentration, 0.95)
-  ) %>%
-  ungroup()
-
-
-dosing_plot <- ggplot() +
-  # Shaded 95% prediction interval
-  geom_ribbon(data = percentiles_df, 
-              aes(x = time, ymin = lower, ymax = upper), 
-              fill = "#cce5df", alpha = 0.6) +
-  
-  # Median line
-  geom_line(data = percentiles_df, 
-            aes(x = time, y = median), 
-            color = "#1b9e77", size = 1.2) +
-  labs(
-    x = "Time (hours)",
-    y = "Plasma concentration (mg/L)"
-  ) +
-  theme_bw(base_size=16) +
-  theme(
-    panel.border = element_rect(color = "black", fill = NA, size = 0.5),
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank()
-  ) +
-  scale_x_continuous(breaks = seq(0, 36, by = 4))
-
-print(dosing_plot)
-
-
-```
-
-
 
 ## Best Practices
 

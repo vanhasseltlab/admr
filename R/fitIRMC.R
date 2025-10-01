@@ -20,7 +20,7 @@
 #'                       Default is c(0.2, 0.4, 0.2, 0.2).
 #' @param max_worse_iterations Maximum number of consecutive worse iterations before skipping a phase.
 #'                            Default is 10.
-#' @param chains Number of parallel chains to run. Default is 1.
+#' @param chains Number of chains to run. Default is 1.
 #' @param perturbation Perturbation factor for the initial parameter values of each chain.
 #'                    Default is 0.1.
 #' @param seed Random seed for reproducibility. Default is 1.

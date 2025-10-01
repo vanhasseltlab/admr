@@ -205,6 +205,7 @@ The `fitIRMC` function fits the model using the IRMC algorithm:
 fit.admrMC <- admr::fitMC(
   opts = opts,
   obs = examplomycin_aggregated,
+  chains = 1,  # Number of chains
   maxiter = 2000  # Maximum iterations
 )
 
@@ -212,7 +213,7 @@ fit.admrMC <- admr::fitMC(
 fit.admr <- admr::fitIRMC(
   opts = opts,
   obs = examplomycin_aggregated,
-  chains = 1,  # Number of parallel chains
+  chains = 1,  # Number of chains
   maxiter = 200  # Maximum iterations
 )
 ```
