@@ -25,7 +25,7 @@
 #'                    Default is 0.1.
 #' @param seed Random seed for reproducibility. Default is 1.
 #'
-#' @returns An object of class `fitIRMC_result` containing:
+#' @returns An object of class `fit_admr_result` containing:
 #' \itemize{
 #'   \item `p`: List of parameter estimates for each iteration
 #'   \item `nll`: Negative log-likelihood values
@@ -217,16 +217,24 @@ fitIRMC <- function(opts, obs, maxiter = 100, convcrit_nll = 1e-05,
   confint_low_original <- exp(beta_params - 1.96 * beta_se)
   confint_high_original <- exp(beta_params + 1.96 * beta_se)
 
-  # Identify which betas have BSV (FALSE = random, TRUE = fixed)
-  if (nomap) {
-    has_bsv <- !opts$single_betas
+  # Handle missing or NA single_betas
+  single_betas <- opts$single_betas
+
+  # If NULL or NA, assume all FALSE
+  if (is.null(single_betas) || all(is.na(single_betas))) {
+    single_betas <- rep(FALSE, length(beta_params))
   } else {
-    has_bsv <- !opts[[1]]$single_betas | !opts[[2]]$single_betas
+    single_betas <- as.logical(single_betas)
+    single_betas[is.na(single_betas)] <- FALSE  # replace any remaining NA
   }
 
-  # Fill BSV only where applicable
+  # Parameters with BSV are those not marked fixed
+  has_bsv <- !single_betas
+
+  # Initialize and fill BSV values
   bsv_vals <- rep(NA_real_, length(beta_params))
   bsv_vals[has_bsv] <- calculate_bsv(back_transformed_params)
+
 
   # Generate comprehensive output object
   output <- list(
@@ -284,7 +292,7 @@ fitIRMC <- function(opts, obs, maxiter = 100, convcrit_nll = 1e-05,
   )
 
   # Set class and return results
-  class(output) <- "fitIRMC_result"
+  class(output) <- "fit_admr_result"
   output
 }
 
@@ -294,7 +302,7 @@ fitIRMC <- function(opts, obs, maxiter = 100, convcrit_nll = 1e-05,
 #' @param ... Additional arguments (not used)
 #' @export
 #'
-print.fitIRMC_result <- function(x, ...) {
+print.fit_admr_result <- function(x, ...) {
   cat("-- FitIRMC Summary --\n\n")
 
   # Objective function and information criteria
@@ -376,9 +384,9 @@ print.fitIRMC_result <- function(x, ...) {
 #' @export
 #'
 
-plot.fitIRMC_result <- function(x, ...) {
-  if (!inherits(x, "fitIRMC_result")) {
-    stop("The input must be a fitIRMC_result object.")
+plot.fit_admr_result <- function(x, ...) {
+  if (!inherits(x, "fit_admr_result")) {
+    stop("The input must be a fit_admr_result object.")
   }
 
   chain_results <- x$chain_results

@@ -16,9 +16,11 @@
 #'                     Default is 1e-05.
 #' @param single_dataframe Logical indicating whether to use a single data frame (TRUE) or multiple
 #'                        data frames (FALSE). Default is TRUE.
+#' @param perturbation Perturbation factor for the initial parameter values of each chain.
+#'                    Default is 0.1.
 #' @param seed Random seed for reproducibility. Default is 1.
 #'
-#' @returns An object of class `fitIRMC_result` containing:
+#' @returns An object of class `fit_admr_result` containing:
 #' \itemize{
 #'   \item `p`: List of parameter estimates for each iteration
 #'   \item `nll`: Negative log-likelihood values
@@ -106,7 +108,7 @@
 #'
 #' @export
 fitMC <- function(opts, obs, maxiter = 5000, convcrit_nll = 1e-05,
-                  single_dataframe = TRUE,seed = 1) {
+                  single_dataframe = TRUE, perturbation = 0.1, seed = 1) {
 
   # Set random seed for reproducibility
   set.seed(seed)
@@ -140,7 +142,7 @@ fitMC <- function(opts, obs, maxiter = 5000, convcrit_nll = 1e-05,
       init = init,
       maxiter = maxiter,
       convcrit_nll = convcrit_nll,
-      pertubation = pertubation,
+      perturbation = perturbation,
       nomap = nomap
     )
   }
@@ -203,6 +205,24 @@ fitMC <- function(opts, obs, maxiter = 5000, convcrit_nll = 1e-05,
   confint_low_original <- exp(beta_params - 1.96 * beta_se)
   confint_high_original <- exp(beta_params + 1.96 * beta_se)
 
+  # Handle missing or NA single_betas
+  single_betas <- opts$single_betas
+
+  # If NULL or NA, assume all FALSE
+  if (is.null(single_betas) || all(is.na(single_betas))) {
+    single_betas <- rep(FALSE, length(beta_params))
+  } else {
+    single_betas <- as.logical(single_betas)
+    single_betas[is.na(single_betas)] <- FALSE  # replace any remaining NA
+  }
+
+  # Parameters with BSV are those not marked fixed
+  has_bsv <- !single_betas
+
+  # Initialize and fill BSV values
+  bsv_vals <- rep(NA_real_, length(beta_params))
+  bsv_vals[has_bsv] <- calculate_bsv(back_transformed_params)
+
   # Generate comprehensive output object
   output <- list(
     final_params = final_params,
@@ -220,7 +240,7 @@ fitMC <- function(opts, obs, maxiter = 5000, convcrit_nll = 1e-05,
         ),
         sprintf("%.4f", residual_error)
       ),
-      `BSV(CV%)` = c(calculate_bsv(back_transformed_params), NA)
+      `BSV(CV%)` = c(bsv_vals, NA)
     ),
     covariance_matrix = cov_matrix_fixed,
     convergence_info = list(
@@ -248,6 +268,6 @@ fitMC <- function(opts, obs, maxiter = 5000, convcrit_nll = 1e-05,
   )
 
   # Set class and return results
-  class(output) <- "fitIRMC_result"
+  class(output) <- "fit_admr_result"
   output
 }

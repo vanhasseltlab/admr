@@ -108,15 +108,15 @@ rxModel <- RxODE({
 predder <- function(time, theta_i, dose = 100) {
   n_individuals <- nrow(theta_i)
   if (is.null(n_individuals)) n_individuals <- 1
-  
+
   # Create event table for dosing and sampling
   ev <- eventTable(amount.units="mg", time.units="hours")
   ev$add.dosing(dose = dose, nbr.doses = 1, start.time = 0)
   ev$add.sampling(time)
-  
+
   # Solve ODE system
   out <- rxSolve(rxModel, params = theta_i, events = ev, cores = 0)
-  
+
   # Return matrix of predictions
   matrix(out$cp, nrow = n_individuals, ncol = length(time), byrow = TRUE)
 }
@@ -132,14 +132,14 @@ opts <- genopts(
             v2 = 30,    # Peripheral volume (L)
             q = 10,     # Inter-compartmental clearance (L/h)
             ka = 1),    # Absorption rate (1/h)
-    
+
     # Between-subject variability (30\% CV on all parameters)
     Omega = matrix(c(0.09, 0, 0, 0, 0,
                     0, 0.09, 0, 0, 0,
                     0, 0, 0.09, 0, 0,
                     0, 0, 0, 0.09, 0,
                     0, 0, 0, 0, 0.09), nrow = 5, ncol = 5),
-    
+
     # Residual error (20\% CV)
     Sigma_prop = 0.04
   ),

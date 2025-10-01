@@ -75,11 +75,11 @@ rxModel <- RxODE({
 predder <- function(time, theta_i, dose = 100) {
   n_individuals <- nrow(theta_i)
   if (is.null(n_individuals)) n_individuals <- 1
-  
+
   ev <- eventTable(amount.units="mg", time.units="hours")
   ev$add.dosing(dose = dose, nbr.doses = 1, start.time = 0)
   ev$add.sampling(time)
-  
+
   out <- rxSolve(rxModel, params = theta_i, events = ev, cores = 0)
   cp_matrix <- matrix(out$cp, nrow = n_individuals, ncol = length(time),
                       byrow = TRUE)
