@@ -26,6 +26,7 @@ library(dplyr)
 library(tidyr)
 library(mnorm)
 library(ggplot2)  # For visualization
+library(tidyverse)
 ```
 
 ## Understanding the Data Format
@@ -225,23 +226,20 @@ fit.covar <- admr::fitIRMC(
 ## Model Diagnostics
 
 ### Basic Diagnostics
-
 The `print` method provides a summary of the model fit:
-
 ```{r}
 print(fit.var)
 print(fit.covar)
 ```
-### Convergence Assessment
 
+### Convergence Assessment
 The `plot` method visualizes the convergence of the model fit:
 ```{r}
 plot(fit.var)
 plot(fit.covar)
 ```
 
-
-
+### True vs Estimated Parameters
 Given that true parameter estimates are known, we can compare the estimated parameters to the true values:
 ```{r}
 true_params <- c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1)
@@ -261,6 +259,171 @@ We see that both methods recover the true parameters reasonably well, but the me
 In this example model, especially inter-compartmental clearance (q) and its random effect are more challenging to estimate accurately with only variance data.
 However, using larger sample sizes from more studies will help improve the estimates from both data.
 
+
+
+### Dosing plot with Confidence Intervals for true vs estimated parameters
+
+```{r}
+params.true <- list(
+  beta = c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1),
+  Omega = diag(rep(0.09, 5)),
+  Sigma_prop = 0.04
+)
+
+params.covar <- fit.covar$transformed_params
+params.var <- fit.var$transformed_params
+
+rxModel_true <- function(){
+  ini({
+    cl <- params.true$beta["cl"]  # Clearance
+    v1 <- params.true$beta["v1"]  # Volume of central compartment
+    v2 <- params.true$beta["v2"] # Volume of peripheral compartment
+    q <- params.true$beta["q"]    # Inter-compartmental clearance
+    ka <- params.true$beta["ka"]   # Absorption rate constant
+
+    eta_cl ~ params.true$Omega[1,1]
+    eta_v1 ~ params.true$Omega[2,2]
+    eta_v2 ~ params.true$Omega[3,3]
+    eta_q ~ params.true$Omega[4,4]
+    eta_ka ~ params.true$Omega[5,5]
+  })
+  model({
+    cl <- cl * exp(eta_cl)
+    v1 <- v1 * exp(eta_v1)
+    v2 <- v2 * exp(eta_v2)
+    q <- q * exp(eta_q)
+    ka <- ka * exp(eta_ka)
+    cp = linCmt(cl, v1, v2, q, ka)
+  })
+}
+rxModel_covar <- function(){
+  ini({
+    cl <- params.covar$beta["cl"]  # Clearance
+    v1 <- params.covar$beta["v1"]  # Volume of central compartment
+    v2 <- params.covar$beta["v2"] # Volume of peripheral compartment
+    q <- params.covar$beta["q"]    # Inter-compartmental clearance
+    ka <- params.covar$beta["ka"]   # Absorption rate constant
+
+    eta_cl ~ params.covar$Omega[1,1]
+    eta_v1 ~ params.covar$Omega[2,2]
+    eta_v2 ~ params.covar$Omega[3,3]
+    eta_q ~ params.covar$Omega[4,4]
+    eta_ka ~ params.covar$Omega[5,5]
+  })
+  model({
+    cl <- cl * exp(eta_cl)
+    v1 <- v1 * exp(eta_v1)
+    v2 <- v2 * exp(eta_v2)
+    q <- q * exp(eta_q)
+    ka <- ka * exp(eta_ka)
+    cp = linCmt(cl, v1, v2, q, ka)
+  })
+}
+rxModel_var <- function(){
+  ini({
+    cl <- params.var$beta["cl"]  # Clearance
+    v1 <- params.var$beta["v1"]  # Volume of central compartment
+    v2 <- params.var$beta["v2"] # Volume of peripheral compartment
+    q <- params.var$beta["q"]    # Inter-compartmental clearance
+    ka <- params.var$beta["ka"]   # Absorption rate constant
+
+    eta_cl ~ params.var$Omega[1,1]
+    eta_v1 ~ params.var$Omega[2,2]
+    eta_v2 ~ params.var$Omega[3,3]
+    eta_q ~ params.var$Omega[4,4]
+    eta_ka ~ params.var$Omega[5,5]
+  })
+  model({
+    cl <- cl * exp(eta_cl)
+    v1 <- v1 * exp(eta_v1)
+    v2 <- v2 * exp(eta_v2)
+    q <- q * exp(eta_q)
+    ka <- ka * exp(eta_ka)
+    cp = linCmt(cl, v1, v2, q, ka)
+  })
+}
+
+rxModel_true <- rxode2(rxModel_true())
+rxModel_true <- rxModel_true$simulationModel
+rxModel_covar <- rxode2(rxModel_covar())
+rxModel_covar <- rxModel_covar$simulationModel
+rxModel_var <- rxode2(rxModel_var())
+rxModel_var <- rxModel_var$simulationModel
+```
+
+
+```{r}
+time_points <- seq(0, 12, by = 0.01)  # Dense time points for smooth curves
+ev <- eventTable(amount.units="mg", time.units="hours")
+ev$add.dosing(dose = 100, nbr.doses = 2, dosing.interval = 6)
+ev$add.sampling(time_points)
+
+
+sim_true <- rxSolve(rxModel_true, events = ev, cores = 0, nSub = 10000)
+sim_covar <- rxSolve(rxModel_covar, events = ev, cores = 0, nSub = 10000)
+sim_var <- rxSolve(rxModel_var, events = ev, cores = 0, nSub = 10000)
+
+# Combine the confidence intervals with a label for the model
+ci_true <- as.data.frame(confint(sim_true, "cp", level=0.95)) %>%
+  mutate(Model = "True parameters")
+
+ci_covar <- as.data.frame(confint(sim_covar, "cp", level=0.95)) %>%
+  mutate(Model = "Covariance fit")
+
+ci_var <- as.data.frame(confint(sim_var, "cp", level=0.95)) %>%
+  mutate(Model = "Variance fit")
+
+# Bind them together
+ci_true_covar <- bind_rows(ci_true, ci_covar) %>%
+  mutate(
+    p1 = as.numeric(as.character(p1)),
+    Percentile = factor(Percentile, levels = unique(Percentile[order(p1)]))
+  )
+
+ci_true_var <- bind_rows(ci_true, ci_var) %>%
+  mutate(
+    p1 = as.numeric(as.character(p1)),
+    Percentile = factor(Percentile, levels = unique(Percentile[order(p1)]))
+  )
+
+# Plot both models
+ggplot(ci_true_covar, aes(x = time, group = interaction(Model, Percentile))) +
+  geom_ribbon(aes(ymin = p2.5, ymax = p97.5, fill = Model),
+              alpha = 0.2, colour = NA) +
+  geom_line(aes(y = p50, colour = Model), size = 0.8) +
+  labs(
+    title = "Central Concentration Simulations",
+    x = "Time",
+    y = "Central Concentration (mg/L)"
+  ) +
+  theme_bw(base_size = 14) +
+  scale_colour_manual(values = c("True parameters" = "blue",
+                                 "Covariance fit" = "red")) +
+  scale_fill_manual(values = c("True parameters" = "blue",
+                               "Covariance fit" = "red")) +
+  coord_cartesian(xlim = c(0, 12), ylim = c(0, 7))
+
+ggplot(ci_true_var, aes(x = time, group = interaction(Model, Percentile))) +
+  geom_ribbon(aes(ymin = p2.5, ymax = p97.5, fill = Model),
+              alpha = 0.2, colour = NA) +
+  geom_line(aes(y = p50, colour = Model), size = 0.8) +
+  labs(
+    title = "Central Concentration Simulations",
+    x = "Time",
+    y = "Central Concentration (mg/L)"
+  ) +
+  theme_bw(base_size = 14) +
+  scale_colour_manual(values = c("True parameters" = "blue",
+                                 "Variance fit" = "darkgreen")) +
+  scale_fill_manual(values = c("True parameters" = "blue",
+                                 "Variance fit" = "darkgreen")) +
+  coord_cartesian(xlim = c(0, 12), ylim = c(0, 7))
+
+
+
+```
+
+### Population Predictions
 
 
 
