@@ -76,11 +76,13 @@
 <h2 id="introduction-to-aggregate-data-modeling-with-admr">Introduction to Aggregate Data Modeling with <code>admr</code><a class="anchor" aria-label="anchor" href="#introduction-to-aggregate-data-modeling-with-admr"></a>
 </h2>
 <p>This vignette provides an introduction to using multiple datasets
-with the <code>admr</code> package in R. The <code>admr</code> package
-is designed for aggregate data modeling, particularly in
-pharmacokinetics. It allows users to fit complex models to aggregate
-data, which can be derived from individual-level observations, published
-models, or summary statistics.</p>
+with the <code>admr</code> package in R. This is an example how to
+combine different datasets with non-overlapping timepoints. However, the
+same principles can be applied to datasets with overlapping timepoints;
+or even datasets with different dosing regimens. Therefore, this
+vignette can be used as a guide for meta-analysis of pharmacokinetic
+data. Further research is currently being conducted to validate this
+approach for meta-analysis or model averaging.</p>
 <div class="section level3">
 <h3 id="required-packages">Required Packages<a class="anchor" aria-label="anchor" href="#required-packages"></a>
 </h3>
@@ -101,13 +103,18 @@ formats:</p>
 <ol style="list-style-type: decimal">
 <li>
 <strong>Raw Data</strong>: Individual-level observations in a wide
-or long format</li>
+or long format.</li>
 <li>
 <strong>Aggregate Data</strong>: Summary statistics (mean and
-covariance) computed from raw data</li>
+covariance) computed from raw data.</li>
+<li>
+<strong>Aggregate Data with only means and variance</strong>: Mean
+and variance for each time point (no covariances).</li>
 </ol>
-<p>Let’s look at the examplomycin dataset, which we’ll use throughout
-this vignette:</p>
+<p>The vignette <a href="https://hiddevandebeek.github.io/admr/articles/variance.html">Variance-only
+based modelling</a> provides more details on the third option.</p>
+<p>Let’s look at the simulated examplomycin dataset, which we’ll use
+throughout this vignette:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Load the dataset</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">examplomycin</span><span class="op">)</span></span>
@@ -136,17 +143,26 @@ this vignette:</p>
 <div class="section level4">
 <h4 id="converting-raw-data-to-aggregate-format">Converting Raw Data to Aggregate Format<a class="anchor" aria-label="anchor" href="#converting-raw-data-to-aggregate-format"></a>
 </h4>
-<p>The first step is to convert your raw data into aggregate format.
-Here’s how to do it:</p>
+<p>The first step is to convert our simulated raw data into aggregate
+format. In real-world scenarios, you might have to extract summary
+statistics from published studies, depending on the available
+information. But for this example, we’ll compute the mean and covariance
+from the <code>examplomycin</code> dataset. Here’s how to do it:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Convert to wide format</span></span>
 <span><span class="va">examplomycin_wide</span> <span class="op">&lt;-</span> <span class="va">examplomycin</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">EVID</span> <span class="op">!=</span> <span class="fl">101</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span>  <span class="co"># Remove dosing events</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">ID</span>, <span class="va">TIME</span>, <span class="va">DV</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span>  <span class="co"># Select relevant columns</span></span>
 <span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_wider.html" class="external-link">pivot_wider</a></span><span class="op">(</span>names_from <span class="op">=</span> <span class="va">TIME</span>, values_from <span class="op">=</span> <span class="va">DV</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span>  <span class="co"># Convert to wide format</span></span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span>  <span class="co"># Remove ID column</span></span>
-<span></span>
-<span><span class="co"># Create aggregated data and filter timepoints 1 to 4</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span>  <span class="co"># Remove ID column</span></span></code></pre></div>
+<p>To illustrate the use of multiple datasets, we’ll split the data into
+two groups based on timepoints: one group with timepoints 0.1, 0.25,
+0.5, and 1 hour; and another group with timepoints 2, 3, 5, 8, and 12
+hours. This illustrates how to use a dataset with absorption phase data
+and a dataset with elimination phase data. We will then create
+aggregated data for each group separately:</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Create aggregated data and filter timepoints 1 to 4</span></span>
 <span><span class="va">examplomycin_aggregated1</span> <span class="op">&lt;-</span> <span class="va">examplomycin_wide</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="../reference/meancov.html">meancov</a></span><span class="op">(</span><span class="op">)</span></span>
@@ -164,7 +180,7 @@ Here’s how to do it:</p>
 <span><span class="co">##   ..- attr(*, "dimnames")=List of 2</span></span>
 <span><span class="co">##   .. ..$ : chr [1:4] "0.1" "0.25" "0.5" "1"</span></span>
 <span><span class="co">##   .. ..$ : chr [1:4] "0.1" "0.25" "0.5" "1"</span></span></code></pre>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">examplomycin_aggregated2</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## List of 2</span></span>
 <span><span class="co">##  $ E: Named num [1:5] 2.258 1.651 1.063 0.751 0.512</span></span>
@@ -173,29 +189,33 @@ Here’s how to do it:</p>
 <span><span class="co">##   ..- attr(*, "dimnames")=List of 2</span></span>
 <span><span class="co">##   .. ..$ : chr [1:5] "2" "3" "5" "8" ...</span></span>
 <span><span class="co">##   .. ..$ : chr [1:5] "2" "3" "5" "8" ...</span></span></code></pre>
+<p>Compared to the full aggregated dataset, each of these datasets
+contains only a subset of the timepoints. This means covariances between
+timepoints in different datasets are not available, effectively reducing
+the information content. However, the <code>admr</code> package can
+still handle this situation effectively.</p>
 </div>
 <div class="section level4">
 <h4 id="visualizing-the-data">Visualizing the Data<a class="anchor" aria-label="anchor" href="#visualizing-the-data"></a>
 </h4>
 <p>Before fitting the model, it’s helpful to visualize the data:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Give different colours to 1-4 and 5-9</span></span>
 <span><span class="va">examplomycin</span> <span class="op">&lt;-</span> <span class="fu">admr</span><span class="fu">::</span><span class="va"><a href="../reference/examplomycin.html">examplomycin</a></span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">EVID</span> <span class="op">!=</span> <span class="fl">101</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span>  <span class="co"># Remove dosing events</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>TIME <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">TIME</span>, levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">0.25</span>, <span class="fl">0.5</span>, <span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">5</span>, <span class="fl">8</span>, <span class="fl">12</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>group <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">TIME</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">0.25</span>, <span class="fl">0.5</span>, <span class="fl">1</span><span class="op">)</span>, <span class="st">"Dataset 1"</span>, <span class="st">"Dataset 2"</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>group <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">TIME</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">0.25</span>, <span class="fl">0.5</span>, <span class="fl">1</span><span class="op">)</span>, <span class="st">"Absorption"</span>, <span class="st">"Elimination"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Plot the data</span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">examplomycin</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">TIME</span>, y <span class="op">=</span> <span class="va">DV</span>, color <span class="op">=</span> <span class="va">group</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">examplomycin</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">TIME</span>, y <span class="op">=</span> <span class="va">DV</span>, fill <span class="op">=</span> <span class="va">group</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_boxplot.html" class="external-link">geom_boxplot</a></span><span class="op">(</span>position <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/position_dodge.html" class="external-link">position_dodge</a></span><span class="op">(</span>width <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
 <span>    title <span class="op">=</span> <span class="st">"Examplomycin Concentration Data"</span>,</span>
 <span>    x <span class="op">=</span> <span class="st">"Time (hours)"</span>,</span>
 <span>    y <span class="op">=</span> <span class="st">"Concentration (mg/L)"</span></span>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_color_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Dataset 1"</span> <span class="op">=</span> <span class="st">"blue"</span>, <span class="st">"Dataset 2"</span> <span class="op">=</span> <span class="st">"red"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="multiple_files/figure-html/unnamed-chunk-3-1.png" width="700"></p>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_fill_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Absorption"</span> <span class="op">=</span> <span class="st">"blue"</span>, <span class="st">"Elimination"</span> <span class="op">=</span> <span class="st">"red"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><img src="multiple_files/figure-html/unnamed-chunk-4-1.png" width="700"></p>
 </div>
 </div>
 <div class="section level3">
@@ -207,7 +227,7 @@ Here’s how to do it:</p>
 <p>We’ll use a two-compartment model with first-order absorption. We use
 a solved model approach for simplicity. The model parameters
 include:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rxModel</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="op">)</span><span class="op">{</span></span>
 <span>    <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/model.html" class="external-link">model</a></span><span class="op">(</span><span class="op">{</span></span>
 <span>      <span class="va">cp</span> <span class="op">=</span> <span class="fu">linCmt</span><span class="op">(</span></span>
@@ -229,10 +249,10 @@ include:</p>
 It: - Constructs the event table for dosing and sampling - Solves the
 RxODE model - Returns predicted concentrations in the required
 format</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">rxode2</span><span class="fu">::</span><span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/rxSetSilentErr.html" class="external-link">rxSetSilentErr</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] TRUE</span></span></code></pre>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">predder</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">time</span>, <span class="va">theta_i</span>, <span class="va">dose</span> <span class="op">=</span> <span class="fl">100</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="va">n_individuals</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">theta_i</span><span class="op">)</span></span>
 <span>    </span>
@@ -254,6 +274,12 @@ format</p>
 <span>    </span>
 <span>    <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">cp_matrix</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
+<p>Since both datasets come from the same study design, we can use the
+same prediction function for both datasets. However, if the datasets had
+different dosing regimens or other characteristics, you would need to
+define separate prediction functions for each dataset. This can be done
+by creating multiple <code>genopts</code> objects, each with its own
+prediction function.</p>
 </div>
 </div>
 <div class="section level3">
@@ -264,7 +290,7 @@ format</p>
 </h4>
 <p>The <code>genopts</code> function creates an options object that
 controls the model fitting process:</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">opts1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/genopts.html">genopts</a></span><span class="op">(</span></span>
 <span>  time <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.1</span>, <span class="fl">.25</span>, <span class="fl">.5</span>, <span class="fl">1</span><span class="op">)</span>,  <span class="co"># Observation times</span></span>
 <span>  p <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
@@ -302,47 +328,20 @@ controls the model fitting process:</p>
 <span>  omega_expansion <span class="op">=</span> <span class="fl">1</span>,  <span class="co"># Omega expansion factor</span></span>
 <span>  f <span class="op">=</span> <span class="va">predder</span>    <span class="co"># Prediction function</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<p>The difference between <code>opts1</code> and <code>opts2</code> is
+the observation times specified in the <code>time</code> argument.</p>
 </div>
 <div class="section level4">
 <h4 id="fitting-the-model">Fitting the Model<a class="anchor" aria-label="anchor" href="#fitting-the-model"></a>
 </h4>
-<p>The <code>fitIRMC</code> function fits the model using the IRMC
-algorithm:</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<p>Before fitting the model, ensure the <code>opts</code> objects and
+aggregated datasets are organized into lists. The <code>fitIRMC</code>
+function fits the model using the IR-MC algorithm:</p>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">opts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">opts1</span>,<span class="va">opts2</span><span class="op">)</span></span>
 <span><span class="va">examplomycin_aggregated</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">examplomycin_aggregated1</span>, <span class="va">examplomycin_aggregated2</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">fit.admrMC</span> <span class="op">&lt;-</span> <span class="fu">admr</span><span class="fu">::</span><span class="fu"><a href="../reference/fitMC.html">fitMC</a></span><span class="op">(</span></span>
-<span>  opts <span class="op">=</span> <span class="va">opts</span>,</span>
-<span>  obs <span class="op">=</span> <span class="va">examplomycin_aggregated</span>,</span>
-<span>  chains <span class="op">=</span> <span class="fl">1</span>,  <span class="co"># Number of parallel chains</span></span>
-<span>  maxiter <span class="op">=</span> <span class="fl">2000</span>,  <span class="co"># Maximum iterations</span></span>
-<span>  single_dataframe <span class="op">=</span> <span class="cn">FALSE</span>  <span class="co"># Use separate data frames for each dataset</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Iteration: 50 - NLL: -1793.555 </span></span>
-<span><span class="co">## Iteration: 100 - NLL: -1795.991 </span></span>
-<span><span class="co">## Iteration: 150 - NLL: -1796.268 </span></span>
-<span><span class="co">## Iteration: 200 - NLL: -1796.38 </span></span>
-<span><span class="co">## Iteration: 250 - NLL: -1796.395 </span></span>
-<span><span class="co">## Iteration: 300 - NLL: -1796.402 </span></span>
-<span><span class="co">## Iteration: 350 - NLL: -1796.408 </span></span>
-<span><span class="co">## Iteration: 400 - NLL: -1796.426 </span></span>
-<span><span class="co">## Iteration: 450 - NLL: -1796.435 </span></span>
-<span><span class="co">## Iteration: 500 - NLL: -1796.446 </span></span>
-<span><span class="co">## Iteration: 550 - NLL: -1796.457 </span></span>
-<span><span class="co">## Iteration: 600 - NLL: -1796.462 </span></span>
-<span><span class="co">## Iteration: 650 - NLL: -1796.476 </span></span>
-<span><span class="co">## Iteration: 700 - NLL: -1796.481 </span></span>
-<span><span class="co">## Iteration: 750 - NLL: -1796.485 </span></span>
-<span><span class="co">## Iteration: 800 - NLL: -1796.487 </span></span>
-<span><span class="co">## Iteration: 850 - NLL: -1796.488 </span></span>
-<span><span class="co">## Iteration: 900 - NLL: -1796.488 </span></span>
-<span><span class="co">## Iteration: 950 - NLL: -1796.489 </span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## Chain 1 Complete: Final NLL = -1796.489, Time Elapsed = 245.67 seconds</span></span>
-<span><span class="co">## </span></span></code></pre>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fit.admr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fitIRMC.html">fitIRMC</a></span><span class="op">(</span></span>
+<span><span class="va">fit.admr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fitIRMC.html">fitIRMC</a></span><span class="op">(</span></span>
 <span>  opts <span class="op">=</span> <span class="va">opts</span>,</span>
 <span>  obs <span class="op">=</span> <span class="va">examplomycin_aggregated</span>,</span>
 <span>  chains <span class="op">=</span> <span class="fl">2</span>,  <span class="co"># Number of parallel chains</span></span>
@@ -382,14 +381,14 @@ algorithm:</p>
 <span><span class="co">##   17: -1796.485    1.602    2.308    3.399    2.285    0.016   -2.271   -2.111   -2.330   -2.299   -2.502   -3.235</span></span>
 <span><span class="co">## Phase Precision Phase converged at iteration 17.</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 1 Complete: Final NLL = -1796.486, Time Elapsed = 32.81 seconds</span></span>
+<span><span class="co">## Chain 1 Complete: Final NLL = -1796.486, Time Elapsed = 32.40 seconds</span></span>
 <span><span class="co">##  </span></span>
 <span><span class="co">## Phase Wide Search Phase converged at iteration 11.</span></span>
 <span><span class="co">## Phase Focussed Search Phase converged at iteration 16.</span></span>
 <span><span class="co">## Phase Fine-Tuning Phase converged at iteration 21.</span></span>
 <span><span class="co">## Phase Precision Phase converged at iteration 23.</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 2 Complete: Final NLL = -1796.485, Time Elapsed = 35.68 seconds</span></span>
+<span><span class="co">## Chain 2 Complete: Final NLL = -1796.485, Time Elapsed = 35.93 seconds</span></span>
 <span><span class="co">## </span></span></code></pre>
 </div>
 </div>
@@ -401,7 +400,7 @@ algorithm:</p>
 </h4>
 <p>The <code>print</code> method provides a summary of the model
 fit:</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">fit.admr</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## -- FitIRMC Summary --</span></span>
 <span><span class="co">## </span></span>
@@ -413,10 +412,10 @@ fit:</p>
 <span><span class="co">## Condition#(Cor): 276.77</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## -- Timing Information --</span></span>
-<span><span class="co">##      Best Chain: 32.8061 seconds</span></span>
-<span><span class="co">##      All Chains: 68.4859 seconds</span></span>
-<span><span class="co">##      Covariance: 44.7554 seconds</span></span>
-<span><span class="co">##         Elapsed: 113.24 seconds</span></span>
+<span><span class="co">##      Best Chain: 32.4020 seconds</span></span>
+<span><span class="co">##      All Chains: 68.3324 seconds</span></span>
+<span><span class="co">##      Covariance: 44.9333 seconds</span></span>
+<span><span class="co">##         Elapsed: 113.27 seconds</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## -- Population Parameters --</span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 6 × 6</span></span></span>
@@ -449,20 +448,53 @@ fit:</p>
 </h4>
 <p>The <code>plot</code> method visualizes the convergence of the model
 fit:</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit.admr</span><span class="op">)</span></span></code></pre></div>
-<p><img src="multiple_files/figure-html/unnamed-chunk-9-1.png" width="700"><img src="multiple_files/figure-html/unnamed-chunk-9-2.png" width="700"><img src="multiple_files/figure-html/unnamed-chunk-9-3.png" width="700"><img src="multiple_files/figure-html/unnamed-chunk-9-4.png" width="700"><img src="multiple_files/figure-html/unnamed-chunk-9-5.png" width="700"><img src="multiple_files/figure-html/unnamed-chunk-9-6.png" width="700"><img src="multiple_files/figure-html/unnamed-chunk-9-7.png" width="700"><img src="multiple_files/figure-html/unnamed-chunk-9-8.png" width="700"></p>
+<p><img src="multiple_files/figure-html/unnamed-chunk-10-1.png" width="700"><img src="multiple_files/figure-html/unnamed-chunk-10-2.png" width="700"><img src="multiple_files/figure-html/unnamed-chunk-10-3.png" width="700"><img src="multiple_files/figure-html/unnamed-chunk-10-4.png" width="700"><img src="multiple_files/figure-html/unnamed-chunk-10-5.png" width="700"><img src="multiple_files/figure-html/unnamed-chunk-10-6.png" width="700"><img src="multiple_files/figure-html/unnamed-chunk-10-7.png" width="700"><img src="multiple_files/figure-html/unnamed-chunk-10-8.png" width="700">
+Upon inspection of the convergence plots, you should look for: good
+chain convergence, overlapping predicted and observed summary plots, and
+similar final observed vs predicted matrices for mean and covariance. We
+observe that the chains converge well, and the predicted means and
+covariances align closely with the observed data.</p>
 </div>
 <div class="section level4">
 <h4 id="parameter-estimates">Parameter Estimates<a class="anchor" aria-label="anchor" href="#parameter-estimates"></a>
 </h4>
-<p>Let’s examine the parameter estimates and their uncertainty:</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<p>Let’s examine the parameter estimates and the true values used in the
+simulation. We expect to be close to the true values, although, like
+discussed earlier, the estimates may be less precise due to the reduced
+information content from splitting the data:</p>
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># True parameter values</span></span>
+<span><span class="va">params.true</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  beta <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>cl <span class="op">=</span> <span class="fl">5</span>, v1 <span class="op">=</span> <span class="fl">10</span>, v2 <span class="op">=</span> <span class="fl">30</span>, q <span class="op">=</span> <span class="fl">10</span>, ka <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
+<span>  Omega <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0.09</span>, <span class="fl">5</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  Sigma_prop <span class="op">=</span> <span class="fl">0.04</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"True parameter values:\n"</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## True parameter values:</span></span></code></pre>
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">params.true</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## $beta</span></span>
+<span><span class="co">## cl v1 v2  q ka </span></span>
+<span><span class="co">##  5 10 30 10  1 </span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## $Omega</span></span>
+<span><span class="co">##      [,1] [,2] [,3] [,4] [,5]</span></span>
+<span><span class="co">## [1,] 0.09 0.00 0.00 0.00 0.00</span></span>
+<span><span class="co">## [2,] 0.00 0.09 0.00 0.00 0.00</span></span>
+<span><span class="co">## [3,] 0.00 0.00 0.09 0.00 0.00</span></span>
+<span><span class="co">## [4,] 0.00 0.00 0.00 0.09 0.00</span></span>
+<span><span class="co">## [5,] 0.00 0.00 0.00 0.00 0.09</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## $Sigma_prop</span></span>
+<span><span class="co">## [1] 0.04</span></span></code></pre>
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Extract parameter estimates</span></span>
 <span><span class="va">params</span> <span class="op">&lt;-</span> <span class="va">fit.admr</span><span class="op">$</span><span class="va">transformed_params</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Final parameter estimates:\n"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Final parameter estimates:</span></span></code></pre>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">params</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## $beta</span></span>
 <span><span class="co">##        cl        v1        v2         q        ka </span></span>
@@ -478,78 +510,57 @@ fit:</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## $Sigma_prop</span></span>
 <span><span class="co">## [1] 0.03934429</span></span></code></pre>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Extract covariance matrix</span></span>
-<span><span class="va">cov_matrix</span> <span class="op">&lt;-</span> <span class="va">fit.admr</span><span class="op">$</span><span class="va">covariance_matrix</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"\nParameter covariance matrix:\n"</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## </span></span>
-<span><span class="co">## Parameter covariance matrix:</span></span></code></pre>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">cov_matrix</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##               [,1]          [,2]          [,3]          [,4]          [,5]</span></span>
-<span><span class="co">## [1,]  2.407086e-04  0.0005472139 -0.0004088538  5.507829e-05  0.0005311163</span></span>
-<span><span class="co">## [2,]  5.472139e-04  0.0090961439 -0.0034145732  5.829371e-04  0.0085269715</span></span>
-<span><span class="co">## [3,] -4.088538e-04 -0.0034145732  0.0019383336 -2.938023e-04 -0.0032926077</span></span>
-<span><span class="co">## [4,]  5.507829e-05  0.0005829371 -0.0002938023  4.238503e-04  0.0006348469</span></span>
-<span><span class="co">## [5,]  5.311163e-04  0.0085269715 -0.0032926077  6.348469e-04  0.0082093004</span></span></code></pre>
+<p>We observe that the parameter estimates are reasonably close to the
+true values, especially considering the reduced information content from
+splitting the data into two groups. There are some deviations,
+particularly in the estimates of <code>q</code> and the random effect of
+<code>v1</code>, which may be attributed to the lack of early timepoint
+data in the second dataset. Let’s also visualize the dynamics of the
+estimated model together with the true model through a dosing
+simulation. ## Advanced Features</p>
 </div>
-</div>
-<div class="section level3">
-<h3 id="advanced-features">Advanced Features<a class="anchor" aria-label="anchor" href="#advanced-features"></a>
-</h3>
 <div class="section level4">
 <h4 id="creating-a-dosing-plot">Creating a dosing plot<a class="anchor" aria-label="anchor" href="#creating-a-dosing-plot"></a>
 </h4>
-<p>To visualize the dosing regimen and predicted concentrations, you can
-create a dosing plot. Here’s how to do it using the
-<code>randtoolbox</code> package for pseudo-random sampling:</p>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-forge.r-project.org/projects/rmetrics/" class="external-link">randtoolbox</a></span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Loading required package: rngWELL</span></span></code></pre>
-<pre><code><span><span class="co">## This is randtoolbox. For an overview, type 'help("randtoolbox")'.</span></span></code></pre>
-<pre><code><span><span class="co">## </span></span>
-<span><span class="co">## Attaching package: 'randtoolbox'</span></span></code></pre>
-<pre><code><span><span class="co">## The following object is masked from 'package:mnorm':</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">##     halton</span></span></code></pre>
-<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Create a dosing plot</span></span>
-<span><span class="va">n_subjects</span> <span class="op">&lt;-</span> <span class="fl">2000</span>  <span class="co"># Number of subjects</span></span>
-<span><span class="va">time_points</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">24</span>, by <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span>  <span class="co"># Dense time points for smooth curves</span></span>
+<p>To visualize the dosing regimen and predicted concentrations, we can
+create a dosing plot. This helps in understanding the pharmacokinetic
+profile of the drug over time. This can be done using the
+<code>nlmixr2</code>-universe. First, we need to define the model in
+<code>nlmixr2</code> syntax and then simulate the dosing regimen of both
+the estimated and true models.</p>
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">params.true</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  beta <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>cl <span class="op">=</span> <span class="fl">5</span>, v1 <span class="op">=</span> <span class="fl">10</span>, v2 <span class="op">=</span> <span class="fl">30</span>, q <span class="op">=</span> <span class="fl">10</span>, ka <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
+<span>  Omega <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0.09</span>, <span class="fl">5</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  Sigma_prop <span class="op">=</span> <span class="fl">0.04</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">params</span> <span class="op">&lt;-</span> <span class="va">fit.admr</span><span class="op">$</span><span class="va">transformed_params</span></span>
 <span></span>
-<span><span class="va">beta</span> <span class="op">&lt;-</span> <span class="va">fit.admr</span><span class="op">$</span><span class="va">transformed_params</span><span class="op">$</span><span class="va">beta</span>  <span class="co"># Extract population parameters</span></span>
-<span><span class="va">omega</span> <span class="op">&lt;-</span> <span class="va">fit.admr</span><span class="op">$</span><span class="va">transformed_params</span><span class="op">$</span><span class="va">Omega</span>  <span class="co"># Extract covariance matrix</span></span>
+<span><span class="va">rxModel_true</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="op">)</span><span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/ini.html" class="external-link">ini</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>    <span class="va">cl</span> <span class="op">&lt;-</span> <span class="va">params.true</span><span class="op">$</span><span class="va">beta</span><span class="op">[</span><span class="st">"cl"</span><span class="op">]</span>  <span class="co"># Clearance</span></span>
+<span>    <span class="va">v1</span> <span class="op">&lt;-</span> <span class="va">params.true</span><span class="op">$</span><span class="va">beta</span><span class="op">[</span><span class="st">"v1"</span><span class="op">]</span>  <span class="co"># Volume of central compartment</span></span>
+<span>    <span class="va">v2</span> <span class="op">&lt;-</span> <span class="va">params.true</span><span class="op">$</span><span class="va">beta</span><span class="op">[</span><span class="st">"v2"</span><span class="op">]</span> <span class="co"># Volume of peripheral compartment</span></span>
+<span>    <span class="va">q</span> <span class="op">&lt;-</span> <span class="va">params.true</span><span class="op">$</span><span class="va">beta</span><span class="op">[</span><span class="st">"q"</span><span class="op">]</span>    <span class="co"># Inter-compartmental clearance</span></span>
+<span>    <span class="va">ka</span> <span class="op">&lt;-</span> <span class="va">params.true</span><span class="op">$</span><span class="va">beta</span><span class="op">[</span><span class="st">"ka"</span><span class="op">]</span>   <span class="co"># Absorption rate constant</span></span>
 <span></span>
-<span><span class="co"># Create parameter matrix for all subjects</span></span>
-<span><span class="va">z</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">qnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/randtoolbox/man/quasiRNG.html" class="external-link">sobol</a></span><span class="op">(</span>n <span class="op">=</span> <span class="va">n_subjects</span>, dim <span class="op">=</span> <span class="fl">5</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">L</span> <span class="op">&lt;-</span> <span class="va">omega</span></span>
-<span><span class="va">mv</span> <span class="op">&lt;-</span> <span class="va">z</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/chol.html" class="external-link">chol</a></span><span class="op">(</span><span class="va">L</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">theta_i</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span>nrow <span class="op">=</span> <span class="va">n_subjects</span>, ncol <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
-<span></span>
-<span></span>
-<span><span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="va">n_subjects</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">theta_i</span><span class="op">[</span><span class="va">i</span>,<span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>    <span class="va">beta</span><span class="op">[</span><span class="st">"cl"</span><span class="op">]</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">mv</span><span class="op">[</span><span class="va">i</span>,<span class="fl">1</span><span class="op">]</span><span class="op">)</span>,</span>
-<span>    <span class="va">beta</span><span class="op">[</span><span class="st">"v1"</span><span class="op">]</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">mv</span><span class="op">[</span><span class="va">i</span>,<span class="fl">2</span><span class="op">]</span><span class="op">)</span>,</span>
-<span>    <span class="va">beta</span><span class="op">[</span><span class="st">"v2"</span><span class="op">]</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">mv</span><span class="op">[</span><span class="va">i</span>,<span class="fl">3</span><span class="op">]</span><span class="op">)</span>,</span>
-<span>    <span class="va">beta</span><span class="op">[</span><span class="st">"q"</span><span class="op">]</span>  <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">mv</span><span class="op">[</span><span class="va">i</span>,<span class="fl">4</span><span class="op">]</span><span class="op">)</span>,</span>
-<span>    <span class="va">beta</span><span class="op">[</span><span class="st">"ka"</span><span class="op">]</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">mv</span><span class="op">[</span><span class="va">i</span>,<span class="fl">5</span><span class="op">]</span><span class="op">)</span></span>
-<span>  <span class="op">)</span></span>
+<span>    <span class="va">eta_cl</span> <span class="op">~</span> <span class="va">params.true</span><span class="op">$</span><span class="va">Omega</span><span class="op">[</span><span class="fl">1</span>,<span class="fl">1</span><span class="op">]</span></span>
+<span>    <span class="va">eta_v1</span> <span class="op">~</span> <span class="va">params.true</span><span class="op">$</span><span class="va">Omega</span><span class="op">[</span><span class="fl">2</span>,<span class="fl">2</span><span class="op">]</span></span>
+<span>    <span class="va">eta_v2</span> <span class="op">~</span> <span class="va">params.true</span><span class="op">$</span><span class="va">Omega</span><span class="op">[</span><span class="fl">3</span>,<span class="fl">3</span><span class="op">]</span></span>
+<span>    <span class="va">eta_q</span> <span class="op">~</span> <span class="va">params.true</span><span class="op">$</span><span class="va">Omega</span><span class="op">[</span><span class="fl">4</span>,<span class="fl">4</span><span class="op">]</span></span>
+<span>    <span class="va">eta_ka</span> <span class="op">~</span> <span class="va">params.true</span><span class="op">$</span><span class="va">Omega</span><span class="op">[</span><span class="fl">5</span>,<span class="fl">5</span><span class="op">]</span></span>
+<span>  <span class="op">}</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/model.html" class="external-link">model</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>    <span class="va">cl</span> <span class="op">&lt;-</span> <span class="va">cl</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">eta_cl</span><span class="op">)</span></span>
+<span>    <span class="va">v1</span> <span class="op">&lt;-</span> <span class="va">v1</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">eta_v1</span><span class="op">)</span></span>
+<span>    <span class="va">v2</span> <span class="op">&lt;-</span> <span class="va">v2</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">eta_v2</span><span class="op">)</span></span>
+<span>    <span class="va">q</span> <span class="op">&lt;-</span> <span class="va">q</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">eta_q</span><span class="op">)</span></span>
+<span>    <span class="va">ka</span> <span class="op">&lt;-</span> <span class="va">ka</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">eta_ka</span><span class="op">)</span></span>
+<span>    <span class="va">cp</span> <span class="op">=</span> <span class="fu">linCmt</span><span class="op">(</span><span class="va">cl</span>, <span class="va">v1</span>, <span class="va">v2</span>, <span class="va">q</span>, <span class="va">ka</span><span class="op">)</span></span>
+<span>  <span class="op">}</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span></span>
-<span><span class="va">ev</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/eventTable.html" class="external-link">eventTable</a></span><span class="op">(</span>amount.units<span class="op">=</span><span class="st">"mg"</span>, time.units<span class="op">=</span><span class="st">"hours"</span><span class="op">)</span></span>
-<span><span class="va">ev</span><span class="op">$</span><span class="fu">add.dosing</span><span class="op">(</span>dose <span class="op">=</span> <span class="fl">100</span>, nbr.doses <span class="op">=</span> <span class="fl">4</span>, dosing.interval <span class="op">=</span> <span class="fl">6</span><span class="op">)</span></span>
-<span><span class="va">ev</span><span class="op">$</span><span class="fu">add.sampling</span><span class="op">(</span><span class="va">time_points</span><span class="op">)</span></span>
-<span><span class="va">sim</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/rxSolve.html" class="external-link">rxSolve</a></span><span class="op">(</span><span class="va">rxModel</span>, params <span class="op">=</span> <span class="va">theta_i</span>, events <span class="op">=</span> <span class="va">ev</span>, cores <span class="op">=</span> <span class="fl">0</span>, nSub <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> </span>
-<span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">sim</span>, <span class="st">"cp"</span>, level<span class="op">=</span><span class="fl">0.95</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span>ylab<span class="op">=</span><span class="st">"Central Concentration"</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## <span style="color: #BBBB00;">!</span> in order to put confidence bands around the intervals, you need at least 2500 simulations</span></span></code></pre>
-<pre><code><span><span class="co">## summarizing data...done</span></span></code></pre>
-<p><img src="multiple_files/figure-html/unnamed-chunk-11-1.png" width="700"></p>
-<p>Or using the <code>rxode2</code> package:</p>
-<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">rxModel2</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="op">)</span><span class="op">{</span></span>
+<span><span class="va">rxModel_multiple</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="op">)</span><span class="op">{</span></span>
 <span>  <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/ini.html" class="external-link">ini</a></span><span class="op">(</span><span class="op">{</span></span>
 <span>    <span class="va">cl</span> <span class="op">&lt;-</span> <span class="va">params</span><span class="op">$</span><span class="va">beta</span><span class="op">[</span><span class="st">"cl"</span><span class="op">]</span>  <span class="co"># Clearance</span></span>
 <span>    <span class="va">v1</span> <span class="op">&lt;-</span> <span class="va">params</span><span class="op">$</span><span class="va">beta</span><span class="op">[</span><span class="st">"v1"</span><span class="op">]</span>  <span class="co"># Volume of central compartment</span></span>
@@ -573,39 +584,75 @@ create a dosing plot. Here’s how to do it using the
 <span>  <span class="op">}</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span></span>
-<span><span class="va">rxModel2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/rxode2.html" class="external-link">rxode2</a></span><span class="op">(</span><span class="va">rxModel2</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## <span style="color: #00BBBB;">ℹ</span> parameter labels from comments are typically ignored in non-interactive mode</span></span></code></pre>
-<pre><code><span><span class="co">## <span style="color: #00BBBB;">ℹ</span> Need to run with the source intact to parse comments</span></span></code></pre>
-<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">rxModel2</span> <span class="op">&lt;-</span> <span class="va">rxModel2</span><span class="op">$</span><span class="va">simulationModel</span></span></code></pre></div>
-<pre><code><span><span class="co">## using C compiler: ‘gcc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0’</span></span></code></pre>
-<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">sim2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/rxSolve.html" class="external-link">rxSolve</a></span><span class="op">(</span><span class="va">rxModel2</span>, events <span class="op">=</span> <span class="va">ev</span>, cores <span class="op">=</span> <span class="fl">0</span>, nSub <span class="op">=</span> <span class="fl">2000</span><span class="op">)</span></span>
-<span><span class="va">sim3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/rxSolve.html" class="external-link">rxSolve</a></span><span class="op">(</span><span class="va">rxModel2</span>, events <span class="op">=</span> <span class="va">ev</span>, cores <span class="op">=</span> <span class="fl">0</span>, nSub <span class="op">=</span> <span class="fl">20000</span><span class="op">)</span></span>
+<span><span class="va">rxModel_true</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/rxode2.html" class="external-link">rxode2</a></span><span class="op">(</span><span class="fu">rxModel_true</span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">rxModel_true</span> <span class="op">&lt;-</span> <span class="va">rxModel_true</span><span class="op">$</span><span class="va">simulationModel</span></span>
+<span><span class="va">rxModel_multiple</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/rxode2.html" class="external-link">rxode2</a></span><span class="op">(</span><span class="fu">rxModel_multiple</span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">rxModel_multiple</span> <span class="op">&lt;-</span> <span class="va">rxModel_multiple</span><span class="op">$</span><span class="va">simulationModel</span></span></code></pre></div>
+<p>Now that we have defined both models, we can simulate the dosing
+regimen and plot the results:</p>
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">time_points</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">12</span>, by <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span>  <span class="co"># Dense time points for smooth curves</span></span>
+<span><span class="va">ev</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/eventTable.html" class="external-link">eventTable</a></span><span class="op">(</span>amount.units<span class="op">=</span><span class="st">"mg"</span>, time.units<span class="op">=</span><span class="st">"hours"</span><span class="op">)</span></span>
+<span><span class="va">ev</span><span class="op">$</span><span class="fu">add.dosing</span><span class="op">(</span>dose <span class="op">=</span> <span class="fl">100</span>, nbr.doses <span class="op">=</span> <span class="fl">2</span>, dosing.interval <span class="op">=</span> <span class="fl">6</span><span class="op">)</span></span>
+<span><span class="va">ev</span><span class="op">$</span><span class="fu">add.sampling</span><span class="op">(</span><span class="va">time_points</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">sim2</span>, <span class="st">"cp"</span>, level<span class="op">=</span><span class="fl">0.95</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span>ylab<span class="op">=</span><span class="st">"Central Concentration"</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## <span style="color: #BBBB00;">!</span> in order to put confidence bands around the intervals, you need at least 2500 simulations</span></span></code></pre>
+<span><span class="va">sim_true</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/rxSolve.html" class="external-link">rxSolve</a></span><span class="op">(</span><span class="va">rxModel_true</span>, events <span class="op">=</span> <span class="va">ev</span>, cores <span class="op">=</span> <span class="fl">0</span>, nSub <span class="op">=</span> <span class="fl">10000</span><span class="op">)</span></span>
+<span><span class="va">sim_multiple</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/rxSolve.html" class="external-link">rxSolve</a></span><span class="op">(</span><span class="va">rxModel_multiple</span>, events <span class="op">=</span> <span class="va">ev</span>, cores <span class="op">=</span> <span class="fl">0</span>, nSub <span class="op">=</span> <span class="fl">10000</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Combine the confidence intervals with a label for the model</span></span>
+<span><span class="va">ci_true</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">sim_true</span>, <span class="st">"cp"</span>, level<span class="op">=</span><span class="fl">0.95</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>Model <span class="op">=</span> <span class="st">"True parameters"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## summarizing data...done</span></span></code></pre>
-<p><img src="multiple_files/figure-html/unnamed-chunk-12-1.png" width="700"></p>
-<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">sim3</span>, <span class="st">"cp"</span>, level<span class="op">=</span><span class="fl">0.95</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span>ylab<span class="op">=</span><span class="st">"Central Concentration"</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">ci_covar</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">sim_multiple</span>, <span class="st">"cp"</span>, level<span class="op">=</span><span class="fl">0.95</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>Model <span class="op">=</span> <span class="st">"Estimated model"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## summarizing data...done</span></span></code></pre>
-<pre><code><span><span class="co">## Warning: `aes_string()` was deprecated in ggplot2 3.0.0.</span></span>
-<span><span class="co">## <span style="color: #00BBBB;">ℹ</span> Please use tidy evaluation idioms with `aes()`.</span></span>
-<span><span class="co">## <span style="color: #00BBBB;">ℹ</span> See also `vignette("ggplot2-in-packages")` for more information.</span></span>
-<span><span class="co">## <span style="color: #00BBBB;">ℹ</span> The deprecated feature was likely used in the <span style="color: #0000BB;">rxode2</span> package.</span></span>
-<span><span class="co">##   Please report the issue at <span style="color: #0000BB; font-style: italic;">&lt;https://github.com/nlmixr2/rxode2/issues/&gt;</span>.</span></span>
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Bind them together</span></span>
+<span><span class="va">ci_all</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind_rows.html" class="external-link">bind_rows</a></span><span class="op">(</span><span class="va">ci_true</span>, <span class="va">ci_covar</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
+<span>    p1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">p1</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    Percentile <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">Percentile</span>, levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">Percentile</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">p1</span><span class="op">)</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Plot both models</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">ci_all</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">time</span>, group <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/interaction.html" class="external-link">interaction</a></span><span class="op">(</span><span class="va">Model</span>, <span class="va">Percentile</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_ribbon.html" class="external-link">geom_ribbon</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>ymin <span class="op">=</span> <span class="va">p2.5</span>, ymax <span class="op">=</span> <span class="va">p97.5</span>, fill <span class="op">=</span> <span class="va">Model</span><span class="op">)</span>,</span>
+<span>              alpha <span class="op">=</span> <span class="fl">0.2</span>, colour <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">p50</span>, colour <span class="op">=</span> <span class="va">Model</span><span class="op">)</span>, size <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
+<span>    title <span class="op">=</span> <span class="st">"Central Concentration Simulations"</span>,</span>
+<span>    x <span class="op">=</span> <span class="st">"Time"</span>,</span>
+<span>    y <span class="op">=</span> <span class="st">"Central Concentration (mg/L)"</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span>base_size <span class="op">=</span> <span class="fl">14</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_colour_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"True parameters"</span> <span class="op">=</span> <span class="st">"blue"</span>,</span>
+<span>                                 <span class="st">"Estimated model"</span> <span class="op">=</span> <span class="st">"red"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_fill_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"True parameters"</span> <span class="op">=</span> <span class="st">"blue"</span>,</span>
+<span>                               <span class="st">"Estimated model"</span> <span class="op">=</span> <span class="st">"red"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.</span></span>
+<span><span class="co">## <span style="color: #00BBBB;">ℹ</span> Please use `linewidth` instead.</span></span>
 <span><span class="co">## <span style="color: #555555;">This warning is displayed once every 8 hours.</span></span></span>
 <span><span class="co">## <span style="color: #555555;">Call `lifecycle::last_lifecycle_warnings()` to see where this warning was</span></span></span>
 <span><span class="co">## <span style="color: #555555;">generated.</span></span></span></code></pre>
-<p><img src="multiple_files/figure-html/unnamed-chunk-12-2.png" width="700"></p>
+<p><img src="multiple_files/figure-html/unnamed-chunk-13-1.png" width="700"></p>
+<p>The combined dataset model (red) closely follows the true parameter
+model (blue). The median line of the estimated model almost perfectly
+overlaps with the true model, indicating that the estimated model.
+However, the estimated model does show slightly wider population
+intervals. In this scenario this isn’t very problematic, since a wider
+range still captures the true dynamics. In case of dose optimization,
+this results in a more conservative dose recommendation. However, in
+other scenarios, this could lead to over- or under-prediction of certain
+percentiles. The estimation error is expected due to the reduced
+information content in variance-only data.</p>
 </div>
 </div>
 <div class="section level3">
 <h3 id="best-practices">Best Practices<a class="anchor" aria-label="anchor" href="#best-practices"></a>
 </h3>
+<p>So to conclude, here are some best practices when using the
+<code>admr</code> package for aggregate data modeling:</p>
 <ol style="list-style-type: decimal">
 <li>
 <strong>Data Preparation</strong>:
@@ -636,22 +683,6 @@ create a dosing plot. Here’s how to do it using the
 <ul>
 <li>Always examine convergence plots</li>
 <li>Validate model predictions against observed data</li>
-</ul>
-</li>
-</ol>
-</div>
-<div class="section level3">
-<h3 id="next-steps">Next Steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>
-</h3>
-<p>After mastering the basics, you might want to explore:</p>
-<ol style="list-style-type: decimal">
-<li>
-<strong>Advanced modelling</strong>:
-<ul>
-<li>Adjusting Monte Carlo sample size</li>
-<li>Residual analysis</li>
-<li>Parameter sensitivity analysis</li>
-<li>Model comparison</li>
 </ul>
 </li>
 </ol>

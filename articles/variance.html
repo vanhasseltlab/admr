@@ -79,10 +79,10 @@
 using the <code>admr</code> package in R. We’ll cover the essential
 steps to prepare your data, specify a pharmacokinetic model, fit the
 model to aggregate data, and evaluate the results. We’ll compare the
-results of using mean and variance only data versus mean and covariance
-data. Variance based modeling is particularly useful when complex
-aggregate data is not available, and only means and variances are
-reported.</p>
+results of using mean and variance only data to the full mean and
+covariance data. Variance based modeling is particularly useful when
+complex aggregate data is not available, and only means and variances
+are reported.</p>
 <p>The <code>admr</code> package implements the Iterative Reweighting
 Monte Carlo (IRMC) algorithm, which efficiently fits models to aggregate
 data by iteratively updating parameter estimates using weighted
@@ -107,13 +107,13 @@ formats:</p>
 <ol style="list-style-type: decimal">
 <li>
 <strong>Raw Data</strong>: Individual-level observations in a wide
-or long format</li>
+or long format.</li>
 <li>
 <strong>Aggregate Data</strong>: Summary statistics (mean and
-covariance) computed from raw data</li>
+covariance) computed from raw data.</li>
 <li>
 <strong>Aggregate Data with only means and variance</strong>: Mean
-and variance for each time point (no covariances)</li>
+and variance for each time point (no covariances).</li>
 </ol>
 <p>Let’s look at the examplomycin dataset, which we’ll use throughout
 this vignette:</p>
@@ -145,10 +145,11 @@ this vignette:</p>
 <div class="section level4">
 <h4 id="converting-raw-data-to-aggregate-format">Converting Raw Data to Aggregate Format<a class="anchor" aria-label="anchor" href="#converting-raw-data-to-aggregate-format"></a>
 </h4>
-<p>The first step is to convert your raw data into aggregate format.
-Then, we will create two versions of the aggregated data: one with mean
-and covariance, and another with mean and variance only.</p>
-<p>Here’s how to do it:</p>
+<p>The first step is to convert our simulated raw data into aggregate
+format. Then, we will create two versions of the aggregated data: one
+with mean and covariance, and another with mean and variance only. In
+real-world scenarios, you will not have access to the raw data, but this
+step is included here for demonstration purposes.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Convert to wide format</span></span>
 <span><span class="va">examplomycin_wide</span> <span class="op">&lt;-</span> <span class="va">examplomycin</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
@@ -230,11 +231,11 @@ and covariance, and another with mean and variance only.</p>
 </h4>
 <p>Before fitting the model, it’s helpful to visualize the data:</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Create a concentration-time plot</span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">examplomycin</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">TIME</span>, y <span class="op">=</span> <span class="va">DV</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
+<code class="sourceCode R"><span><span class="co"># Boxplot to visualize variability</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">examplomycin</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">TIME</span>, y <span class="op">=</span> <span class="va">DV</span>, group <span class="op">=</span> <span class="va">TIME</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_boxplot.html" class="external-link">geom_boxplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>group <span class="op">=</span> <span class="va">TIME</span><span class="op">)</span>, width <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
-<span>    title <span class="op">=</span> <span class="st">"Concentration-Time Profile"</span>,</span>
+<span>    title <span class="op">=</span> <span class="st">"Concentration Variability at Each Time Point"</span>,</span>
 <span>    x <span class="op">=</span> <span class="st">"Time (hours)"</span>,</span>
 <span>    y <span class="op">=</span> <span class="st">"Concentration (mg/L)"</span></span>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
@@ -248,8 +249,8 @@ and covariance, and another with mean and variance only.</p>
 <div class="section level4">
 <h4 id="defining-the-pharmacokinetic-model">Defining the Pharmacokinetic Model<a class="anchor" aria-label="anchor" href="#defining-the-pharmacokinetic-model"></a>
 </h4>
-<p>We’ll use a two-compartment model with first-order absorption.</p>
-<p>Using the solved model approach (simpler):</p>
+<p>We’ll use a solved two-compartment model with first-order
+absorption:</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Define RxODE model</span></span>
 <span><span class="va">rxModel</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="op">)</span><span class="op">{</span></span>
@@ -298,6 +299,9 @@ format</p>
 <span>    </span>
 <span>    <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">cp_matrix</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
+<p>It can be observed that all steps for variance based modeling are
+similar to the mean and covariance based modeling. The only difference
+is in the data that is used for fitting the model.</p>
 </div>
 </div>
 <div class="section level3">
@@ -347,6 +351,10 @@ controls the model fitting process:</p>
 <span>  f <span class="op">=</span> <span class="va">predder</span>,    <span class="co"># Prediction function</span></span>
 <span>  no_cov <span class="op">=</span> <span class="cn">TRUE</span> <span class="co"># Use mean and variance only format</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<p>The only difference between the two options is the
+<code>no_cov</code> argument, which is set to <code>TRUE</code> for
+variance only data and <code>FALSE</code> for mean and covariance
+data.</p>
 </div>
 <div class="section level4">
 <h4 id="fitting-the-model">Fitting the Model<a class="anchor" aria-label="anchor" href="#fitting-the-model"></a>
@@ -392,13 +400,13 @@ algorithm:</p>
 <span><span class="co">##   16: -1266.456    1.598    2.054    3.455    2.173   -0.242   -2.136   -2.669   -2.388   -5.480   -2.019   -3.358</span></span>
 <span><span class="co">## Phase Precision Phase converged at iteration 16.</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 1 Complete: Final NLL = -1266.456, Time Elapsed = 32.94 seconds</span></span>
+<span><span class="co">## Chain 1 Complete: Final NLL = -1266.456, Time Elapsed = 33.02 seconds</span></span>
 <span><span class="co">##  </span></span>
 <span><span class="co">## Phase Focussed Search Phase converged at iteration 120.</span></span>
 <span><span class="co">## Phase Fine-Tuning Phase converged at iteration 121.</span></span>
 <span><span class="co">## Phase Precision Phase converged at iteration 143.</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 2 Complete: Final NLL = -1266.456, Time Elapsed = 179.35 seconds</span></span>
+<span><span class="co">## Chain 2 Complete: Final NLL = -1266.456, Time Elapsed = 179.00 seconds</span></span>
 <span><span class="co">##  </span></span>
 <span><span class="co">## Phase Wide Search Phase converged at iteration 10.</span></span>
 <span><span class="co">## </span></span>
@@ -444,21 +452,21 @@ algorithm:</p>
 <span><span class="co">##   17: -1845.354    1.601    2.318    3.401    2.285    0.027   -2.282   -2.216   -2.339   -2.236   -2.389   -3.235</span></span>
 <span><span class="co">## Phase Precision Phase converged at iteration 17.</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 1 Complete: Final NLL = -1845.355, Time Elapsed = 17.07 seconds</span></span>
+<span><span class="co">## Chain 1 Complete: Final NLL = -1845.355, Time Elapsed = 17.01 seconds</span></span>
 <span><span class="co">##  </span></span>
 <span><span class="co">## Phase Wide Search Phase converged at iteration 13.</span></span>
 <span><span class="co">## Phase Focussed Search Phase converged at iteration 15.</span></span>
 <span><span class="co">## Phase Fine-Tuning Phase converged at iteration 16.</span></span>
 <span><span class="co">## Phase Precision Phase converged at iteration 18.</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 2 Complete: Final NLL = -1845.354, Time Elapsed = 23.08 seconds</span></span>
+<span><span class="co">## Chain 2 Complete: Final NLL = -1845.354, Time Elapsed = 22.20 seconds</span></span>
 <span><span class="co">##  </span></span>
 <span><span class="co">## Phase Wide Search Phase converged at iteration 8.</span></span>
 <span><span class="co">## Phase Focussed Search Phase converged at iteration 10.</span></span>
 <span><span class="co">## Phase Fine-Tuning Phase converged at iteration 11.</span></span>
 <span><span class="co">## Phase Precision Phase converged at iteration 13.</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 3 Complete: Final NLL = -1845.354, Time Elapsed = 15.46 seconds</span></span>
+<span><span class="co">## Chain 3 Complete: Final NLL = -1845.354, Time Elapsed = 15.34 seconds</span></span>
 <span><span class="co">## </span></span></code></pre>
 </div>
 </div>
@@ -482,10 +490,10 @@ fit:</p>
 <span><span class="co">## Condition#(Cor): 695.66</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## -- Timing Information --</span></span>
-<span><span class="co">##      Best Chain: 32.9440 seconds</span></span>
-<span><span class="co">##      All Chains: 451.7484 seconds</span></span>
-<span><span class="co">##      Covariance: 27.7006 seconds</span></span>
-<span><span class="co">##         Elapsed: 479.45 seconds</span></span>
+<span><span class="co">##      Best Chain: 33.0225 seconds</span></span>
+<span><span class="co">##      All Chains: 451.4671 seconds</span></span>
+<span><span class="co">##      Covariance: 27.9124 seconds</span></span>
+<span><span class="co">##         Elapsed: 479.38 seconds</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## -- Population Parameters --</span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 6 × 6</span></span></span>
@@ -524,10 +532,10 @@ fit:</p>
 <span><span class="co">## Condition#(Cor): 216.91</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## -- Timing Information --</span></span>
-<span><span class="co">##      Best Chain: 17.0724 seconds</span></span>
-<span><span class="co">##      All Chains: 55.6173 seconds</span></span>
-<span><span class="co">##      Covariance: 28.1121 seconds</span></span>
-<span><span class="co">##         Elapsed: 83.73 seconds</span></span>
+<span><span class="co">##      Best Chain: 17.0068 seconds</span></span>
+<span><span class="co">##      All Chains: 54.5502 seconds</span></span>
+<span><span class="co">##      Covariance: 27.9989 seconds</span></span>
+<span><span class="co">##         Elapsed: 82.55 seconds</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## -- Population Parameters --</span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 6 × 6</span></span></span>
@@ -562,37 +570,52 @@ fit:</p>
 fit:</p>
 <div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit.var</span><span class="op">)</span></span></code></pre></div>
-<p><img src="variance_files/figure-html/unnamed-chunk-9-1.png" width="700"><img src="variance_files/figure-html/unnamed-chunk-9-2.png" width="700"><img src="variance_files/figure-html/unnamed-chunk-9-3.png" width="700"><img src="variance_files/figure-html/unnamed-chunk-9-4.png" width="700"><img src="variance_files/figure-html/unnamed-chunk-9-5.png" width="700"></p>
+<p><img src="variance_files/figure-html/unnamed-chunk-9-1.png" width="700"><img src="variance_files/figure-html/unnamed-chunk-9-2.png" width="700"><img src="variance_files/figure-html/unnamed-chunk-9-3.png" width="700"><img src="variance_files/figure-html/unnamed-chunk-9-4.png" width="700"><img src="variance_files/figure-html/unnamed-chunk-9-5.png" width="700">
+First variance only data is plotted. We see that the model converges
+well within the specified iterations. Now we plot the mean and
+covariance data fit:</p>
 <div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit.covar</span><span class="op">)</span></span></code></pre></div>
-<p><img src="variance_files/figure-html/unnamed-chunk-9-6.png" width="700"><img src="variance_files/figure-html/unnamed-chunk-9-7.png" width="700"><img src="variance_files/figure-html/unnamed-chunk-9-8.png" width="700"><img src="variance_files/figure-html/unnamed-chunk-9-9.png" width="700"><img src="variance_files/figure-html/unnamed-chunk-9-10.png" width="700"></p>
+<p><img src="variance_files/figure-html/unnamed-chunk-10-1.png" width="700"><img src="variance_files/figure-html/unnamed-chunk-10-2.png" width="700"><img src="variance_files/figure-html/unnamed-chunk-10-3.png" width="700"><img src="variance_files/figure-html/unnamed-chunk-10-4.png" width="700"><img src="variance_files/figure-html/unnamed-chunk-10-5.png" width="700">
+This data seems to converge slightly better, especially when looking at
+chain comparisons. All chains converge to similar values, whereas in the
+variance only data, the chains show more variability while resulting in
+the same NLL. This is due to non-identifiability issues of some
+parameters when only variance data is used.</p>
+</div>
+<div class="section level4">
+<h4 id="true-vs-estimated-parameters">True vs Estimated Parameters<a class="anchor" aria-label="anchor" href="#true-vs-estimated-parameters"></a>
+</h4>
 <p>Given that true parameter estimates are known, we can compare the
 estimated parameters to the true values:</p>
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">true_params</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>cl <span class="op">=</span> <span class="fl">5</span>, v1 <span class="op">=</span> <span class="fl">10</span>, v2 <span class="op">=</span> <span class="fl">30</span>, q <span class="op">=</span> <span class="fl">10</span>, ka <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
-<span><span class="va">true_omega</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.09</span>, <span class="fl">0.09</span>, <span class="fl">0.09</span>, <span class="fl">0.09</span>, <span class="fl">0.09</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">true_sigma</span> <span class="op">&lt;-</span> <span class="fl">0.04</span></span>
+<code class="sourceCode R"><span><span class="va">params.true</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  beta <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>cl <span class="op">=</span> <span class="fl">5</span>, v1 <span class="op">=</span> <span class="fl">10</span>, v2 <span class="op">=</span> <span class="fl">30</span>, q <span class="op">=</span> <span class="fl">10</span>, ka <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
+<span>  Omega <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0.09</span>, <span class="fl">5</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  Sigma_prop <span class="op">=</span> <span class="fl">0.04</span></span>
+<span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"True parameter values:\n"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## True parameter values:</span></span></code></pre>
 <div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">true_params</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## cl v1 v2  q ka </span></span>
-<span><span class="co">##  5 10 30 10  1</span></span></code></pre>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">true_omega</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##      [,1] [,2] [,3] [,4] [,5]</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">params.true</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## $beta</span></span>
+<span><span class="co">## cl v1 v2  q ka </span></span>
+<span><span class="co">##  5 10 30 10  1 </span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## $Omega</span></span>
+<span><span class="co">##      [,1] [,2] [,3] [,4] [,5]</span></span>
 <span><span class="co">## [1,] 0.09 0.00 0.00 0.00 0.00</span></span>
 <span><span class="co">## [2,] 0.00 0.09 0.00 0.00 0.00</span></span>
 <span><span class="co">## [3,] 0.00 0.00 0.09 0.00 0.00</span></span>
 <span><span class="co">## [4,] 0.00 0.00 0.00 0.09 0.00</span></span>
-<span><span class="co">## [5,] 0.00 0.00 0.00 0.00 0.09</span></span></code></pre>
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">true_sigma</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] 0.04</span></span></code></pre>
-<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<span><span class="co">## [5,] 0.00 0.00 0.00 0.00 0.09</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## $Sigma_prop</span></span>
+<span><span class="co">## [1] 0.04</span></span></code></pre>
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Estimated parameters (mean and variance only):\n"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Estimated parameters (mean and variance only):</span></span></code></pre>
-<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">fit.var</span><span class="op">$</span><span class="va">transformed_params</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## $beta</span></span>
 <span><span class="co">##         cl         v1         v2          q         ka </span></span>
@@ -608,37 +631,197 @@ estimated parameters to the true values:</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## $Sigma_prop</span></span>
 <span><span class="co">## [1] 0.03479938</span></span></code></pre>
-<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Estimated parameters (mean and covariance):\n"</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Estimated parameters (mean and covariance):</span></span></code></pre>
-<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">fit.covar</span><span class="op">$</span><span class="va">transformed_params</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## $beta</span></span>
-<span><span class="co">##        cl        v1        v2         q        ka </span></span>
-<span><span class="co">##  4.958917 10.147466 29.999156  9.826715  1.026882 </span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## $Omega</span></span>
-<span><span class="co">##           [,1]     [,2]       [,3]      [,4]       [,5]</span></span>
-<span><span class="co">## [1,] 0.1020163 0.000000 0.00000000 0.0000000 0.00000000</span></span>
-<span><span class="co">## [2,] 0.0000000 0.108904 0.00000000 0.0000000 0.00000000</span></span>
-<span><span class="co">## [3,] 0.0000000 0.000000 0.09641712 0.0000000 0.00000000</span></span>
-<span><span class="co">## [4,] 0.0000000 0.000000 0.00000000 0.1066628 0.00000000</span></span>
-<span><span class="co">## [5,] 0.0000000 0.000000 0.00000000 0.0000000 0.09182798</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## $Sigma_prop</span></span>
-<span><span class="co">## [1] 0.03935998</span></span></code></pre>
-<p>We see that both methods recover the true parameters reasonably well,
-but the mean and covariance method provides more accurate estimates due
-to the additional information from covariances. In this example model,
-especially inter-compartmental clearance (q) and its random effect are
-more challenging to estimate accurately with only variance data.
-However, using larger sample sizes from more studies will help improve
-the estimates from both data.</p>
+<p>We observe that both methods recover the true parameters reasonably
+well, but the mean and covariance method provides more accurate
+estimates due to the additional information from covariances. In this
+example model, especially inter-compartmental clearance (q) and its
+random effect are more challenging to estimate accurately with only
+variance data. However, using larger sample sizes from more studies will
+help improve the estimates from both data. To further illustrate the
+differences in dynamics, we can simulate concentration-time profiles
+using the true parameters and the estimated parameters from both
+methods.</p>
+</div>
+<div class="section level4">
+<h4 id="dosing-plot-with-confidence-intervals-for-true-vs-estimated-parameters">Dosing plot with Confidence Intervals for true vs estimated
+parameters<a class="anchor" aria-label="anchor" href="#dosing-plot-with-confidence-intervals-for-true-vs-estimated-parameters"></a>
+</h4>
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">params.true</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  beta <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>cl <span class="op">=</span> <span class="fl">5</span>, v1 <span class="op">=</span> <span class="fl">10</span>, v2 <span class="op">=</span> <span class="fl">30</span>, q <span class="op">=</span> <span class="fl">10</span>, ka <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
+<span>  Omega <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0.09</span>, <span class="fl">5</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  Sigma_prop <span class="op">=</span> <span class="fl">0.04</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">params.covar</span> <span class="op">&lt;-</span> <span class="va">fit.covar</span><span class="op">$</span><span class="va">transformed_params</span></span>
+<span><span class="va">params.var</span> <span class="op">&lt;-</span> <span class="va">fit.var</span><span class="op">$</span><span class="va">transformed_params</span></span>
+<span></span>
+<span><span class="va">rxModel_true</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="op">)</span><span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/ini.html" class="external-link">ini</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>    <span class="va">cl</span> <span class="op">&lt;-</span> <span class="va">params.true</span><span class="op">$</span><span class="va">beta</span><span class="op">[</span><span class="st">"cl"</span><span class="op">]</span>  <span class="co"># Clearance</span></span>
+<span>    <span class="va">v1</span> <span class="op">&lt;-</span> <span class="va">params.true</span><span class="op">$</span><span class="va">beta</span><span class="op">[</span><span class="st">"v1"</span><span class="op">]</span>  <span class="co"># Volume of central compartment</span></span>
+<span>    <span class="va">v2</span> <span class="op">&lt;-</span> <span class="va">params.true</span><span class="op">$</span><span class="va">beta</span><span class="op">[</span><span class="st">"v2"</span><span class="op">]</span> <span class="co"># Volume of peripheral compartment</span></span>
+<span>    <span class="va">q</span> <span class="op">&lt;-</span> <span class="va">params.true</span><span class="op">$</span><span class="va">beta</span><span class="op">[</span><span class="st">"q"</span><span class="op">]</span>    <span class="co"># Inter-compartmental clearance</span></span>
+<span>    <span class="va">ka</span> <span class="op">&lt;-</span> <span class="va">params.true</span><span class="op">$</span><span class="va">beta</span><span class="op">[</span><span class="st">"ka"</span><span class="op">]</span>   <span class="co"># Absorption rate constant</span></span>
+<span></span>
+<span>    <span class="va">eta_cl</span> <span class="op">~</span> <span class="va">params.true</span><span class="op">$</span><span class="va">Omega</span><span class="op">[</span><span class="fl">1</span>,<span class="fl">1</span><span class="op">]</span></span>
+<span>    <span class="va">eta_v1</span> <span class="op">~</span> <span class="va">params.true</span><span class="op">$</span><span class="va">Omega</span><span class="op">[</span><span class="fl">2</span>,<span class="fl">2</span><span class="op">]</span></span>
+<span>    <span class="va">eta_v2</span> <span class="op">~</span> <span class="va">params.true</span><span class="op">$</span><span class="va">Omega</span><span class="op">[</span><span class="fl">3</span>,<span class="fl">3</span><span class="op">]</span></span>
+<span>    <span class="va">eta_q</span> <span class="op">~</span> <span class="va">params.true</span><span class="op">$</span><span class="va">Omega</span><span class="op">[</span><span class="fl">4</span>,<span class="fl">4</span><span class="op">]</span></span>
+<span>    <span class="va">eta_ka</span> <span class="op">~</span> <span class="va">params.true</span><span class="op">$</span><span class="va">Omega</span><span class="op">[</span><span class="fl">5</span>,<span class="fl">5</span><span class="op">]</span></span>
+<span>  <span class="op">}</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/model.html" class="external-link">model</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>    <span class="va">cl</span> <span class="op">&lt;-</span> <span class="va">cl</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">eta_cl</span><span class="op">)</span></span>
+<span>    <span class="va">v1</span> <span class="op">&lt;-</span> <span class="va">v1</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">eta_v1</span><span class="op">)</span></span>
+<span>    <span class="va">v2</span> <span class="op">&lt;-</span> <span class="va">v2</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">eta_v2</span><span class="op">)</span></span>
+<span>    <span class="va">q</span> <span class="op">&lt;-</span> <span class="va">q</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">eta_q</span><span class="op">)</span></span>
+<span>    <span class="va">ka</span> <span class="op">&lt;-</span> <span class="va">ka</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">eta_ka</span><span class="op">)</span></span>
+<span>    <span class="va">cp</span> <span class="op">=</span> <span class="fu">linCmt</span><span class="op">(</span><span class="va">cl</span>, <span class="va">v1</span>, <span class="va">v2</span>, <span class="va">q</span>, <span class="va">ka</span><span class="op">)</span></span>
+<span>  <span class="op">}</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="va">rxModel_covar</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="op">)</span><span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/ini.html" class="external-link">ini</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>    <span class="va">cl</span> <span class="op">&lt;-</span> <span class="va">params.covar</span><span class="op">$</span><span class="va">beta</span><span class="op">[</span><span class="st">"cl"</span><span class="op">]</span>  <span class="co"># Clearance</span></span>
+<span>    <span class="va">v1</span> <span class="op">&lt;-</span> <span class="va">params.covar</span><span class="op">$</span><span class="va">beta</span><span class="op">[</span><span class="st">"v1"</span><span class="op">]</span>  <span class="co"># Volume of central compartment</span></span>
+<span>    <span class="va">v2</span> <span class="op">&lt;-</span> <span class="va">params.covar</span><span class="op">$</span><span class="va">beta</span><span class="op">[</span><span class="st">"v2"</span><span class="op">]</span> <span class="co"># Volume of peripheral compartment</span></span>
+<span>    <span class="va">q</span> <span class="op">&lt;-</span> <span class="va">params.covar</span><span class="op">$</span><span class="va">beta</span><span class="op">[</span><span class="st">"q"</span><span class="op">]</span>    <span class="co"># Inter-compartmental clearance</span></span>
+<span>    <span class="va">ka</span> <span class="op">&lt;-</span> <span class="va">params.covar</span><span class="op">$</span><span class="va">beta</span><span class="op">[</span><span class="st">"ka"</span><span class="op">]</span>   <span class="co"># Absorption rate constant</span></span>
+<span></span>
+<span>    <span class="va">eta_cl</span> <span class="op">~</span> <span class="va">params.covar</span><span class="op">$</span><span class="va">Omega</span><span class="op">[</span><span class="fl">1</span>,<span class="fl">1</span><span class="op">]</span></span>
+<span>    <span class="va">eta_v1</span> <span class="op">~</span> <span class="va">params.covar</span><span class="op">$</span><span class="va">Omega</span><span class="op">[</span><span class="fl">2</span>,<span class="fl">2</span><span class="op">]</span></span>
+<span>    <span class="va">eta_v2</span> <span class="op">~</span> <span class="va">params.covar</span><span class="op">$</span><span class="va">Omega</span><span class="op">[</span><span class="fl">3</span>,<span class="fl">3</span><span class="op">]</span></span>
+<span>    <span class="va">eta_q</span> <span class="op">~</span> <span class="va">params.covar</span><span class="op">$</span><span class="va">Omega</span><span class="op">[</span><span class="fl">4</span>,<span class="fl">4</span><span class="op">]</span></span>
+<span>    <span class="va">eta_ka</span> <span class="op">~</span> <span class="va">params.covar</span><span class="op">$</span><span class="va">Omega</span><span class="op">[</span><span class="fl">5</span>,<span class="fl">5</span><span class="op">]</span></span>
+<span>  <span class="op">}</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/model.html" class="external-link">model</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>    <span class="va">cl</span> <span class="op">&lt;-</span> <span class="va">cl</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">eta_cl</span><span class="op">)</span></span>
+<span>    <span class="va">v1</span> <span class="op">&lt;-</span> <span class="va">v1</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">eta_v1</span><span class="op">)</span></span>
+<span>    <span class="va">v2</span> <span class="op">&lt;-</span> <span class="va">v2</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">eta_v2</span><span class="op">)</span></span>
+<span>    <span class="va">q</span> <span class="op">&lt;-</span> <span class="va">q</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">eta_q</span><span class="op">)</span></span>
+<span>    <span class="va">ka</span> <span class="op">&lt;-</span> <span class="va">ka</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">eta_ka</span><span class="op">)</span></span>
+<span>    <span class="va">cp</span> <span class="op">=</span> <span class="fu">linCmt</span><span class="op">(</span><span class="va">cl</span>, <span class="va">v1</span>, <span class="va">v2</span>, <span class="va">q</span>, <span class="va">ka</span><span class="op">)</span></span>
+<span>  <span class="op">}</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="va">rxModel_var</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="op">)</span><span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/ini.html" class="external-link">ini</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>    <span class="va">cl</span> <span class="op">&lt;-</span> <span class="va">params.var</span><span class="op">$</span><span class="va">beta</span><span class="op">[</span><span class="st">"cl"</span><span class="op">]</span>  <span class="co"># Clearance</span></span>
+<span>    <span class="va">v1</span> <span class="op">&lt;-</span> <span class="va">params.var</span><span class="op">$</span><span class="va">beta</span><span class="op">[</span><span class="st">"v1"</span><span class="op">]</span>  <span class="co"># Volume of central compartment</span></span>
+<span>    <span class="va">v2</span> <span class="op">&lt;-</span> <span class="va">params.var</span><span class="op">$</span><span class="va">beta</span><span class="op">[</span><span class="st">"v2"</span><span class="op">]</span> <span class="co"># Volume of peripheral compartment</span></span>
+<span>    <span class="va">q</span> <span class="op">&lt;-</span> <span class="va">params.var</span><span class="op">$</span><span class="va">beta</span><span class="op">[</span><span class="st">"q"</span><span class="op">]</span>    <span class="co"># Inter-compartmental clearance</span></span>
+<span>    <span class="va">ka</span> <span class="op">&lt;-</span> <span class="va">params.var</span><span class="op">$</span><span class="va">beta</span><span class="op">[</span><span class="st">"ka"</span><span class="op">]</span>   <span class="co"># Absorption rate constant</span></span>
+<span></span>
+<span>    <span class="va">eta_cl</span> <span class="op">~</span> <span class="va">params.var</span><span class="op">$</span><span class="va">Omega</span><span class="op">[</span><span class="fl">1</span>,<span class="fl">1</span><span class="op">]</span></span>
+<span>    <span class="va">eta_v1</span> <span class="op">~</span> <span class="va">params.var</span><span class="op">$</span><span class="va">Omega</span><span class="op">[</span><span class="fl">2</span>,<span class="fl">2</span><span class="op">]</span></span>
+<span>    <span class="va">eta_v2</span> <span class="op">~</span> <span class="va">params.var</span><span class="op">$</span><span class="va">Omega</span><span class="op">[</span><span class="fl">3</span>,<span class="fl">3</span><span class="op">]</span></span>
+<span>    <span class="va">eta_q</span> <span class="op">~</span> <span class="va">params.var</span><span class="op">$</span><span class="va">Omega</span><span class="op">[</span><span class="fl">4</span>,<span class="fl">4</span><span class="op">]</span></span>
+<span>    <span class="va">eta_ka</span> <span class="op">~</span> <span class="va">params.var</span><span class="op">$</span><span class="va">Omega</span><span class="op">[</span><span class="fl">5</span>,<span class="fl">5</span><span class="op">]</span></span>
+<span>  <span class="op">}</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/model.html" class="external-link">model</a></span><span class="op">(</span><span class="op">{</span></span>
+<span>    <span class="va">cl</span> <span class="op">&lt;-</span> <span class="va">cl</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">eta_cl</span><span class="op">)</span></span>
+<span>    <span class="va">v1</span> <span class="op">&lt;-</span> <span class="va">v1</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">eta_v1</span><span class="op">)</span></span>
+<span>    <span class="va">v2</span> <span class="op">&lt;-</span> <span class="va">v2</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">eta_v2</span><span class="op">)</span></span>
+<span>    <span class="va">q</span> <span class="op">&lt;-</span> <span class="va">q</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">eta_q</span><span class="op">)</span></span>
+<span>    <span class="va">ka</span> <span class="op">&lt;-</span> <span class="va">ka</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="va">eta_ka</span><span class="op">)</span></span>
+<span>    <span class="va">cp</span> <span class="op">=</span> <span class="fu">linCmt</span><span class="op">(</span><span class="va">cl</span>, <span class="va">v1</span>, <span class="va">v2</span>, <span class="va">q</span>, <span class="va">ka</span><span class="op">)</span></span>
+<span>  <span class="op">}</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="va">rxModel_true</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/rxode2.html" class="external-link">rxode2</a></span><span class="op">(</span><span class="fu">rxModel_true</span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">rxModel_true</span> <span class="op">&lt;-</span> <span class="va">rxModel_true</span><span class="op">$</span><span class="va">simulationModel</span></span>
+<span><span class="va">rxModel_covar</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/rxode2.html" class="external-link">rxode2</a></span><span class="op">(</span><span class="fu">rxModel_covar</span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">rxModel_covar</span> <span class="op">&lt;-</span> <span class="va">rxModel_covar</span><span class="op">$</span><span class="va">simulationModel</span></span>
+<span><span class="va">rxModel_var</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/rxode2.html" class="external-link">rxode2</a></span><span class="op">(</span><span class="fu">rxModel_var</span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">rxModel_var</span> <span class="op">&lt;-</span> <span class="va">rxModel_var</span><span class="op">$</span><span class="va">simulationModel</span></span></code></pre></div>
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">time_points</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">12</span>, by <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span>  <span class="co"># Dense time points for smooth curves</span></span>
+<span><span class="va">ev</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/eventTable.html" class="external-link">eventTable</a></span><span class="op">(</span>amount.units<span class="op">=</span><span class="st">"mg"</span>, time.units<span class="op">=</span><span class="st">"hours"</span><span class="op">)</span></span>
+<span><span class="va">ev</span><span class="op">$</span><span class="fu">add.dosing</span><span class="op">(</span>dose <span class="op">=</span> <span class="fl">100</span>, nbr.doses <span class="op">=</span> <span class="fl">2</span>, dosing.interval <span class="op">=</span> <span class="fl">6</span><span class="op">)</span></span>
+<span><span class="va">ev</span><span class="op">$</span><span class="fu">add.sampling</span><span class="op">(</span><span class="va">time_points</span><span class="op">)</span></span>
+<span></span>
+<span></span>
+<span><span class="va">sim_true</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/rxSolve.html" class="external-link">rxSolve</a></span><span class="op">(</span><span class="va">rxModel_true</span>, events <span class="op">=</span> <span class="va">ev</span>, cores <span class="op">=</span> <span class="fl">0</span>, nSub <span class="op">=</span> <span class="fl">10000</span><span class="op">)</span></span>
+<span><span class="va">sim_covar</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/rxSolve.html" class="external-link">rxSolve</a></span><span class="op">(</span><span class="va">rxModel_covar</span>, events <span class="op">=</span> <span class="va">ev</span>, cores <span class="op">=</span> <span class="fl">0</span>, nSub <span class="op">=</span> <span class="fl">10000</span><span class="op">)</span></span>
+<span><span class="va">sim_var</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/rxSolve.html" class="external-link">rxSolve</a></span><span class="op">(</span><span class="va">rxModel_var</span>, events <span class="op">=</span> <span class="va">ev</span>, cores <span class="op">=</span> <span class="fl">0</span>, nSub <span class="op">=</span> <span class="fl">10000</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Combine the confidence intervals with a label for the model</span></span>
+<span><span class="va">ci_true</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">sim_true</span>, <span class="st">"cp"</span>, level<span class="op">=</span><span class="fl">0.95</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>Model <span class="op">=</span> <span class="st">"True parameters"</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## summarizing data...done</span></span></code></pre>
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">ci_covar</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">sim_covar</span>, <span class="st">"cp"</span>, level<span class="op">=</span><span class="fl">0.95</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>Model <span class="op">=</span> <span class="st">"Covariance fit"</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## summarizing data...done</span></span></code></pre>
+<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">ci_var</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">sim_var</span>, <span class="st">"cp"</span>, level<span class="op">=</span><span class="fl">0.95</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>Model <span class="op">=</span> <span class="st">"Variance fit"</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## summarizing data...done</span></span></code></pre>
+<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Bind them together</span></span>
+<span><span class="va">ci_true_covar</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind_rows.html" class="external-link">bind_rows</a></span><span class="op">(</span><span class="va">ci_true</span>, <span class="va">ci_covar</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
+<span>    p1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">p1</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    Percentile <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">Percentile</span>, levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">Percentile</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">p1</span><span class="op">)</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span><span class="va">ci_true_var</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind_rows.html" class="external-link">bind_rows</a></span><span class="op">(</span><span class="va">ci_true</span>, <span class="va">ci_var</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
+<span>    p1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">p1</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    Percentile <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">Percentile</span>, levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">Percentile</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">p1</span><span class="op">)</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Plot both models</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">ci_true_covar</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">time</span>, group <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/interaction.html" class="external-link">interaction</a></span><span class="op">(</span><span class="va">Model</span>, <span class="va">Percentile</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_ribbon.html" class="external-link">geom_ribbon</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>ymin <span class="op">=</span> <span class="va">p2.5</span>, ymax <span class="op">=</span> <span class="va">p97.5</span>, fill <span class="op">=</span> <span class="va">Model</span><span class="op">)</span>,</span>
+<span>              alpha <span class="op">=</span> <span class="fl">0.2</span>, colour <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">p50</span>, colour <span class="op">=</span> <span class="va">Model</span><span class="op">)</span>, size <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
+<span>    title <span class="op">=</span> <span class="st">"Central Concentration Simulations"</span>,</span>
+<span>    x <span class="op">=</span> <span class="st">"Time"</span>,</span>
+<span>    y <span class="op">=</span> <span class="st">"Central Concentration (mg/L)"</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span>base_size <span class="op">=</span> <span class="fl">14</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_colour_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"True parameters"</span> <span class="op">=</span> <span class="st">"blue"</span>,</span>
+<span>                                 <span class="st">"Covariance fit"</span> <span class="op">=</span> <span class="st">"red"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_fill_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"True parameters"</span> <span class="op">=</span> <span class="st">"blue"</span>,</span>
+<span>                               <span class="st">"Covariance fit"</span> <span class="op">=</span> <span class="st">"red"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_cartesian.html" class="external-link">coord_cartesian</a></span><span class="op">(</span>xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">12</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">7</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.</span></span>
+<span><span class="co">## <span style="color: #00BBBB;">ℹ</span> Please use `linewidth` instead.</span></span>
+<span><span class="co">## <span style="color: #555555;">This warning is displayed once every 8 hours.</span></span></span>
+<span><span class="co">## <span style="color: #555555;">Call `lifecycle::last_lifecycle_warnings()` to see where this warning was</span></span></span>
+<span><span class="co">## <span style="color: #555555;">generated.</span></span></span></code></pre>
+<p><img src="variance_files/figure-html/unnamed-chunk-13-1.png" width="700"></p>
+<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">ci_true_var</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">time</span>, group <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/interaction.html" class="external-link">interaction</a></span><span class="op">(</span><span class="va">Model</span>, <span class="va">Percentile</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_ribbon.html" class="external-link">geom_ribbon</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>ymin <span class="op">=</span> <span class="va">p2.5</span>, ymax <span class="op">=</span> <span class="va">p97.5</span>, fill <span class="op">=</span> <span class="va">Model</span><span class="op">)</span>,</span>
+<span>              alpha <span class="op">=</span> <span class="fl">0.2</span>, colour <span class="op">=</span> <span class="cn">NA</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">p50</span>, colour <span class="op">=</span> <span class="va">Model</span><span class="op">)</span>, size <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
+<span>    title <span class="op">=</span> <span class="st">"Central Concentration Simulations"</span>,</span>
+<span>    x <span class="op">=</span> <span class="st">"Time"</span>,</span>
+<span>    y <span class="op">=</span> <span class="st">"Central Concentration (mg/L)"</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span>base_size <span class="op">=</span> <span class="fl">14</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_colour_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"True parameters"</span> <span class="op">=</span> <span class="st">"blue"</span>,</span>
+<span>                                 <span class="st">"Variance fit"</span> <span class="op">=</span> <span class="st">"darkgreen"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_fill_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"True parameters"</span> <span class="op">=</span> <span class="st">"blue"</span>,</span>
+<span>                                 <span class="st">"Variance fit"</span> <span class="op">=</span> <span class="st">"darkgreen"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_cartesian.html" class="external-link">coord_cartesian</a></span><span class="op">(</span>xlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">12</span><span class="op">)</span>, ylim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">7</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><img src="variance_files/figure-html/unnamed-chunk-13-2.png" width="700">
+Both models capture the central tendency of the true parameters dynamics
+well. However, the variance only model shows slightly wider population
+intervals. In this scenario this isn’t very problematic, since a wider
+range still captures the true dynamics. However, in other scenarios,
+this could lead to over- or under-prediction of certain percentiles. The
+estimation error is expected due to the reduced information content in
+variance-only data.</p>
 </div>
 </div>
 <div class="section level3">
 <h3 id="best-practices">Best Practices<a class="anchor" aria-label="anchor" href="#best-practices"></a>
 </h3>
+<p>So to recap, here are some best practices for variance-based (but
+also covariance-based) modeling with <code>admr</code>:</p>
 <ol style="list-style-type: decimal">
 <li>
 <strong>Data Preparation</strong>:
@@ -669,22 +852,6 @@ the estimates from both data.</p>
 <ul>
 <li>Always examine convergence plots</li>
 <li>Validate model predictions against observed data</li>
-</ul>
-</li>
-</ol>
-</div>
-<div class="section level3">
-<h3 id="next-steps">Next Steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>
-</h3>
-<p>After mastering the basics, you might want to explore:</p>
-<ol style="list-style-type: decimal">
-<li>
-<strong>Advanced modelling</strong>:
-<ul>
-<li>Adjusting Monte Carlo sample size</li>
-<li>Residual analysis</li>
-<li>Parameter initial sensitivity analysis</li>
-<li>Model comparison</li>
 </ul>
 </li>
 </ol>
