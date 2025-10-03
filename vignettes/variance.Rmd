@@ -12,7 +12,7 @@ editor_options:
 
 # Variance based modelling
 
-This vignette provides an introduction to variance-based modeling using the `admr` package in R. We'll cover the essential steps to prepare your data, specify a pharmacokinetic model, fit the model to aggregate data, and evaluate the results. We'll compare the results of using mean and variance only data versus mean and covariance data. Variance based modeling is particularly useful when complex aggregate data is not available, and only means and variances are reported.
+This vignette provides an introduction to variance-based modeling using the `admr` package in R. We'll cover the essential steps to prepare your data, specify a pharmacokinetic model, fit the model to aggregate data, and evaluate the results. We'll compare the results of using mean and variance only data to the full mean and covariance data. Variance based modeling is particularly useful when complex aggregate data is not available, and only means and variances are reported.
 
 The `admr` package implements the Iterative Reweighting Monte Carlo (IRMC) algorithm, which efficiently fits models to aggregate data by iteratively updating parameter estimates using weighted importance sampling.
 
@@ -26,16 +26,15 @@ library(dplyr)
 library(tidyr)
 library(mnorm)
 library(ggplot2)  # For visualization
-library(tidyverse)
 ```
 
 ## Understanding the Data Format
 
 The `admr` package works with two types of data formats:
 
-1. **Raw Data**: Individual-level observations in a wide or long format
-2. **Aggregate Data**: Summary statistics (mean and covariance) computed from raw data
-3. **Aggregate Data with only means and variance**: Mean and variance for each time point (no covariances)
+1. **Raw Data**: Individual-level observations in a wide or long format.
+2. **Aggregate Data**: Summary statistics (mean and covariance) computed from raw data.
+3. **Aggregate Data with only means and variance**: Mean and variance for each time point (no covariances).
 
 Let's look at the examplomycin dataset, which we'll use throughout this vignette:
 
@@ -54,9 +53,8 @@ cat("Time points:", paste(sort(unique(examplomycin$TIME)), collapse = ", "), "\n
 
 ### Converting Raw Data to Aggregate Format
 
-The first step is to convert your raw data into aggregate format. Then, we will create two versions of the aggregated data: one with mean and covariance, and another with mean and variance only.
+The first step is to convert our simulated raw data into aggregate format. Then, we will create two versions of the aggregated data: one with mean and covariance, and another with mean and variance only. In real-world scenarios, you will not have access to the raw data, but this step is included here for demonstration purposes. 
 
-Here's how to do it:
 
 ```{r, cache=TRUE}
 # Convert to wide format
@@ -87,25 +85,22 @@ examplomycin_aggregated_var
 Before fitting the model, it's helpful to visualize the data:
 
 ```{r, cache=TRUE}
-# Create a concentration-time plot
-ggplot(examplomycin, aes(x = TIME, y = DV)) +
-  geom_point(alpha = 0.5) +
+# Boxplot to visualize variability
+ggplot(examplomycin, aes(x = TIME, y = DV, group = TIME)) +
+  geom_boxplot(aes(group = TIME), width = 0.2) +
   labs(
-    title = "Concentration-Time Profile",
+    title = "Concentration Variability at Each Time Point",
     x = "Time (hours)",
     y = "Concentration (mg/L)"
   ) +
   theme_minimal()
-
 ```
 
 ## Model Specification
 
 ### Defining the Pharmacokinetic Model
 
-We'll use a two-compartment model with first-order absorption. 
-
-Using the solved model approach (simpler):
+We'll use a solved two-compartment model with first-order absorption: 
 ```{r, message = FALSE, warning = FALSE}
 # Define RxODE model
 rxModel <- function(){
@@ -155,6 +150,7 @@ predder <- function(time, theta_i, dose = 100) {
     return(cp_matrix)
 }
 ```
+It can be observed that all steps for variance based modeling are similar to the mean and covariance based modeling. The only difference is in the data that is used for fitting the model.
 
 ## Model Fitting
 
@@ -202,6 +198,8 @@ opts_var <- genopts(
   no_cov = TRUE # Use mean and variance only format
 )
 ```
+The only difference between the two options is the `no_cov` argument, which is set to `TRUE` for variance only data and `FALSE` for mean and covariance data.
+
 
 ### Fitting the Model
 
@@ -236,28 +234,29 @@ print(fit.covar)
 The `plot` method visualizes the convergence of the model fit:
 ```{r}
 plot(fit.var)
+```
+First variance only data is plotted. We see that the model converges well within the specified iterations. Now we plot the mean and covariance data fit:
+
+```{r}
 plot(fit.covar)
 ```
+This data seems to converge slightly better, especially when looking at chain comparisons. All chains converge to similar values, whereas in the variance only data, the chains show more variability while resulting in the same NLL. This is due to non-identifiability issues of some parameters when only variance data is used.
 
 ### True vs Estimated Parameters
 Given that true parameter estimates are known, we can compare the estimated parameters to the true values:
 ```{r}
-true_params <- c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1)
-true_omega <- diag(c(0.09, 0.09, 0.09, 0.09, 0.09))
-true_sigma <- 0.04
+params.true <- list(
+  beta = c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1),
+  Omega = diag(rep(0.09, 5)),
+  Sigma_prop = 0.04
+)
 cat("True parameter values:\n")
-print(true_params)
-print(true_omega)
-print(true_sigma)
+print(params.true)
 
 cat("Estimated parameters (mean and variance only):\n")
 print(fit.var$transformed_params)
-cat("Estimated parameters (mean and covariance):\n")
-print(fit.covar$transformed_params)
 ```
-We see that both methods recover the true parameters reasonably well, but the mean and covariance method provides more accurate estimates due to the additional information from covariances.
-In this example model, especially inter-compartmental clearance (q) and its random effect are more challenging to estimate accurately with only variance data.
-However, using larger sample sizes from more studies will help improve the estimates from both data.
+We observe that both methods recover the true parameters reasonably well, but the mean and covariance method provides more accurate estimates due to the additional information from covariances. In this example model, especially inter-compartmental clearance (q) and its random effect are more challenging to estimate accurately with only variance data. However, using larger sample sizes from more studies will help improve the estimates from both data. To further illustrate the differences in dynamics, we can simulate concentration-time profiles using the true parameters and the estimated parameters from both methods.
 
 
 
@@ -422,12 +421,13 @@ ggplot(ci_true_var, aes(x = time, group = interaction(Model, Percentile))) +
 
 
 ```
-
-### Population Predictions
+Both models capture the central tendency of the true parameters dynamics well. However, the variance only model shows slightly wider population intervals. In this scenario this isn't very problematic, since a wider range still captures the true dynamics. However, in other scenarios, this could lead to over- or under-prediction of certain percentiles. The estimation error is expected due to the reduced information content in variance-only data.
 
 
 
 ## Best Practices
+
+So to recap, here are some best practices for variance-based (but also covariance-based) modeling with `admr`:
 
 1. **Data Preparation**:
    - Always check your data for missing values and outliers
@@ -448,14 +448,5 @@ ggplot(ci_true_var, aes(x = time, group = interaction(Model, Percentile))) +
    - Always examine convergence plots
    - Validate model predictions against observed data
 
-## Next Steps
-
-After mastering the basics, you might want to explore:
-
-1. **Advanced modelling**:
-   - Adjusting Monte Carlo sample size
-   - Residual analysis
-   - Parameter initial sensitivity analysis
-   - Model comparison
 
 For more information, see the package documentation and other vignettes.

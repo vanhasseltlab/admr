@@ -12,8 +12,7 @@ editor_options:
 
 # Introduction to Aggregate Data Modeling with `admr`
 
-This vignette provides an introduction to using multiple datasets with the `admr` package in R. The `admr` package is designed for aggregate data modeling, particularly in pharmacokinetics. It allows users to fit complex models to aggregate data, which can be derived from individual-level observations, published models, or summary statistics.
-
+This vignette provides an introduction to using multiple datasets with the `admr` package in R. This is an example how to combine different datasets with non-overlapping timepoints. However, the same principles can be applied to datasets with overlapping timepoints; or even datasets with different dosing regimens. Therefore, this vignette can be used as a guide for meta-analysis of pharmacokinetic data. Further research is currently being conducted to validate this approach for meta-analysis or model averaging.
 
 ## Required Packages
 
@@ -31,10 +30,13 @@ library(ggplot2)  # For visualization
 
 The `admr` package works with two types of data formats:
 
-1. **Raw Data**: Individual-level observations in a wide or long format
-2. **Aggregate Data**: Summary statistics (mean and covariance) computed from raw data
+1. **Raw Data**: Individual-level observations in a wide or long format.
+2. **Aggregate Data**: Summary statistics (mean and covariance) computed from raw data.
+3. **Aggregate Data with only means and variance**: Mean and variance for each time point (no covariances). 
 
-Let's look at the examplomycin dataset, which we'll use throughout this vignette:
+The vignette [Variance-only based modelling](https://hiddevandebeek.github.io/admr/articles/variance.html) provides more details on the third option.
+
+Let's look at the simulated examplomycin dataset, which we'll use throughout this vignette:
 
 ```{r, cache=TRUE}
 # Load the dataset
@@ -51,7 +53,7 @@ cat("Time points:", paste(sort(unique(examplomycin$TIME)), collapse = ", "), "\n
 
 ### Converting Raw Data to Aggregate Format
 
-The first step is to convert your raw data into aggregate format. Here's how to do it:
+The first step is to convert our simulated raw data into aggregate format. In real-world scenarios, you might have to extract summary statistics from published studies, depending on the available information. But for this example, we'll compute the mean and covariance from the `examplomycin` dataset. Here's how to do it:
 
 ```{r, cache=TRUE}
 # Convert to wide format
@@ -60,7 +62,11 @@ examplomycin_wide <- examplomycin %>%
   dplyr::select(ID, TIME, DV) %>%  # Select relevant columns
   pivot_wider(names_from = TIME, values_from = DV) %>%  # Convert to wide format
   dplyr::select(-c(1))  # Remove ID column
+```
 
+
+To illustrate the use of multiple datasets, we'll split the data into two groups based on timepoints: one group with timepoints 0.1, 0.25, 0.5, and 1 hour; and another group with timepoints 2, 3, 5, 8, and 12 hours. This illustrates how to use a dataset with absorption phase data and a dataset with elimination phase data. We will then create aggregated data for each group separately:
+```{r, cache=TRUE}
 # Create aggregated data and filter timepoints 1 to 4
 examplomycin_aggregated1 <- examplomycin_wide %>%
   dplyr::select(c(1:4)) %>%
@@ -74,6 +80,7 @@ examplomycin_aggregated2 <- examplomycin_wide %>%
 str(examplomycin_aggregated1)
 str(examplomycin_aggregated2)
 ```
+Compared to the full aggregated dataset, each of these datasets contains only a subset of the timepoints. This means covariances between timepoints in different datasets are not available, effectively reducing the information content. However, the `admr` package can still handle this situation effectively.
 
 ### Visualizing the Data
 
@@ -84,18 +91,18 @@ Before fitting the model, it's helpful to visualize the data:
 examplomycin <- admr::examplomycin %>%
   filter(EVID != 101) %>%  # Remove dosing events
   mutate(TIME = factor(TIME, levels = c(0.1, 0.25, 0.5, 1, 2, 3, 5, 8, 12))) %>%
-  mutate(group = ifelse(TIME %in% c(0.1, 0.25, 0.5, 1), "Dataset 1", "Dataset 2"))
+  mutate(group = ifelse(TIME %in% c(0.1, 0.25, 0.5, 1), "Absorption", "Elimination"))
 
-# Plot the data
-ggplot(examplomycin, aes(x = TIME, y = DV, color = group)) +
-  geom_point() +
+ggplot(examplomycin, aes(x = TIME, y = DV, fill = group)) +
+  geom_boxplot(position = position_dodge(width = 0.8)) +
   labs(
     title = "Examplomycin Concentration Data",
     x = "Time (hours)",
     y = "Concentration (mg/L)"
   ) +
   theme_minimal() +
-  scale_color_manual(values = c("Dataset 1" = "blue", "Dataset 2" = "red"))
+  scale_fill_manual(values = c("Absorption" = "blue", "Elimination" = "red"))
+
 ```
 
 ## Model Specification
@@ -152,6 +159,8 @@ predder <- function(time, theta_i, dose = 100) {
 }
 ```
 
+Since both datasets come from the same study design, we can use the same prediction function for both datasets. However, if the datasets had different dosing regimens or other characteristics, you would need to define separate prediction functions for each dataset. This can be done by creating multiple `genopts` objects, each with its own prediction function.
+
 ## Model Fitting
 
 ### Setting Up Model Options
@@ -198,22 +207,15 @@ opts2 <- genopts(
 )
 
 ```
+The difference between `opts1` and `opts2` is the observation times specified in the `time` argument.
+
 
 ### Fitting the Model
-The `fitIRMC` function fits the model using the IRMC algorithm:
 
+Before fitting the model, ensure the `opts` objects and aggregated datasets are organized into lists. The `fitIRMC` function fits the model using the IR-MC algorithm:
 ```{r, cache=TRUE}
 opts <- list(opts1,opts2)
 examplomycin_aggregated <- list(examplomycin_aggregated1, examplomycin_aggregated2)
-
-fit.admrMC <- admr::fitMC(
-  opts = opts,
-  obs = examplomycin_aggregated,
-  chains = 1,  # Number of parallel chains
-  maxiter = 2000,  # Maximum iterations
-  single_dataframe = FALSE  # Use separate data frames for each dataset
-)
-
 
 fit.admr <- fitIRMC(
   opts = opts,
@@ -242,66 +244,66 @@ The `plot` method visualizes the convergence of the model fit:
 ```{r}
 plot(fit.admr)
 ```
+Upon inspection of the convergence plots, you should look for: good chain convergence, overlapping predicted and observed summary plots, and similar final observed vs predicted matrices for mean and covariance. We observe that the chains converge well, and the predicted means and covariances align closely with the observed data.
+
 
 ### Parameter Estimates
 
-Let's examine the parameter estimates and their uncertainty:
+Let's examine the parameter estimates and the true values used in the simulation. We expect to be close to the true values, although, like discussed earlier, the estimates may be less precise due to the reduced information content from splitting the data:
 
 ```{r}
+# True parameter values
+params.true <- list(
+  beta = c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1),
+  Omega = diag(rep(0.09, 5)),
+  Sigma_prop = 0.04
+)
+cat("True parameter values:\n")
+print(params.true)
+
 # Extract parameter estimates
 params <- fit.admr$transformed_params
 cat("Final parameter estimates:\n")
 print(params)
-
-# Extract covariance matrix
-cov_matrix <- fit.admr$covariance_matrix
-cat("\nParameter covariance matrix:\n")
-print(cov_matrix)
 ```
-
+We observe that the parameter estimates are reasonably close to the true values, especially considering the reduced information content from splitting the data into two groups. There are some deviations, particularly in the estimates of `q` and the random effect of `v1`, which may be attributed to the lack of early timepoint data in the second dataset. Let's also visualize the dynamics of the estimated model together with the true model through a dosing simulation.
 ## Advanced Features
 
 ### Creating a dosing plot
-To visualize the dosing regimen and predicted concentrations, you can create a dosing plot. Here's how to do it using the `randtoolbox` package for pseudo-random sampling:
+To visualize the dosing regimen and predicted concentrations, we can create a dosing plot. This helps in understanding the pharmacokinetic profile of the drug over time. This can be done using the `nlmixr2`-universe. First, we need to define the model in `nlmixr2` syntax and then simulate the dosing regimen of both the estimated and true models.
 ```{r}
-library(randtoolbox)
+params.true <- list(
+  beta = c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1),
+  Omega = diag(rep(0.09, 5)),
+  Sigma_prop = 0.04
+)
+params <- fit.admr$transformed_params
 
-# Create a dosing plot
-n_subjects <- 2000  # Number of subjects
-time_points <- seq(0, 24, by = 0.1)  # Dense time points for smooth curves
+rxModel_true <- function(){
+  ini({
+    cl <- params.true$beta["cl"]  # Clearance
+    v1 <- params.true$beta["v1"]  # Volume of central compartment
+    v2 <- params.true$beta["v2"] # Volume of peripheral compartment
+    q <- params.true$beta["q"]    # Inter-compartmental clearance
+    ka <- params.true$beta["ka"]   # Absorption rate constant
 
-beta <- fit.admr$transformed_params$beta  # Extract population parameters
-omega <- fit.admr$transformed_params$Omega  # Extract covariance matrix
-
-# Create parameter matrix for all subjects
-z <- qnorm(sobol(n = n_subjects, dim = 5))
-L <- omega
-mv <- z %*% chol(L)
-
-theta_i <- matrix(nrow = n_subjects, ncol = 5)
-
-
-for(i in 1:n_subjects) {
-  theta_i[i,] <- c(
-    beta["cl"] * exp(mv[i,1]),
-    beta["v1"] * exp(mv[i,2]),
-    beta["v2"] * exp(mv[i,3]),
-    beta["q"]  * exp(mv[i,4]),
-    beta["ka"] * exp(mv[i,5])
-  )
+    eta_cl ~ params.true$Omega[1,1]
+    eta_v1 ~ params.true$Omega[2,2]
+    eta_v2 ~ params.true$Omega[3,3]
+    eta_q ~ params.true$Omega[4,4]
+    eta_ka ~ params.true$Omega[5,5]
+  })
+  model({
+    cl <- cl * exp(eta_cl)
+    v1 <- v1 * exp(eta_v1)
+    v2 <- v2 * exp(eta_v2)
+    q <- q * exp(eta_q)
+    ka <- ka * exp(eta_ka)
+    cp = linCmt(cl, v1, v2, q, ka)
+  })
 }
 
-ev <- eventTable(amount.units="mg", time.units="hours")
-ev$add.dosing(dose = 100, nbr.doses = 4, dosing.interval = 6)
-ev$add.sampling(time_points)
-sim <- rxSolve(rxModel, params = theta_i, events = ev, cores = 0, nSub = 1) 
-confint(sim, "cp", level=0.95) %>%
-    plot(ylab="Central Concentration")
-```
-
-Or using the `rxode2` package:
-```{r}
-rxModel2 <- function(){
+rxModel_multiple <- function(){
   ini({
     cl <- params$beta["cl"]  # Clearance
     v1 <- params$beta["v1"]  # Volume of central compartment
@@ -325,20 +327,60 @@ rxModel2 <- function(){
   })
 }
 
-rxModel2 <- rxode2(rxModel2)
-rxModel2 <- rxModel2$simulationModel
+rxModel_true <- rxode2(rxModel_true())
+rxModel_true <- rxModel_true$simulationModel
+rxModel_multiple <- rxode2(rxModel_multiple())
+rxModel_multiple <- rxModel_multiple$simulationModel
+```
+Now that we have defined both models, we can simulate the dosing regimen and plot the results:
+```{r}
+time_points <- seq(0, 12, by = 0.1)  # Dense time points for smooth curves
+ev <- eventTable(amount.units="mg", time.units="hours")
+ev$add.dosing(dose = 100, nbr.doses = 2, dosing.interval = 6)
+ev$add.sampling(time_points)
 
-sim2 <- rxSolve(rxModel2, events = ev, cores = 0, nSub = 2000)
-sim3 <- rxSolve(rxModel2, events = ev, cores = 0, nSub = 20000)
+sim_true <- rxSolve(rxModel_true, events = ev, cores = 0, nSub = 10000)
+sim_multiple <- rxSolve(rxModel_multiple, events = ev, cores = 0, nSub = 10000)
 
-confint(sim2, "cp", level=0.95) %>%
-    plot(ylab="Central Concentration")
-confint(sim3, "cp", level=0.95) %>%
-    plot(ylab="Central Concentration")
+# Combine the confidence intervals with a label for the model
+ci_true <- as.data.frame(confint(sim_true, "cp", level=0.95)) %>%
+  mutate(Model = "True parameters")
+
+ci_covar <- as.data.frame(confint(sim_multiple, "cp", level=0.95)) %>%
+  mutate(Model = "Estimated model")
+
+# Bind them together
+ci_all <- bind_rows(ci_true, ci_covar) %>%
+  mutate(
+    p1 = as.numeric(as.character(p1)),
+    Percentile = factor(Percentile, levels = unique(Percentile[order(p1)]))
+  )
+
+# Plot both models
+ggplot(ci_all, aes(x = time, group = interaction(Model, Percentile))) +
+  geom_ribbon(aes(ymin = p2.5, ymax = p97.5, fill = Model),
+              alpha = 0.2, colour = NA) +
+  geom_line(aes(y = p50, colour = Model), size = 0.8) +
+  labs(
+    title = "Central Concentration Simulations",
+    x = "Time",
+    y = "Central Concentration (mg/L)"
+  ) +
+  theme_bw(base_size = 14) +
+  scale_colour_manual(values = c("True parameters" = "blue",
+                                 "Estimated model" = "red")) +
+  scale_fill_manual(values = c("True parameters" = "blue",
+                               "Estimated model" = "red"))
+
 
 ```
 
+The combined dataset model (red) closely follows the true parameter model (blue). The median line of the estimated model almost perfectly overlaps with the true model, indicating that the estimated model. However, the estimated model does show slightly wider population intervals. In this scenario this isn't very problematic, since a wider range still captures the true dynamics. In case of dose optimization, this results in a more conservative dose recommendation. However, in other scenarios, this could lead to over- or under-prediction of certain percentiles. The estimation error is expected due to the reduced information content in variance-only data.
+
+
 ## Best Practices
+
+So to conclude, here are some best practices when using the `admr` package for aggregate data modeling:
 
 1. **Data Preparation**:
    - Always check your data for missing values and outliers
@@ -358,15 +400,5 @@ confint(sim3, "cp", level=0.95) %>%
 4. **Diagnostics**:
    - Always examine convergence plots
    - Validate model predictions against observed data
-
-## Next Steps
-
-After mastering the basics, you might want to explore:
-
-1. **Advanced modelling**:
-   - Adjusting Monte Carlo sample size
-   - Residual analysis
-   - Parameter sensitivity analysis
-   - Model comparison
 
 For more information, see the package documentation and other vignettes.

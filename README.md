@@ -2,7 +2,9 @@ admr: Aggregate Data Modeling in R
 ================
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
+
 <!-- badges: start -->
+
 <!-- badges: end -->
 
 admr (Aggregate Data Modeling in R) is an open-source R package designed
@@ -72,11 +74,22 @@ model to aggregate data:
 # Load required libraries
 library(admr)
 library(rxode2)
-#> Warning: package 'rxode2' was built under R version 4.4.2
-#> rxode2 3.0.4 using 7 threads (see ?getRxThreads)
+#> rxode2 4.1.0 using 7 threads (see ?getRxThreads)
 #>   no cache: create with `rxCreateCache()`
 library(nlmixr2)
-#> Loading required package: nlmixr2data
+#> ── Attaching packages ───────────────────────────────────────── nlmixr2 4.0.1 ──
+#> ✔ lotri        1.0.2     ✔ nlmixr2extra 3.0.2
+#> ✔ nlmixr2data  2.0.9     ✔ nlmixr2plot  3.0.3
+#> ✔ nlmixr2est   4.1.0
+#> ── Optional Packages Loaded/Ignored ─────────────────────────── nlmixr2 4.0.1 ──
+#> ✖ babelmixr2     ✖ nonmem2rx
+#> ✖ ggPMX     ✖ posologyr
+#> ✖ monolix2rx     ✖ shinyMixR
+#> ✖ nlmixr2lib     ✖ xpose.nlmixr2
+#> ✖ nlmixr2rpt
+#> ── Conflicts ───────────────────────────────────────────── nlmixr2conflicts() ──
+#> ✖ nlmixr2est::boxCox()     masks rxode2::boxCox()
+#> ✖ nlmixr2est::yeoJohnson() masks rxode2::yeoJohnson()
 library(dplyr)
 #> 
 #> Attaching package: 'dplyr'
@@ -89,7 +102,7 @@ library(dplyr)
 library(tidyr)
 library(mnorm)
 
-# Load and prepare data
+# Load and prepare the simulated individual-level data
 data(examplomycin)
 examplomycin_wide <- examplomycin %>%
   filter(EVID != 101) %>%
@@ -97,7 +110,7 @@ examplomycin_wide <- examplomycin %>%
   pivot_wider(names_from = TIME, values_from = DV) %>%
   dplyr::select(-c(1))
 
-# Create aggregated data
+# Create aggregated data as example
 examplomycin_aggregated <- examplomycin_wide %>%
   admr::meancov()
 
@@ -111,6 +124,7 @@ rxModel <- RxODE({
     ka            # Absorption rate constant
   )
 })
+#> using C compiler: 'gcc.exe (GCC) 14.2.0'
 
 # Define prediction function
 predder <- function(time, theta_i, dose = 100) {
@@ -147,29 +161,29 @@ opts <- genopts(
 )
 
 # Fit model to data
-result <- fitIRMC(opts = opts, obs = examplomycin_aggregated)
+result <- fitIRMC(opts = opts, obs = examplomycin_aggregated, chains = 2)
 #> Chain 1:
 #> Iter | NLL and Parameters (11 values)
 #> --------------------------------------------------------------------------------
 #>    1: -1839.577    1.609    2.303    3.401    2.303    0.000   -2.408   -2.408   -2.408   -2.408   -2.408   -3.219
 #> 
 #> ### Wide Search Phase ###
-#>    2: -1845.238    1.601    2.309    3.404    2.284    0.020   -2.279   -2.167   -2.333   -2.245   -2.439   -3.235
-#>    3: -1845.277    1.600    2.307    3.406    2.285    0.017   -2.287   -2.195   -2.342   -2.267   -2.416   -3.235
-#>    4: -1845.277    1.600    2.306    3.406    2.285    0.017   -2.287   -2.195   -2.342   -2.266   -2.416   -3.235
-#>    5: -1845.277    1.600    2.306    3.406    2.285    0.017   -2.287   -2.195   -2.342   -2.266   -2.416   -3.235
-#> Phase Wide Search Phase converged at iteration 5.
+#>    2: -1845.241    1.601    2.309    3.404    2.284    0.020   -2.280   -2.169   -2.334   -2.245   -2.437   -3.235
+#>    3: -1845.278    1.600    2.305    3.406    2.284    0.016   -2.287   -2.200   -2.344   -2.270   -2.412   -3.235
+#>    4: -1845.279    1.600    2.305    3.406    2.284    0.016   -2.287   -2.199   -2.344   -2.269   -2.412   -3.235
+#> Phase Wide Search Phase converged at iteration 4.
 #> 
 #> ### Focussed Search Phase ###
+#>    5: -1845.280    1.601    2.307    3.405    2.285    0.018   -2.286   -2.200   -2.343   -2.264   -2.411   -3.235
 #>    6: -1845.280    1.601    2.307    3.405    2.285    0.018   -2.286   -2.200   -2.343   -2.264   -2.411   -3.235
 #>    7: -1845.280    1.601    2.307    3.405    2.285    0.018   -2.286   -2.200   -2.343   -2.264   -2.411   -3.235
 #>    8: -1845.280    1.601    2.307    3.405    2.285    0.018   -2.286   -2.200   -2.343   -2.264   -2.411   -3.235
 #>    9: -1845.280    1.601    2.307    3.405    2.285    0.018   -2.286   -2.200   -2.343   -2.264   -2.411   -3.235
-#>   10: -1845.280    1.601    2.307    3.405    2.285    0.018   -2.286   -2.200   -2.343   -2.264   -2.411   -3.235
-#>   11: -1845.280    1.601    2.307    3.405    2.285    0.018   -2.286   -2.200   -2.343   -2.264   -2.411   -3.235
-#> Phase Focussed Search Phase converged at iteration 11.
+#> Phase Focussed Search Phase converged at iteration 9.
 #> 
 #> ### Fine-Tuning Phase ###
+#>   10: -1845.280    1.601    2.307    3.405    2.285    0.018   -2.286   -2.200   -2.343   -2.264   -2.411   -3.235
+#>   11: -1845.280    1.601    2.307    3.405    2.285    0.018   -2.286   -2.200   -2.343   -2.264   -2.411   -3.235
 #>   12: -1845.280    1.601    2.307    3.405    2.285    0.018   -2.286   -2.200   -2.343   -2.264   -2.411   -3.235
 #> Phase Fine-Tuning Phase converged at iteration 12.
 #> 
@@ -178,49 +192,56 @@ result <- fitIRMC(opts = opts, obs = examplomycin_aggregated)
 #>   14: -1845.280    1.601    2.307    3.405    2.285    0.018   -2.286   -2.201   -2.343   -2.265   -2.410   -3.235
 #> Phase Precision Phase converged at iteration 14.
 #> 
-#> Chain 1 Complete: Final NLL = -1845.280, Time Elapsed = 5.93 seconds
+#> Chain 1 Complete: Final NLL = -1845.280, Time Elapsed = 5.38 seconds
+#>  
+#> Phase Wide Search Phase converged at iteration 6.
+#> Phase Focussed Search Phase converged at iteration 12.
+#> Phase Fine-Tuning Phase converged at iteration 14.
+#> Phase Precision Phase converged at iteration 16.
+#> 
+#> Chain 2 Complete: Final NLL = -1845.281, Time Elapsed = 7.06 seconds
 #> 
 print(result)
 #> -- FitIRMC Summary --
 #> 
 #> -- Objective Function and Information Criteria --
-#>  Log-likelihood: -1845.2803
+#>  Log-likelihood: -1845.2806
 #>             AIC: 3701.56
 #>             BIC: 3758.92
-#> Condition#(Cov): 143.71
-#> Condition#(Cor): 202.97
+#> Condition#(Cov): 143.74
+#> Condition#(Cor): 203.03
 #> 
 #> -- Timing Information --
-#>      Best Chain: 5.9257 seconds
-#>      All Chains: 5.9279 seconds
-#>      Covariance: 28.1302 seconds
-#>         Elapsed: 34.06 seconds
+#>      Best Chain: 7.0634 seconds
+#>      All Chains: 12.4428 seconds
+#>      Covariance: 29.8336 seconds
+#>         Elapsed: 42.28 seconds
 #> 
 #> -- Population Parameters --
 #> # A tibble: 6 × 6
 #>   Parameter        Est.      SE  `%RSE` `Back-transformed(95%CI)` `BSV(CV%)`
 #>   <chr>           <dbl>   <dbl>   <dbl> <chr>                          <dbl>
 #> 1 cl             1.60    0.0153   0.955 4.96 (4.81, 5.11)               31.9
-#> 2 v1             2.31    0.0839   3.64  10.05 (8.52, 11.84)             33.3
+#> 2 v1             2.31    0.0839   3.64  10.04 (8.52, 11.84)             33.3
 #> 3 v2             3.41    0.0393   1.16  30.12 (27.88, 32.53)            31.0
 #> 4 q              2.28    0.0213   0.931 9.82 (9.42, 10.24)              32.2
-#> 5 ka             0.0181  0.0791 437.    1.02 (0.87, 1.19)               30.0
+#> 5 ka             0.0179  0.0792 441.    1.02 (0.87, 1.19)               30.0
 #> 6 Residual Error 0.0394 NA       NA     0.0394                          NA  
 #> 
 #> -- Iteration Diagnostics --
 #>  Iter | NLL and Parameters
 #> --------------------------------------------------------------------------------
-#>    1: -1839.577 1.609 2.303 3.401 2.303 0.000 -2.408 -2.408 -2.408 -2.408 -2.408 -3.219
-#>    2: -1845.238 1.601 2.309 3.404 2.284 0.020 -2.279 -2.167 -2.333 -2.245 -2.439 -3.235
-#>    3: -1845.277 1.600 2.307 3.406 2.285 0.017 -2.287 -2.195 -2.342 -2.267 -2.416 -3.235
-#>    4: -1845.277 1.600 2.306 3.406 2.285 0.017 -2.287 -2.195 -2.342 -2.266 -2.416 -3.235
-#>    5: -1845.277 1.600 2.306 3.406 2.285 0.017 -2.287 -2.195 -2.342 -2.266 -2.416 -3.235
+#>    1: -1565.147 1.700 2.198 3.118 2.034 0.000 -2.665 -2.784 -2.129 -2.208 -2.463 -3.133
+#>    2: -1842.631 1.605 2.411 3.389 2.288 0.089 -2.325 -1.946 -2.291 -2.121 -2.604 -3.234
+#>    3: -1845.276 1.601 2.305 3.406 2.285 0.016 -2.285 -2.197 -2.345 -2.271 -2.413 -3.235
+#>    4: -1845.277 1.600 2.305 3.406 2.284 0.016 -2.286 -2.197 -2.344 -2.268 -2.414 -3.235
+#>    5: -1845.280 1.600 2.306 3.406 2.285 0.017 -2.286 -2.201 -2.342 -2.266 -2.410 -3.235
 #>    ... (omitted iterations) ...
-#>   10: -1845.280 1.601 2.307 3.405 2.285 0.018 -2.286 -2.200 -2.343 -2.264 -2.411 -3.235
-#>   11: -1845.280 1.601 2.307 3.405 2.285 0.018 -2.286 -2.200 -2.343 -2.264 -2.411 -3.235
-#>   12: -1845.280 1.601 2.307 3.405 2.285 0.018 -2.286 -2.200 -2.343 -2.264 -2.411 -3.235
+#>   12: -1845.281 1.601 2.307 3.405 2.285 0.018 -2.286 -2.201 -2.343 -2.265 -2.410 -3.235
 #>   13: -1845.280 1.601 2.307 3.405 2.285 0.018 -2.286 -2.201 -2.343 -2.265 -2.410 -3.235
 #>   14: -1845.280 1.601 2.307 3.405 2.285 0.018 -2.286 -2.201 -2.343 -2.265 -2.410 -3.235
+#>   15: -1845.280 1.601 2.307 3.405 2.285 0.018 -2.286 -2.201 -2.343 -2.265 -2.410 -3.235
+#>   16: -1845.280 1.601 2.307 3.405 2.285 0.018 -2.286 -2.201 -2.343 -2.265 -2.410 -3.235
 ```
 
 ## Documentation
@@ -231,8 +252,7 @@ include:
 
 - [Getting
   Started](https://hiddevandebeek.github.io/admr/articles/getting_started.html)
-- [Advanced
-  Topics](https://hiddevandebeek.github.io/admr/articles/advanced_modeling.html)
+- [Other vignettes](https://hiddevandebeek.github.io/admr/articles/)
 - [Function
   Reference](https://hiddevandebeek.github.io/admr/reference/index.html)
 - [Examples](https://hiddevandebeek.github.io/admr/articles/examples.html)

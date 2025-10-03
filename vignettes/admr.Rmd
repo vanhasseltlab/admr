@@ -12,18 +12,18 @@ editor_options:
 
 # Introduction to Aggregate Data Modeling with `admr`
 
-This vignette provides a comprehensive introduction to using the `admr` package for aggregate data modeling in pharmacometrics. We'll cover the basic concepts, data preparation, model specification, and advanced features.
+This vignette provides a comprehensive introduction to using the `admr` package for aggregate data modeling in population pharmacokinetics. We'll cover the basic concepts, data preparation, model specification, and make a link to more advanced features.
 
 ## What is Aggregate Data Modeling?
 
-Aggregate data modeling is a powerful approach in pharmacometrics that allows you to work with summary-level data instead of individual-level observations. This is particularly useful when:
+Aggregate data modeling is a new approach in pharmacometrics that allows you to work with summary-level data instead of individual-level observations. This is particularly useful when:
 
 - Individual-level data is not available (e.g., from published literature)
 - You need to combine data from multiple studies
 - You want to perform meta-analyses
 - You're working with simulated data and want to reduce computational burden
 
-The `admr` package implements the Iterative Reweighting Monte Carlo (IRMC) algorithm, which efficiently fits models to aggregate data by iteratively updating parameter estimates using weighted importance sampling.
+The `admr` package implements the Iterative Reweighting Monte Carlo (IRMC) algorithm, which efficiently fits models to aggregate data by iteratively updating parameter estimates using weighted importance sampling. This is more efficient than traditional Monte Carlo methods.
 
 ## Required Packages
 
@@ -36,15 +36,17 @@ library(tidyr)
 library(mnorm)
 library(ggplot2)  # For visualization
 library(randtoolbox)
-library(tidyverse)
 ```
 
 ## Understanding the Data Format
 
 The `admr` package works with two types of data formats:
 
-1. **Raw Data**: Individual-level observations in a wide or long format
-2. **Aggregate Data**: Summary statistics (mean and covariance) computed from raw data
+1. **Raw Data**: Individual-level observations in a wide or long format.
+2. **Aggregate Data**: Summary statistics (mean and covariance) computed from raw data.
+3. **Aggregate Data with only means and variance**: Mean and variance for each time point (no covariances). 
+
+The vignette [Variance-only based modelling](https://hiddevandebeek.github.io/admr/articles/variance.html) provides more details on the third option.
 
 Let's look at the examplomycin dataset, which we'll use throughout this vignette:
 
@@ -63,7 +65,7 @@ cat("Time points:", paste(sort(unique(examplomycin$TIME)), collapse = ", "), "\n
 
 ### Converting Raw Data to Aggregate Format
 
-The first step is to convert your raw data into aggregate format. Here's how to do it:
+The first step is to convert our simulated raw data into aggregate format. In real-world scenarios, you might have to extract summary statistics from published studies, depending on the available information. But for this example, we'll compute the mean and covariance from the `examplomycin` dataset. Here's how to do it:
 
 ```{r, cache=TRUE}
 # Convert to wide format
@@ -80,28 +82,28 @@ examplomycin_aggregated <- examplomycin_wide %>%
 # View the structure of aggregated data
 str(examplomycin_aggregated)
 ```
+This aggregated data now contains the mean concentrations and the covariance matrix at each time point. If you have raw data, you can use the `meancov` function to compute these statistics. However, when extracting data from literature, you may need to manually input the means and covariances based on the reported values. If only standard deviations are available, you can construct a diagonal covariance matrix.
 
 ### Visualizing the Data
 
-Before fitting the model, it's helpful to visualize the data:
+Before fitting the model, it's helpful to visualize the aggregate data:
 
 ```{r, cache=TRUE}
-# Create a concentration-time plot
-ggplot(examplomycin, aes(x = TIME, y = DV)) +
-  geom_point(alpha = 0.5) +
+# Boxplot to visualize variability
+ggplot(examplomycin, aes(x = TIME, y = DV, group = TIME)) +
+  geom_boxplot(aes(group = TIME), width = 0.2) +
   labs(
-    title = "Concentration-Time Profile",
+    title = "Concentration Variability at Each Time Point",
     x = "Time (hours)",
     y = "Concentration (mg/L)"
   ) +
   theme_minimal()
-
-
-
 ```
+This plot doesn't show the covariance between time points, but it gives an idea of the variability in concentrations at each time point.
+
+
 
 ## Model Specification
-
 ### Defining the Pharmacokinetic Model
 
 We'll use a two-compartment model with first-order absorption. There are two ways to specify this:
@@ -142,6 +144,9 @@ rxModel <- rxode2(rxModel)
 rxModel <- rxModel$simulationModel
 ```
 
+These models are identical in terms of their pharmacokinetic behavior. The second approach is the solved model, which is faster in execution. In this stage of package development, it is important the parameters are in the same order as specified in the `genopts` function later.
+
+
 ### Creating the Prediction Function
 
 The prediction function is crucial for the `admr` package. It:
@@ -150,7 +155,7 @@ The prediction function is crucial for the `admr` package. It:
 - Returns predicted concentrations in the required format
 
 ```{r, cache=TRUE}
-rxode2::rxSetSilentErr(1)
+rxode2::rxSetSilentErr(1) # does not print iteration messages in vignette
 
 predder <- function(time, theta_i, dose = 100) {
     n_individuals <- nrow(theta_i)
@@ -174,6 +179,8 @@ predder <- function(time, theta_i, dose = 100) {
     return(cp_matrix)
 }
 ```
+This is the function that `admr` will use to generate predictions based on the model parameters. The user can specify the dose amount, number of doses and the dosing interval in the `eventTable` function. Furthermore, the `rxSolve` function can be parallelized by setting the `cores` argument to a value greater than 1, which can significantly speed up computations for large datasets or complex models. 
+
 
 ## Model Fitting
 
@@ -195,15 +202,24 @@ opts <- genopts(
   ),
   nsim = 10000,  # Number of Monte Carlo samples
   n = 500,      # Number of individuals
-  fo_appr = FALSE,  # Disable first-order approximation
+  fo_appr = FALSE,  # Disable first-order approximation used in lower nsim
   omega_expansion = 1,  # Omega expansion factor
-  f = predder    # Prediction function
+  f = predder    # Prediction function we defined earlier
 )
 ```
+In this `opts` object:
+- `time`: Specifies the observation times
+- `p`: Contains the initial estimates for population parameters (`beta`), between-subject variability (`Omega`), and residual error (`Sigma_prop`)
+- `nsim`: Number of Monte Carlo samples to use in the fitting process
+- `n`: Number of individuals to simulate
+- `fo_appr`: Whether to use a first-order approximation, only recommended for very low `nsim`
+- `omega_expansion`: A factor to expand the covariance matrix during estimation, which can help with convergence
+- `f`: The prediction function we defined earlier
+
 
 ### Fitting the Model
 
-The `fitIRMC` function fits the model using the IRMC algorithm:
+The `fitMC` function fits the model using a traditional MC algorithm:
 
 ```{r, cache=TRUE}
 fit.admrMC <- admr::fitMC(
@@ -212,8 +228,11 @@ fit.admrMC <- admr::fitMC(
   chains = 1,  # Number of chains
   maxiter = 2000  # Maximum iterations
 )
+```
 
 
+The `fitIRMC` function fits the model using the IRMC algorithm, which is more efficient for aggregate data:
+```{r, cache=TRUE}
 fit.admr <- admr::fitIRMC(
   opts = opts,
   obs = examplomycin_aggregated,
@@ -240,10 +259,11 @@ The `plot` method visualizes the convergence of the model fit:
 ```{r}
 plot(fit.admr)
 ```
+The Observed vs Predicted plot shows how well the model predictions align with the observed aggregate data. These show a good fit to the data, with means and variability well captured. However, let's examine the parameter estimates for a more detailed assessment. The predicted means and variance-covariance show good resemblance to the observed data, indicating that the model is capturing the underlying pharmacokinetic behavior effectively.
 
 ### Parameter Estimates
 
-Let's examine the parameter estimates and their uncertainty:
+Let's examine the parameter estimates:
 
 ```{r}
 # Extract parameter estimates
@@ -251,20 +271,26 @@ params <- fit.admr$transformed_params
 cat("Final parameter estimates:\n")
 print(params)
 
-# Extract covariance matrix
-cov_matrix <- fit.admr$covariance_matrix
-cat("\nParameter covariance matrix:\n")
-print(cov_matrix)
-```
-
-### Dosing plot with Confidence Intervals for true vs estimated parameters
-```{r}
 params.true <- list(
   beta = c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1),
   Omega = diag(rep(0.09, 5)),
   Sigma_prop = 0.04
 )
 
+cat("True parameter values:\n")
+print(params.true)
+```
+For this dataset, the estimated parameters are close to the true values used in the simulation, indicating a successful model fit using only summary statistics. However, small discrepancies can occur due to the stochastic nature of the Monte Carlo sampling and the limited number of samples. Therefore, we'll assess the overall dynamics of the model through a dosing simulation.
+
+
+### Dosing plot with Confidence Intervals for true vs estimated parameters
+First, let's specify two models: one with the true parameters and another with the estimated parameters from the `fit.admr` object.
+```{r}
+params.true <- list(
+  beta = c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1),
+  Omega = diag(rep(0.09, 5)),
+  Sigma_prop = 0.04
+)
 params <- fit.admr$transformed_params
 
 rxModel_true <- function(){
@@ -321,7 +347,7 @@ rxModel_covar <- rxode2(rxModel_covar())
 rxModel_covar <- rxModel_covar$simulationModel
 ```
 
-
+Now, let's simulate both models over a dosing regimen and plot the results with confidence intervals:
 ```{r}
 time_points <- seq(0, 12, by = 0.1)  # Dense time points for smooth curves
 ev <- eventTable(amount.units="mg", time.units="hours")
@@ -363,8 +389,7 @@ ggplot(ci_all, aes(x = time, group = interaction(Model, Percentile))) +
 
 
 ```
-
-
+We can see that the model with estimated parameters closely follows the dynamics of the model with true parameters, indicating that the `admr` package can effectively recover population parameters from aggregate data. These are some small differences in the 95% population and their associated confidence intervals, showing slight overestimation of random effects. However, the overall dynamics are well captured.
 
 ## Best Practices
 

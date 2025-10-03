@@ -65,7 +65,7 @@ library(dplyr)
 library(tidyr)
 library(mnorm)
 
-# Load and prepare data
+# Load and prepare the simulated individual-level data
 data(examplomycin)
 examplomycin_wide <- examplomycin %>%
   filter(EVID != 101) %>%
@@ -73,7 +73,7 @@ examplomycin_wide <- examplomycin %>%
   pivot_wider(names_from = TIME, values_from = DV) %>%
   dplyr::select(-c(1))
 
-# Create aggregated data
+# Create aggregated data as example
 examplomycin_aggregated <- examplomycin_wide %>%
   admr::meancov()
 
@@ -123,7 +123,7 @@ opts <- genopts(
 )
 
 # Fit model to data
-result <- fitIRMC(opts = opts, obs = examplomycin_aggregated)
+result <- fitIRMC(opts = opts, obs = examplomycin_aggregated, chains = 2)
 print(result)
 ```
 
@@ -132,7 +132,7 @@ print(result)
 The package documentation is available at [https://hiddevandebeek.github.io/admr/](https://hiddevandebeek.github.io/admr/). Key documentation sections include:
 
 - [Getting Started](https://hiddevandebeek.github.io/admr/articles/getting_started.html)
-- [Advanced Topics](https://hiddevandebeek.github.io/admr/articles/advanced_modeling.html)
+- [Other vignettes](https://hiddevandebeek.github.io/admr/articles/)
 - [Function Reference](https://hiddevandebeek.github.io/admr/reference/index.html)
 - [Examples](https://hiddevandebeek.github.io/admr/articles/examples.html)
 
