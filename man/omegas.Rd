@@ -60,6 +60,11 @@ Mathematical details:
 }
 }
 \examples{
+
+# Load required libraries
+library(admr)
+library(rxode2)
+
 # Create a diagonal matrix for a one-compartment model
 # 30\% CV on CL and V (ω² = 0.09 for each)
 omega1 <- omegas(0.09, 0, 2)

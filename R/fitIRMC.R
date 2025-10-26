@@ -70,15 +70,26 @@
 #'   admr::meancov()
 #'
 #' # Define RxODE model
-#' rxModel <- RxODE({
-#'   cp = linCmt(
-#'     cl,           # Clearance
-#'     v1,           # Volume of the central compartment
-#'     v2,           # Volume of the peripheral compartment
-#'     q,            # Inter-compartmental clearance
-#'     ka            # Absorption rate constant
-#'   )
+#' rxModel <- function(){
+#' model({
+#'   # Parameters
+#'   ke = cl / v1             # Elimination rate constant
+#'   k12 = q / v1             # Rate constant for central to peripheral transfer
+#'   k21 = q / v2             # Rate constant for peripheral to central transfer
+#'
+#'   # Differential equations
+#'   d/dt(depot)    = -ka * depot
+#'   d/dt(central)  = ka * depot - ke * central - k12 * central + k21 * peripheral
+#'   d/dt(peripheral) = k12 * central - k21 * peripheral
+#'
+#'   # Concentration in central compartment
+#'   cp = central / v1
 #' })
+#' }
+#'
+#' rxModel <- rxode2(rxModel)
+#' rxModel <- rxModel$simulationModel
+#'
 #'
 #' # Define prediction function
 #' predder <- function(time, theta_i, dose = 100) {
@@ -110,7 +121,7 @@
 #'   nsim = 2500,
 #'   n = 500,
 #'   fo_appr = FALSE,
-#'   omega_expansion = 1.2,
+#'   omega_expansion = 1,
 #'   f = predder
 #' )
 #'
@@ -218,7 +229,11 @@ fitIRMC <- function(opts, obs, maxiter = 100, convcrit_nll = 1e-05,
   confint_high_original <- exp(beta_params + 1.96 * beta_se)
 
   # Handle missing or NA single_betas
-  single_betas <- opts$single_betas
+  if (nomap) {
+    single_betas <- opts$single_betas
+  } else {
+    single_betas <- opts[[1]]$single_betas
+  }
 
   # If NULL or NA, assume all FALSE
   if (is.null(single_betas) || all(is.na(single_betas))) {
@@ -231,10 +246,9 @@ fitIRMC <- function(opts, obs, maxiter = 100, convcrit_nll = 1e-05,
   # Parameters with BSV are those not marked fixed
   has_bsv <- !single_betas
 
-  # Initialize and fill BSV values
+  # Only calculate BSV for parameters that actually have it
   bsv_vals <- rep(NA_real_, length(beta_params))
-  bsv_vals[has_bsv] <- calculate_bsv(back_transformed_params)
-
+  bsv_vals[has_bsv] <- calculate_bsv(back_transformed_params[has_bsv])
 
   # Generate comprehensive output object
   output <- list(
@@ -470,7 +484,8 @@ plot.fit_admr_result <- function(x, ...) {
     # Extract observations from the fitIRMC result
     time_points <- x$data$opts$time
     observations <- x$data$obs
-    predictions <- MCapprEV(upd_opts(x$data$opts, list(p = x$transformed_params)))
+    #predictions <- MCapprEV(upd_opts(x$data$opts, list(p = x$transformed_params)))
+    predictions <- gen_pop_EV(upd_opts(x$data$opts, list(p = x$transformed_params)))
 
     # Create plot-ready boxplot data for observations and predictions
     obs_boxplot <- prepare_boxplot_df(observations$E, observations$V, time_points)
@@ -550,7 +565,8 @@ plot.fit_admr_result <- function(x, ...) {
       # Extract observations from the fitIRMC result
       time_points <- x$data$opts[[i]]$time
       observations <- x$data$obs[[i]]
-      predictions <- MCapprEV(upd_opts(x$data$opts[[i]], list(p = x$transformed_params)))
+      predictions <- gen_pop_EV(upd_opts(x$data$opts[[i]], list(p = x$transformed_params)))
+      #predictions <- MCapprEV(upd_opts(x$data$opts[[i]], list(p = x$transformed_params)))
 
       # Create plot-ready boxplot data for observations and predictions
       obs_boxplot <- prepare_boxplot_df(observations$E, observations$V, time_points)

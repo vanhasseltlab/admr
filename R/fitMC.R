@@ -59,15 +59,25 @@
 #'   admr::meancov()
 #'
 #' # Define RxODE model
-#' rxModel <- RxODE({
-#'   cp = linCmt(
-#'     cl,           # Clearance
-#'     v1,           # Volume of the central compartment
-#'     v2,           # Volume of the peripheral compartment
-#'     q,            # Inter-compartmental clearance
-#'     ka            # Absorption rate constant
-#'   )
+#' rxModel <- function(){
+#' model({
+#'   # Parameters
+#'   ke = cl / v1             # Elimination rate constant
+#'   k12 = q / v1             # Rate constant for central to peripheral transfer
+#'   k21 = q / v2             # Rate constant for peripheral to central transfer
+#'
+#'   # Differential equations
+#'   d/dt(depot)    = -ka * depot
+#'   d/dt(central)  = ka * depot - ke * central - k12 * central + k21 * peripheral
+#'   d/dt(peripheral) = k12 * central - k21 * peripheral
+#'
+#'   # Concentration in central compartment
+#'   cp = central / v1
 #' })
+#' }
+#'
+#' rxModel <- rxode2(rxModel)
+#' rxModel <- rxModel$simulationModel
 #'
 #' # Define prediction function
 #' predder <- function(time, theta_i, dose = 100) {
@@ -206,7 +216,11 @@ fitMC <- function(opts, obs, maxiter = 5000, convcrit_nll = 1e-05,
   confint_high_original <- exp(beta_params + 1.96 * beta_se)
 
   # Handle missing or NA single_betas
-  single_betas <- opts$single_betas
+  if (nomap) {
+    single_betas <- opts$single_betas
+  } else {
+    single_betas <- opts[[1]]$single_betas
+  }
 
   # If NULL or NA, assume all FALSE
   if (is.null(single_betas) || all(is.na(single_betas))) {
@@ -219,9 +233,9 @@ fitMC <- function(opts, obs, maxiter = 5000, convcrit_nll = 1e-05,
   # Parameters with BSV are those not marked fixed
   has_bsv <- !single_betas
 
-  # Initialize and fill BSV values
+  # Only calculate BSV for parameters that actually have it
   bsv_vals <- rep(NA_real_, length(beta_params))
-  bsv_vals[has_bsv] <- calculate_bsv(back_transformed_params)
+  bsv_vals[has_bsv] <- calculate_bsv(back_transformed_params[has_bsv])
 
   # Generate comprehensive output object
   output <- list(
@@ -264,6 +278,14 @@ fitMC <- function(opts, obs, maxiter = 5000, convcrit_nll = 1e-05,
     data = list(
       opts = opts,
       obs = obs
+    ),
+    settings = list(
+      maxiter = maxiter,
+      convcrit_nll = convcrit_nll,
+      single_dataframe = single_dataframe,
+      chains = chains,
+      perturbation = perturbation,
+      seed = seed
     )
   )
 

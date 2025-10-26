@@ -76,17 +76,34 @@
 #' }
 #'
 #' @examples
-#' # Define the two-compartment model using RxODE
-#' rxModel <- RxODE({
-#'   # Central compartment
-#'   d/dt(centr) = -cl * centr - q * centr + q * periph + ka * depot
-#'   # Peripheral compartment
-#'   d/dt(periph) = q * centr - q * periph
-#'   # Depot compartment
-#'   d/dt(depot) = -ka * depot
+#' # Load required libraries
+#' library(admr)
+#' library(rxode2)
+#' library(nlmixr2)
+#' library(dplyr)
+#' library(tidyr)
+#' library(mnorm)
+#'
+#' # Define RxODE model
+#' rxModel <- function(){
+#' model({
+#'   # Parameters
+#'   ke = cl / v1             # Elimination rate constant
+#'   k12 = q / v1             # Rate constant for central to peripheral transfer
+#'   k21 = q / v2             # Rate constant for peripheral to central transfer
+#'
+#'   # Differential equations
+#'   d/dt(depot)    = -ka * depot
+#'   d/dt(central)  = ka * depot - ke * central - k12 * central + k21 * peripheral
+#'   d/dt(peripheral) = k12 * central - k21 * peripheral
+#'
 #'   # Concentration in central compartment
-#'   cp = centr / v1
+#'   cp = central / v1
 #' })
+#' }
+#'
+#' rxModel <- rxode2(rxModel)
+#' rxModel <- rxModel$simulationModel
 #'
 #' # Define prediction function for a two-compartment model
 #' predder <- function(time, theta_i, dose = 100) {

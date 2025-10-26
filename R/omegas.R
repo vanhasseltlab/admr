@@ -50,6 +50,11 @@
 #' }
 #'
 #' @examples
+#'
+#' # Load required libraries
+#' library(admr)
+#' library(rxode2)
+#'
 #' # Create a diagonal matrix for a one-compartment model
 #' # 30% CV on CL and V (ω² = 0.09 for each)
 #' omega1 <- omegas(0.09, 0, 2)
@@ -68,15 +73,15 @@ omegas <- function(diag, offdiag, n_om) {
   # Input validation (could be added)
   # if (diag < 0) stop("Diagonal elements must be non-negative")
   # if (abs(offdiag) >= abs(diag)) warning("Off-diagonal elements larger than diagonal may result in non-positive definite matrix")
-  
+
   # Create matrix filled with off-diagonal elements
   # This ensures symmetry in the covariance matrix
   m <- matrix(offdiag, n_om, n_om)
-  
+
   # Set diagonal elements
   # diag() extracts/replaces the diagonal of a matrix
   diag(m) <- diag
-  
+
   # Return the covariance matrix
   # The matrix will be:
   # [diag   offdiag offdiag ...]

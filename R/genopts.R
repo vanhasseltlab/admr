@@ -93,6 +93,16 @@
 #' }
 #'
 #' @examples
+#'
+#' # Load required libraries
+#' library(admr)
+#' library(rxode2)
+#' library(nlmixr2)
+#' library(dplyr)
+#' library(tidyr)
+#' library(mnorm)
+#'
+#'
 #' # Define prediction function for a two-compartment model
 #' predder <- function(time, theta_i, dose = 100) {
 #'   n_individuals <- nrow(theta_i)
@@ -196,9 +206,8 @@ genopts <- function(f, time, p, h, nsim = 1, n = 30, adist = NULL,
   # Handle additional random effects if specified
   ai <- NULL
   if (!is.null(adist)) {
-    aiseq <- totseq[, nrow(p$Omega) + seq_along(adist), drop=F]
-    # Apply qnorm to the aiseq quantiles for each column
-    aiseq_qnorm <- apply(aiseq, 2, qnorm)
+    aiseq <- totseq[, nrow(p$Omega) + seq_along(adist), drop = FALSE]
+    aiseq_qnorm <- matrix(qnorm(aiseq), nrow = nsim)
 
     if (!is.list(adist)) adist <- list(adist)
     ai <- do.call(cbind, map(seq_along(adist), ~adist[[.]](aiseq_qnorm[, .])))

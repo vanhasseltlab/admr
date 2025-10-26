@@ -21,15 +21,19 @@ create_test_data <- function() {
     admr::meancov()
 
   # Define RxODE model
-  rxModel <- RxODE({
-    cp = linCmt(
-      cl,           # Clearance
-      v1,           # Volume of the central compartment
-      v2,           # Volume of the peripheral compartment
-      q,            # Inter-compartmental clearance
-      ka            # Absorption rate constant
-    )
-  })
+  rxModel <- function(){
+    model({
+      cp = linCmt(
+        cl,           # Clearance
+        v1,           # Volume of central compartment
+        v2,           # Volume of peripheral compartment
+        q,            # Inter-compartmental clearance
+        ka            # Absorption rate constant
+      )})
+  }
+
+  rxModel <- rxode2(rxModel)
+  rxModel <- rxModel$simulationModel
 
   # Define prediction function
   predder <- function(time, theta_i, dose = 100) {

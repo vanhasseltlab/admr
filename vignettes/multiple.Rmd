@@ -16,6 +16,9 @@ This vignette provides an introduction to using multiple datasets with the `admr
 
 ## Required Packages
 
+First, ensure you have the necessary packages loaded:
+
+<details><summary>Click here</summary>
 ```{r setup, message = FALSE, warning = FALSE}
 library(admr)
 library(rxode2)
@@ -25,6 +28,8 @@ library(tidyr)
 library(mnorm)
 library(ggplot2)  # For visualization
 ```
+</details>
+
 
 ## Understanding the Data Format
 
@@ -110,6 +115,8 @@ ggplot(examplomycin, aes(x = TIME, y = DV, fill = group)) +
 ### Defining the Pharmacokinetic Model
 
 We'll use a two-compartment model with first-order absorption. We use a solved model approach for simplicity. The model parameters include:
+
+<details><summary>Click here</summary>
 ```{r, message = FALSE, warning = FALSE}
 rxModel <- function(){
     model({
@@ -125,6 +132,7 @@ rxModel <- function(){
 rxModel <- rxode2(rxModel)
 rxModel <- rxModel$simulationModel
 ```
+</details>
 
 ### Creating the Prediction Function
 
@@ -271,6 +279,8 @@ We observe that the parameter estimates are reasonably close to the true values,
 
 ### Creating a dosing plot
 To visualize the dosing regimen and predicted concentrations, we can create a dosing plot. This helps in understanding the pharmacokinetic profile of the drug over time. This can be done using the `nlmixr2`-universe. First, we need to define the model in `nlmixr2` syntax and then simulate the dosing regimen of both the estimated and true models.
+
+<details><summary>Click here</summary>
 ```{r}
 params.true <- list(
   beta = c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1),
@@ -332,6 +342,8 @@ rxModel_true <- rxModel_true$simulationModel
 rxModel_multiple <- rxode2(rxModel_multiple())
 rxModel_multiple <- rxModel_multiple$simulationModel
 ```
+</details>
+
 Now that we have defined both models, we can simulate the dosing regimen and plot the results:
 ```{r}
 time_points <- seq(0, 12, by = 0.1)  # Dense time points for smooth curves

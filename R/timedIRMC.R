@@ -41,7 +41,7 @@
 #' library(dplyr)
 #' library(tidyr)
 #' library(mnorm)
-#' 
+#'
 #' # Load and prepare data
 #' data(examplomycin)
 #' examplomycin_wide <- examplomycin %>%
@@ -49,37 +49,47 @@
 #'   dplyr::select(ID, TIME, DV) %>%
 #'   pivot_wider(names_from = TIME, values_from = DV) %>%
 #'   dplyr::select(-c(1))
-#' 
+#'
 #' # Create aggregated data
 #' examplomycin_aggregated <- examplomycin_wide %>%
 #'   admr::meancov()
-#' 
+#'
 #' # Define RxODE model
-#' rxModel <- RxODE({
-#'   cp = linCmt(
-#'     cl,           # Clearance
-#'     v1,           # Volume of the central compartment
-#'     v2,           # Volume of the peripheral compartment
-#'     q,            # Inter-compartmental clearance
-#'     ka            # Absorption rate constant
-#'   )
+#' rxModel <- function(){
+#' model({
+#'   # Parameters
+#'   ke = cl / v1             # Elimination rate constant
+#'   k12 = q / v1             # Rate constant for central to peripheral transfer
+#'   k21 = q / v2             # Rate constant for peripheral to central transfer
+#'
+#'   # Differential equations
+#'   d/dt(depot)    = -ka * depot
+#'   d/dt(central)  = ka * depot - ke * central - k12 * central + k21 * peripheral
+#'   d/dt(peripheral) = k12 * central - k21 * peripheral
+#'
+#'   # Concentration in central compartment
+#'   cp = central / v1
 #' })
-#' 
+#' }
+#'
+#' rxModel <- rxode2(rxModel)
+#' rxModel <- rxModel$simulationModel
+#'
 #' # Define prediction function
 #' predder <- function(time, theta_i, dose = 100) {
 #'   n_individuals <- nrow(theta_i)
 #'   if (is.null(n_individuals)) n_individuals <- 1
-#'   
+#'
 #'   ev <- eventTable(amount.units="mg", time.units="hours")
 #'   ev$add.dosing(dose = dose, nbr.doses = 1, start.time = 0)
 #'   ev$add.sampling(time)
-#'   
+#'
 #'   out <- rxSolve(rxModel, params = theta_i, events = ev, cores = 0)
 #'   cp_matrix <- matrix(out$cp, nrow = n_individuals, ncol = length(time),
 #'                       byrow = TRUE)
 #'   return(cp_matrix)
 #' }
-#' 
+#'
 #' # Create options
 #' opts <- genopts(
 #'   time = c(.1, .25, .5, 1, 2, 3, 5, 8, 12),
@@ -98,7 +108,7 @@
 #'   omega_expansion = 1.2,
 #'   f = predder
 #' )
-#' 
+#'
 #' # Run optimization
 #' result <- timedIRMC(opts$pt, opts, examplomycin_aggregated)
 #' print(result)
@@ -118,17 +128,17 @@ timedIRMC <- function(init, opts, obs, maxiter = 100, convcrit_nll = 5e-04, noma
                 appr_nll=NA,
                 time=Sys.time(),
                 iter=1)
-  
+
   # Store initial values and compute initial negative log-likelihood
   res$p[[1]] <- init
   res$time[1] <- Sys.time()
   res$nll[1] <- compute_nll(opts, init, nomap)
   res$appr_nll[1] <- res$nll[1]
   message(paste0("iteration ",1,", nll=",res$nll[1]))
-  
+
   # Initialize p-values for convergence checking
   pvals <- rep(0,length(init)+1)
-  
+
   # Main optimization loop
   for (i in 2:maxiter) {
     # Generate objective function for optimization
@@ -165,7 +175,7 @@ timedIRMC <- function(init, opts, obs, maxiter = 100, convcrit_nll = 5e-04, noma
     res$appr_nll[i] <- m0$objective
     res$iter[i] <- i
     message(paste0("iteration ",i,", nll=",res$nll[i]))
-    
+
     # Check for parameter stationarity after 10 iterations
     if (i>10) {
       # Extract last 10 iterations of parameters and objective function
@@ -177,12 +187,12 @@ timedIRMC <- function(init, opts, obs, maxiter = 100, convcrit_nll = 5e-04, noma
         summary(lm(yy~xx))$coef[2,4]
       })
     }
-    
+
     # Check convergence criteria
     if (all(pvals>0.05)) {message("should break now due to stationary ofv+parameters");break()}
     if (abs(res$nll[i]-res$appr_nll[i]) <convcrit_nll) {message("should break now due to no difference between OFV and appr OFV");break()}
   }
-  
+
   # Return results for successful iterations
   res[!is.na(res$nll),]
 }

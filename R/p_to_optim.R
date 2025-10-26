@@ -65,6 +65,10 @@
 #' }
 #'
 #' @examples
+#' # Load required libraries
+#' library(admr)
+#' library(rxode2)
+#'
 #' # Define a two-compartment model parameters
 #' p <- list(
 #'   # Population parameters (fixed effects)
@@ -73,14 +77,14 @@
 #'           v2 = 30,    # Peripheral volume (L)
 #'           q = 10,     # Inter-compartmental clearance (L/h)
 #'           ka = 1),    # Absorption rate (1/h)
-#'   
+#'
 #'   # Between-subject variability (30% CV on all parameters)
 #'   Omega = matrix(c(0.09, 0, 0, 0, 0,
 #'                   0, 0.09, 0, 0, 0,
 #'                   0, 0, 0.09, 0, 0,
 #'                   0, 0, 0, 0.09, 0,
 #'                   0, 0, 0, 0, 0.09), nrow = 5, ncol = 5),
-#'   
+#'
 #'   # Residual error (20% CV)
 #'   Sigma_prop = 0.04
 #' )
@@ -134,7 +138,7 @@ p_to_optim <- function(p) {
     # Validate input parameters
     if (any(is.na(pp))) stop("Parameters contain NA values!!")
     if (missing(pp)) pp <- valuess
-    
+
     # Restructure and back-transform parameters
     p5 <- relist(pp, p3)  # Restore parameter structure
     p5 <- map(seq_along(p5), ~p2[[.]][[2]](p5[[.]]))  # Apply back-transformations
@@ -157,12 +161,12 @@ p_to_optim <- function(p) {
 
   # Combine transformation functions
   tottransfunclist <- do.call(c, map(p2, ~.$transfunclist))
-  
+
   # Create function for computing short-form derivatives
   d_psi_d_psitrans_short <- function(pp) {
     if (missing(pp)) pp <- valuess
     # Split parameters by type and compute derivatives
-    pp <- split(unlist(pp), 
+    pp <- split(unlist(pp),
                 factor(str_extract(names(tottransfunclist), ".*[^[:digit:]]")))
     res <- map2(p2, pp, ~.x$d_psi_d_psitrans_short(.y)) %>% unlist()
     names(res) <- names(tottransfunclist)

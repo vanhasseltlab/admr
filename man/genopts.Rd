@@ -135,6 +135,16 @@ Key features:
 }
 }
 \examples{
+
+# Load required libraries
+library(admr)
+library(rxode2)
+library(nlmixr2)
+library(dplyr)
+library(tidyr)
+library(mnorm)
+
+
 # Define prediction function for a two-compartment model
 predder <- function(time, theta_i, dose = 100) {
   n_individuals <- nrow(theta_i)

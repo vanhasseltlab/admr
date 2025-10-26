@@ -13,15 +13,15 @@ This vignette demonstrates how to create a simulated pharmacokinetic dataset for
 
 ## Overview
 
-The examplomycin dataset is a simulated pharmacokinetic study with the following characteristics:
-- 500 healthy subjects
-- Single oral dose of 100 mg
-- 9 sampling time points per subject
-- Two-compartment model with first-order absorption
-- Random effects on all parameters
-- Proportional residual error
+The examplomycin dataset is a simulated pharmacokinetic study with the following characteristics: - 500 healthy subjects - Single oral dose of 100 mg - 9 sampling time points per subject - Two-compartment model with first-order absorption - Random effects on all parameters - Proportional residual error
 
 ## Required Packages
+
+The necessary R packages for data generation and manipulation are loaded below:
+
+<details>
+
+<summary>Show code</summary>
 
 ```{r library import, message = FALSE, warning = FALSE}
 library(rxode2)
@@ -34,14 +34,25 @@ library(ggplot2)
 library(usethis)
 ```
 
+</details>
+
 ## Data Generation Function
 
 The `generate_data` function creates the examplomycin dataset with the following features:
-- Two-compartment model with first-order absorption
-- Log-normal random effects on all parameters
-- Proportional residual error
-- Standardized sampling schedule
-- NLMIXR-compatible data format
+
+-   Two-compartment model with first-order absorption
+
+-   Log-normal random effects on all parameters
+
+-   Proportional residual error
+
+-   Standardized sampling schedule
+
+-   nlmixr2-compatible data format
+
+<details>
+
+<summary>Show code</summary>
 
 ```{r data generating function}
 generate_data <- function(n, times, seed = 1) {
@@ -134,12 +145,11 @@ generate_data <- function(n, times, seed = 1) {
 }
 ```
 
+</details>
+
 ## Generating the Dataset
 
-We'll generate the examplomycin dataset with:
-- 500 subjects
-- 9 time points (0.1, 0.25, 0.5, 1, 2, 3, 5, 8, 12 hours)
-- Random seed for reproducibility
+We'll generate the examplomycin dataset with: - 500 subjects - 9 time points (0.1, 0.25, 0.5, 1, 2, 3, 5, 8, 12 hours) - Random seed for reproducibility
 
 ```{r examplomycin data}
 examplomycin <- generate_data(
@@ -180,12 +190,17 @@ ggplot(examplomycin, aes(x = TIME, y = DV, color = factor(ID))) +
 ## Dataset Structure
 
 The examplomycin dataset contains the following columns:
-- `ID`: Subject identifier
-- `TIME`: Observation time (hours)
-- `DV`: Observed concentration
-- `AMT`: Dose amount (100 mg or NA)
-- `EVID`: Event type (101 for dose, 0 for observation)
-- `CMT`: Compartment number (1 for depot, 2 for central)
+
+-   `ID`: Subject identifier
+
+-   `TIME`: Observation time (hours)
+
+-   `DV`: Observed concentration
+
+-   `AMT`: Dose amount (100 mg or NA)
+
+-   `EVID`: Event type (101 for dose, 0 for observation)
+
+-   `CMT`: Compartment number (1 for depot, 2 for central)
 
 This dataset serves as a realistic example for demonstrating aggregate data modeling techniques in the `admr` package.
-

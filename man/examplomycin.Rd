@@ -28,6 +28,9 @@ first-order absorption and elimination. Random effects and residual errors are i
 simulate variability and noise.
 }
 \examples{
+#' # Load required libraries
+library(admr)
+
 # Load the dataset
 data("examplomycin")
 

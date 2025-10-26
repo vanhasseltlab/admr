@@ -21,15 +21,19 @@ create_test_data <- function() {
     admr::meancov()
 
   # Define RxODE model
-  rxModel <- RxODE({
-    cp = linCmt(
-      cl,           # Clearance
-      v1,           # Volume of the central compartment
-      v2,           # Volume of the peripheral compartment
-      q,            # Inter-compartmental clearance
-      ka            # Absorption rate constant
-    )
-  })
+  rxModel <- function(){
+    model({
+      cp = linCmt(
+        cl,           # Clearance
+        v1,           # Volume of central compartment
+        v2,           # Volume of peripheral compartment
+        q,            # Inter-compartmental clearance
+        ka            # Absorption rate constant
+      )})
+  }
+
+  rxModel <- rxode2(rxModel)
+  rxModel <- rxModel$simulationModel
 
   # Define prediction function
   predder <- function(time, theta_i, dose = 100) {
@@ -84,7 +88,7 @@ test_that("fitIRMC basic functionality works with examplomycin data", {
   )
 
   # Check basic structure
-  expect_s3_class(result, "fitIRMC_result")
+  expect_s3_class(result, "fit_admr_result")
   expect_named(result, c("final_params", "transformed_params", "param_df",
                         "covariance_matrix", "convergence_info", "diagnostics",
                         "chain_results", "iteration_history", "data"))
@@ -147,7 +151,7 @@ test_that("fitIRMC handles phase fractions correctly with examplomycin data", {
   )
 
   # Check that the function runs without errors
-  expect_s3_class(result, "fitIRMC_result")
+  expect_s3_class(result, "fit_admr_result")
 })
 
 test_that("fitIRMC handles errors gracefully with examplomycin data", {

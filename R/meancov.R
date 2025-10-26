@@ -45,6 +45,10 @@
 #' }
 #'
 #' @examples
+#' # Load required libraries
+#' library(admr)
+#' library(rxode2)
+#'
 #' # Create a matrix of concentration measurements
 #' # 10 subjects measured at 10 time points
 #' m <- matrix(rnorm(100), nrow = 10, ncol = 10)

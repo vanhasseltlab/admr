@@ -73,6 +73,10 @@ Special Features:
 }
 }
 \examples{
+# Load required libraries
+library(admr)
+library(rxode2)
+
 # Define a two-compartment model parameters
 p <- list(
   # Population parameters (fixed effects)
@@ -81,14 +85,14 @@ p <- list(
           v2 = 30,    # Peripheral volume (L)
           q = 10,     # Inter-compartmental clearance (L/h)
           ka = 1),    # Absorption rate (1/h)
-  
+
   # Between-subject variability (30\% CV on all parameters)
   Omega = matrix(c(0.09, 0, 0, 0, 0,
                   0, 0.09, 0, 0, 0,
                   0, 0, 0.09, 0, 0,
                   0, 0, 0, 0.09, 0,
                   0, 0, 0, 0, 0.09), nrow = 5, ncol = 5),
-  
+
   # Residual error (20\% CV)
   Sigma_prop = 0.04
 )

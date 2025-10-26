@@ -83,15 +83,25 @@ examplomycin_aggregated <- examplomycin_wide \%>\%
   admr::meancov()
 
 # Define RxODE model
-rxModel <- RxODE({
-  cp = linCmt(
-    cl,           # Clearance
-    v1,           # Volume of the central compartment
-    v2,           # Volume of the peripheral compartment
-    q,            # Inter-compartmental clearance
-    ka            # Absorption rate constant
-  )
+rxModel <- function(){
+model({
+  # Parameters
+  ke = cl / v1             # Elimination rate constant
+  k12 = q / v1             # Rate constant for central to peripheral transfer
+  k21 = q / v2             # Rate constant for peripheral to central transfer
+
+  # Differential equations
+  d/dt(depot)    = -ka * depot
+  d/dt(central)  = ka * depot - ke * central - k12 * central + k21 * peripheral
+  d/dt(peripheral) = k12 * central - k21 * peripheral
+
+  # Concentration in central compartment
+  cp = central / v1
 })
+}
+
+rxModel <- rxode2(rxModel)
+rxModel <- rxModel$simulationModel
 
 # Define prediction function
 predder <- function(time, theta_i, dose = 100) {

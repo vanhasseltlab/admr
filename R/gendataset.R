@@ -51,31 +51,48 @@
 #' and is compatible with both population PK modeling and simulation workflows.
 #'
 #' @examples
-#' # Define the two-compartment model using RxODE
-#' rxModel <- RxODE({
-#'   # Central compartment
-#'   d/dt(centr) = -cl * centr - q * centr + q * periph + ka * depot
-#'   # Peripheral compartment
-#'   d/dt(periph) = q * centr - q * periph
-#'   # Depot compartment
-#'   d/dt(depot) = -ka * depot
+#' # Load required libraries
+#' library(admr)
+#' library(rxode2)
+#' library(nlmixr2)
+#' library(dplyr)
+#' library(tidyr)
+#' library(mnorm)
+#'
+#' # Define RxODE model
+#' rxModel <- function(){
+#' model({
+#'   # Parameters
+#'   ke = cl / v1             # Elimination rate constant
+#'   k12 = q / v1             # Rate constant for central to peripheral transfer
+#'   k21 = q / v2             # Rate constant for peripheral to central transfer
+#'
+#'   # Differential equations
+#'   d/dt(depot)    = -ka * depot
+#'   d/dt(central)  = ka * depot - ke * central - k12 * central + k21 * peripheral
+#'   d/dt(peripheral) = k12 * central - k21 * peripheral
+#'
 #'   # Concentration in central compartment
-#'   cp = centr / v1
+#'   cp = central / v1
 #' })
+#' }
+#'
+#' rxModel <- rxode2(rxModel)
+#' rxModel <- rxModel$simulationModel
 #'
 #' # Define prediction function for a two-compartment model
 #' predder <- function(time, theta_i, dose = 100) {
 #'   n_individuals <- nrow(theta_i)
 #'   if (is.null(n_individuals)) n_individuals <- 1
-#'   
+#'
 #'   # Create event table for dosing and sampling
 #'   ev <- eventTable(amount.units="mg", time.units="hours")
 #'   ev$add.dosing(dose = dose, nbr.doses = 1, start.time = 0)
 #'   ev$add.sampling(time)
-#'   
+#'
 #'   # Solve ODE system
 #'   out <- rxSolve(rxModel, params = theta_i, events = ev, cores = 0)
-#'   
+#'
 #'   # Return matrix of predictions
 #'   matrix(out$cp, nrow = n_individuals, ncol = length(time), byrow = TRUE)
 #' }
@@ -91,14 +108,14 @@
 #'             v2 = 30,    # Peripheral volume (L)
 #'             q = 10,     # Inter-compartmental clearance (L/h)
 #'             ka = 1),    # Absorption rate (1/h)
-#'     
+#'
 #'     # Between-subject variability (30% CV on all parameters)
 #'     Omega = matrix(c(0.09, 0, 0, 0, 0,
 #'                     0, 0.09, 0, 0, 0,
 #'                     0, 0, 0.09, 0, 0,
 #'                     0, 0, 0, 0.09, 0,
 #'                     0, 0, 0, 0, 0.09), nrow = 5, ncol = 5),
-#'     
+#'
 #'     # Residual error (20% CV)
 #'     Sigma_prop = 0.04
 #'   ),
@@ -115,36 +132,36 @@
 gendataset <- function(opts, seed = 1, reserr = TRUE, nlmixrform = FALSE) {
   # Set random seed for reproducibility
   set.seed(seed)
-  
+
   # Generate random effects (between-subject variability)
   # bi contains the random effects for each simulated individual
   bi <- gen_bi(opts, FALSE)
-  
+
   # Calculate total number of observations to simulate
   # nsimobs = number of time points * number of subjects
   nsimobs <- length(opts$time) * opts$nsim
-  
+
   # Compute individual parameters using random effects
   # theta_i contains the individual parameter values
   theta_i <- g_iter(opts, bi)
-  
+
   # Generate predictions using the model function
   # res contains the simulated concentrations without error
   res <- opts$f(opts$time, theta_i)
-  
+
   # Return clean predictions if no residual error is requested
   if (!reserr) return(res)
-  
+
   # Add proportional error if specified
   # y = f(t,θ)(1 + ε), where ε ~ N(0,σ²_prop)
   if (!is.null(opts$p$Sigma_prop))
     res <- res * (1 + rnorm(nsimobs, sd = sqrt(opts$p$Sigma_prop)))
-  
+
   # Add additive error if specified
   # y = f(t,θ) + ε, where ε ~ N(0,σ²_add)
   if (!is.null(opts$p$Sigma_add))
     res <- res + rnorm(nsimobs, sd = sqrt(opts$p$Sigma_add))
-  
+
   # Return results in requested format
   if (!nlmixrform) {
     # Return raw matrix of observations

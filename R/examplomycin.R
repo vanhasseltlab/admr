@@ -14,6 +14,9 @@
 #'   - `CMT`: Compartment number (1 for depot, 2 for central).
 #'
 #' @examples
+#' #' # Load required libraries
+#' library(admr)
+#'
 #' # Load the dataset
 #' data("examplomycin")
 #'

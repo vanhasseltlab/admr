@@ -31,12 +31,11 @@ derivtransfunchooser <- function(fs) { # Returns appropriate back-transformation
                  identity=function(x) 1)
   res <- translist[fs]
   for (i in which(map_lgl(res,is.null))) {
-    names(res)[i]  <- fs[i]
+    names(res)[i] <- fs[i]
     res[[i]] <- function(x) grad(fs[i],x)
   }
   res
-}
-
+  }
 
 #' @noRd
 foceapprEV_single <- function(opts,bi,biseq # Uses the First-Order Conditional Estimation (FOCE) method to approximate expected values for a single individual.
@@ -45,13 +44,41 @@ foceapprEV_single <- function(opts,bi,biseq # Uses the First-Order Conditional E
   theta_i <- g_iter(opts,bi)
   Eind <- opts$f(opts$time,theta_i)
   Etyp <- opts$f(opts$time,opts$p$beta)
-  d_f_d_bi <- jacobiann(function(et) opts$f(opts$time,g_iter(opts,et)),bi)
+  d_f_d_bi <- jacobiann_vec_fast(function(et) opts$f(opts$time,g_iter(opts,et)),bi)
+
   E <- t(c(Eind)-d_f_d_bi %*% t(bi))
   V <- d_f_d_bi %*% opts$p$Omega %*% t(d_f_d_bi)
   if (opts$interact) V <- opts$h(list(V=V,E=Eind),opts$p)$V else V <- opts$h(list(V=V,E=Etyp),opts$p)$V
   res <- list(E=E,V=V,Etyp=Etyp,Eind=Eind,d_f_d_bi=d_f_d_bi,weights=weights)
   res
 }
+
+jacobiann_vec_fast <- function(f, bi, eps = 1e-8) {
+  bi <- as.vector(bi)
+  n <- length(bi)
+
+  # Baseline evaluation
+  f0 <- as.vector(f(bi))
+  m <- length(f0)
+
+  # Create matrix of perturbed bi values
+  BI <- matrix(rep(bi, n), ncol = n)
+  diag(BI) <- diag(BI) + eps   # add eps to each parameter in turn
+
+  # Evaluate all perturbations in one vectorized call
+  # Assumes f can take a matrix and return each column as a case
+  F_all <- sapply(seq_len(n), function(j) f(BI[, j]))
+
+  # Compute differences
+  J <- (F_all - f0) / eps
+
+  # Return as m × n Jacobian
+  matrix(J, nrow = m, ncol = n)
+}
+
+#' @noRd
+grad <- function(f,var) gradient(f,unname(var)) # Gradient of a function without names.
+
 
 #' @noRd
 g_iter2 <- function(opts,bi) { # Applies the model g to generate individual-specific parameter values theta_i based on random effects bi.
@@ -87,12 +114,6 @@ gen_bi2 <- function(Omega,biseq) { # Generates random effects bi based on the co
   biseq %*% chol(Omega)
 }
 
-
-#' @noRd
-grad <- function(f,var) gradient(f,unname(var)) # Gradient of a function without names.
-
-#' @noRd
-jacobiann <- function(f,var) jacobian(f,unname(var))
 
 #' @noRd
 list_to_mat <- function(l) { # Converts a list of values into a matrix by organizing them into a block-diagonal format.
@@ -160,7 +181,7 @@ maxfunc <- function(opts) {
     EVnow <- with(cov.wt(rawpreds[NAfilters,],wttot,method="ML"),list(E=center,V=cov))
     EVnow <- opts$h(EVnow,pneww)
     if (adjust) {
-      kappa <- opts$f(opts$time,opts$g(ifelse(opts$single_betas,pneww$beta,origbeta))) - rawpreds[1,]
+      kappa <- opts$f(opts$time, t(as.matrix(opts$g(ifelse(opts$single_betas, pneww$beta, origbeta))))) - rawpreds[1,]
       EVnow$E <- EVnow$E + kappa
     }
 
@@ -315,7 +336,7 @@ p_transform_mat <- function(x) { # Transforms a matrix (typically representing v
             diag(Omega)[diag(Omega)==0] <- 1e-10
           biseqt %*% chol(Omega)
         }
-        c(jacobiann(gen_bi_here,0))
+        c(jacobiann_richardson(gen_bi_here, 0))
       }
     })
   }
