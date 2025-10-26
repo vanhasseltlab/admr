@@ -129,15 +129,29 @@ number of iterations is reached.</p>
 <span class="r-in"><span>  <span class="fu">admr</span><span class="fu">::</span><span class="fu"><a href="meancov.html">meancov</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Define RxODE model</span></span></span>
-<span class="r-in"><span><span class="va">rxModel</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/rxode2.html" class="external-link">RxODE</a></span><span class="op">(</span><span class="op">{</span></span></span>
-<span class="r-in"><span>  <span class="va">cp</span> <span class="op">=</span> <span class="fu">linCmt</span><span class="op">(</span></span></span>
-<span class="r-in"><span>    <span class="va">cl</span>,           <span class="co"># Clearance</span></span></span>
-<span class="r-in"><span>    <span class="va">v1</span>,           <span class="co"># Volume of the central compartment</span></span></span>
-<span class="r-in"><span>    <span class="va">v2</span>,           <span class="co"># Volume of the peripheral compartment</span></span></span>
-<span class="r-in"><span>    <span class="va">q</span>,            <span class="co"># Inter-compartmental clearance</span></span></span>
-<span class="r-in"><span>    <span class="va">ka</span>            <span class="co"># Absorption rate constant</span></span></span>
-<span class="r-in"><span>  <span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">rxModel</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="op">)</span><span class="op">{</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/model.html" class="external-link">model</a></span><span class="op">(</span><span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="co"># Parameters</span></span></span>
+<span class="r-in"><span>  <span class="va">ke</span> <span class="op">=</span> <span class="va">cl</span> <span class="op">/</span> <span class="va">v1</span>             <span class="co"># Elimination rate constant</span></span></span>
+<span class="r-in"><span>  <span class="va">k12</span> <span class="op">=</span> <span class="va">q</span> <span class="op">/</span> <span class="va">v1</span>             <span class="co"># Rate constant for central to peripheral transfer</span></span></span>
+<span class="r-in"><span>  <span class="va">k21</span> <span class="op">=</span> <span class="va">q</span> <span class="op">/</span> <span class="va">v2</span>             <span class="co"># Rate constant for peripheral to central transfer</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span>  <span class="co"># Differential equations</span></span></span>
+<span class="r-in"><span>  <span class="va">d</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/stats/TDist.html" class="external-link">dt</a></span><span class="op">(</span><span class="va">depot</span><span class="op">)</span>    <span class="op">=</span> <span class="op">-</span><span class="va">ka</span> <span class="op">*</span> <span class="va">depot</span></span></span>
+<span class="r-in"><span>  <span class="va">d</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/stats/TDist.html" class="external-link">dt</a></span><span class="op">(</span><span class="va">central</span><span class="op">)</span>  <span class="op">=</span> <span class="va">ka</span> <span class="op">*</span> <span class="va">depot</span> <span class="op">-</span> <span class="va">ke</span> <span class="op">*</span> <span class="va">central</span> <span class="op">-</span> <span class="va">k12</span> <span class="op">*</span> <span class="va">central</span> <span class="op">+</span> <span class="va">k21</span> <span class="op">*</span> <span class="va">peripheral</span></span></span>
+<span class="r-in"><span>  <span class="va">d</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/stats/TDist.html" class="external-link">dt</a></span><span class="op">(</span><span class="va">peripheral</span><span class="op">)</span> <span class="op">=</span> <span class="va">k12</span> <span class="op">*</span> <span class="va">central</span> <span class="op">-</span> <span class="va">k21</span> <span class="op">*</span> <span class="va">peripheral</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span>  <span class="co"># Concentration in central compartment</span></span></span>
+<span class="r-in"><span>  <span class="va">cp</span> <span class="op">=</span> <span class="va">central</span> <span class="op">/</span> <span class="va">v1</span></span></span>
 <span class="r-in"><span><span class="op">}</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">rxModel</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/rxode2.html" class="external-link">rxode2</a></span><span class="op">(</span><span class="va">rxModel</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> parameter labels from comments are typically ignored in non-interactive mode</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Need to run with the source intact to parse comments</span>
+<span class="r-in"><span><span class="va">rxModel</span> <span class="op">&lt;-</span> <span class="va">rxModel</span><span class="op">$</span><span class="va">simulationModel</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>  </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>  </span>
 <span class="r-in"><span></span></span>
@@ -145,11 +159,11 @@ number of iterations is reached.</p>
 <span class="r-in"><span><span class="va">predder</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">time</span>, <span class="va">theta_i</span>, <span class="va">dose</span> <span class="op">=</span> <span class="fl">100</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="va">n_individuals</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">theta_i</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">n_individuals</span><span class="op">)</span><span class="op">)</span> <span class="va">n_individuals</span> <span class="op">&lt;-</span> <span class="fl">1</span></span></span>
-<span class="r-in"><span>  </span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="va">ev</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/eventTable.html" class="external-link">eventTable</a></span><span class="op">(</span>amount.units<span class="op">=</span><span class="st">"mg"</span>, time.units<span class="op">=</span><span class="st">"hours"</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="va">ev</span><span class="op">$</span><span class="fu">add.dosing</span><span class="op">(</span>dose <span class="op">=</span> <span class="va">dose</span>, nbr.doses <span class="op">=</span> <span class="fl">1</span>, start.time <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="va">ev</span><span class="op">$</span><span class="fu">add.sampling</span><span class="op">(</span><span class="va">time</span><span class="op">)</span></span></span>
-<span class="r-in"><span>  </span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/rxSolve.html" class="external-link">rxSolve</a></span><span class="op">(</span><span class="va">rxModel</span>, params <span class="op">=</span> <span class="va">theta_i</span>, events <span class="op">=</span> <span class="va">ev</span>, cores <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="va">cp_matrix</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="va">out</span><span class="op">$</span><span class="va">cp</span>, nrow <span class="op">=</span> <span class="va">n_individuals</span>, ncol <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">time</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                      byrow <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
@@ -177,19 +191,19 @@ number of iterations is reached.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Run optimization</span></span></span>
 <span class="r-in"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">timedIRMC</span><span class="op">(</span><span class="va">opts</span><span class="op">$</span><span class="va">pt</span>, <span class="va">opts</span>, <span class="va">examplomycin_aggregated</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 1, nll=-1839.57745407338</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 2, nll=-1845.24211134536</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 3, nll=-1845.28044696803</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 4, nll=-1845.28064766726</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 1, nll=-1839.57745906232</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 2, nll=-1845.23729552787</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 3, nll=-1845.27995577506</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 4, nll=-1845.28009970217</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> should break now due to no difference between OFV and appr OFV</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4 × 5</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   p             nll appr_nll time                 iter</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dttm&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">840.</span>   -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">840.</span> 2025-10-03 <span style="color: #949494;">10:32:18</span>     1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">845.</span>   -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">845.</span> 2025-10-03 <span style="color: #949494;">10:32:19</span>     2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">845.</span>   -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">845.</span> 2025-10-03 <span style="color: #949494;">10:32:20</span>     3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">845.</span>   -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">845.</span> 2025-10-03 <span style="color: #949494;">10:32:20</span>     4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">840.</span>   -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">840.</span> 2025-10-26 <span style="color: #949494;">18:04:13</span>     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">845.</span>   -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">845.</span> 2025-10-26 <span style="color: #949494;">18:04:14</span>     2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">845.</span>   -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">845.</span> 2025-10-26 <span style="color: #949494;">18:04:15</span>     3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">845.</span>   -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">845.</span> 2025-10-26 <span style="color: #949494;">18:04:15</span>     4</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

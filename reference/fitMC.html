@@ -148,17 +148,32 @@ allowing flexibility in how the observed data is structured.</p>
 <span class="r-in"><span>  <span class="fu">admr</span><span class="fu">::</span><span class="fu"><a href="meancov.html">meancov</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Define RxODE model</span></span></span>
-<span class="r-in"><span><span class="va">rxModel</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/rxode2.html" class="external-link">RxODE</a></span><span class="op">(</span><span class="op">{</span></span></span>
-<span class="r-in"><span>  <span class="va">cp</span> <span class="op">=</span> <span class="fu">linCmt</span><span class="op">(</span></span></span>
-<span class="r-in"><span>    <span class="va">cl</span>,           <span class="co"># Clearance</span></span></span>
-<span class="r-in"><span>    <span class="va">v1</span>,           <span class="co"># Volume of the central compartment</span></span></span>
-<span class="r-in"><span>    <span class="va">v2</span>,           <span class="co"># Volume of the peripheral compartment</span></span></span>
-<span class="r-in"><span>    <span class="va">q</span>,            <span class="co"># Inter-compartmental clearance</span></span></span>
-<span class="r-in"><span>    <span class="va">ka</span>            <span class="co"># Absorption rate constant</span></span></span>
-<span class="r-in"><span>  <span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">rxModel</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="op">)</span><span class="op">{</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/model.html" class="external-link">model</a></span><span class="op">(</span><span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="co"># Parameters</span></span></span>
+<span class="r-in"><span>  <span class="va">ke</span> <span class="op">=</span> <span class="va">cl</span> <span class="op">/</span> <span class="va">v1</span>             <span class="co"># Elimination rate constant</span></span></span>
+<span class="r-in"><span>  <span class="va">k12</span> <span class="op">=</span> <span class="va">q</span> <span class="op">/</span> <span class="va">v1</span>             <span class="co"># Rate constant for central to peripheral transfer</span></span></span>
+<span class="r-in"><span>  <span class="va">k21</span> <span class="op">=</span> <span class="va">q</span> <span class="op">/</span> <span class="va">v2</span>             <span class="co"># Rate constant for peripheral to central transfer</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span>  <span class="co"># Differential equations</span></span></span>
+<span class="r-in"><span>  <span class="va">d</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/stats/TDist.html" class="external-link">dt</a></span><span class="op">(</span><span class="va">depot</span><span class="op">)</span>    <span class="op">=</span> <span class="op">-</span><span class="va">ka</span> <span class="op">*</span> <span class="va">depot</span></span></span>
+<span class="r-in"><span>  <span class="va">d</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/stats/TDist.html" class="external-link">dt</a></span><span class="op">(</span><span class="va">central</span><span class="op">)</span>  <span class="op">=</span> <span class="va">ka</span> <span class="op">*</span> <span class="va">depot</span> <span class="op">-</span> <span class="va">ke</span> <span class="op">*</span> <span class="va">central</span> <span class="op">-</span> <span class="va">k12</span> <span class="op">*</span> <span class="va">central</span> <span class="op">+</span> <span class="va">k21</span> <span class="op">*</span> <span class="va">peripheral</span></span></span>
+<span class="r-in"><span>  <span class="va">d</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/stats/TDist.html" class="external-link">dt</a></span><span class="op">(</span><span class="va">peripheral</span><span class="op">)</span> <span class="op">=</span> <span class="va">k12</span> <span class="op">*</span> <span class="va">central</span> <span class="op">-</span> <span class="va">k21</span> <span class="op">*</span> <span class="va">peripheral</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span>  <span class="co"># Concentration in central compartment</span></span></span>
+<span class="r-in"><span>  <span class="va">cp</span> <span class="op">=</span> <span class="va">central</span> <span class="op">/</span> <span class="va">v1</span></span></span>
 <span class="r-in"><span><span class="op">}</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">rxModel</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/rxode2.html" class="external-link">rxode2</a></span><span class="op">(</span><span class="va">rxModel</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>  </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>  </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> parameter labels from comments are typically ignored in non-interactive mode</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Need to run with the source intact to parse comments</span>
+<span class="r-in"><span><span class="va">rxModel</span> <span class="op">&lt;-</span> <span class="va">rxModel</span><span class="op">$</span><span class="va">simulationModel</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> using C compiler: ‘gcc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0’</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Define prediction function</span></span></span>
 <span class="r-in"><span><span class="va">predder</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">time</span>, <span class="va">theta_i</span>, <span class="va">dose</span> <span class="op">=</span> <span class="fl">100</span><span class="op">)</span> <span class="op">{</span></span></span>
@@ -197,47 +212,47 @@ allowing flexibility in how the observed data is structured.</p>
 <span class="r-in"><span><span class="co"># Run optimization</span></span></span>
 <span class="r-in"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">fitMC</span><span class="op">(</span><span class="va">opts</span>, <span class="va">examplomycin_aggregated</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 50 - NLL: -1842.696 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 100 - NLL: -1844.712 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 150 - NLL: -1845.037 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 200 - NLL: -1845.198 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 250 - NLL: -1845.234 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 300 - NLL: -1845.25 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 350 - NLL: -1845.262 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 400 - NLL: -1845.267 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 450 - NLL: -1845.271 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 500 - NLL: -1845.28 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 550 - NLL: -1845.286 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 600 - NLL: -1845.288 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 100 - NLL: -1844.847 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 150 - NLL: -1845.222 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 200 - NLL: -1845.259 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 250 - NLL: -1845.269 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 300 - NLL: -1845.277 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 350 - NLL: -1845.286 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 400 - NLL: -1845.287 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 450 - NLL: -1845.288 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 500 - NLL: -1845.289 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 550 - NLL: -1845.289 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 600 - NLL: -1845.289 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 650 - NLL: -1845.29 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 700 - NLL: -1845.29 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1 Complete: Final NLL = -1845.290, Time Elapsed = 116.86 seconds</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1 Complete: Final NLL = -1845.290, Time Elapsed = 148.70 seconds</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  </span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> -- FitIRMC Summary --</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> -- Objective Function and Information Criteria --</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Log-likelihood: -1845.2902</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Log-likelihood: -1845.2898</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             AIC: 3701.58</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             BIC: 3758.94</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Condition#(Cov): 152.55</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Condition#(Cor): 217.55</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Condition#(Cov): 234.94</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Condition#(Cor): 363.36</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> -- Timing Information --</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Best Chain: 116.8627 seconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      All Chains: 116.8653 seconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Covariance: 29.1144 seconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         Elapsed: 145.98 seconds</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Best Chain: 148.6971 seconds</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      All Chains: 148.6996 seconds</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Covariance: 37.9317 seconds</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         Elapsed: 186.63 seconds</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> -- Population Parameters --</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 6 × 6</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Parameter        Est.      SE  `%RSE` `Back-transformed(95%CI)` `BSV(CV%)`</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> cl             1.60    0.015<span style="text-decoration: underline;">2</span>   0.951 4.96 (4.81, 5.11)               31.9</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> v1             2.31    0.086<span style="text-decoration: underline;">6</span>   3.74  10.11 (8.53, 11.98)             32.7</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> v2             3.40    0.040<span style="text-decoration: underline;">0</span>   1.18  30.04 (27.78, 32.49)            31.0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> q              2.29    0.021<span style="text-decoration: underline;">2</span>   0.928 9.83 (9.43, 10.24)              32.3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> ka             0.023<span style="text-decoration: underline;">6</span>  0.081<span style="text-decoration: underline;">8</span> 347.    1.02 (0.87, 1.20)               30.5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> cl             1.60    0.015<span style="text-decoration: underline;">6</span>   0.975 4.96 (4.81, 5.11)               31.9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> v1             2.31    0.110    4.77  10.11 (8.14, 12.55)             32.7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> v2             3.40    0.047<span style="text-decoration: underline;">5</span>   1.40  30.05 (27.38, 32.98)            31.1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> q              2.28    0.021<span style="text-decoration: underline;">4</span>   0.938 9.82 (9.42, 10.25)              32.2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> ka             0.023<span style="text-decoration: underline;">7</span>  0.105  444.    1.02 (0.83, 1.26)               30.6</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> Residual Error 0.039<span style="text-decoration: underline;">4</span> <span style="color: #BB0000;">NA</span>       <span style="color: #BB0000;">NA</span>     0.0394                          <span style="color: #BB0000;">NA</span>  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> -- Iteration Diagnostics --</span>
@@ -246,14 +261,14 @@ allowing flexibility in how the observed data is structured.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    1: -1839.577 1.609 2.303 3.401 2.303 0.000 -2.408 -2.408 -2.408 -2.408 -2.408 -3.219</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    2: -1839.577 1.609 2.303 3.401 2.303 0.000 -2.408 -2.408 -2.408 -2.408 -2.408 -3.219</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    3: -1839.577 1.609 2.303 3.401 2.303 0.000 -2.408 -2.408 -2.408 -2.408 -2.408 -3.219</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    4: 14056.806 2.609 2.303 3.401 2.303 0.000 -2.408 -2.408 -2.408 -2.408 -2.408 -3.219</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    4: 14056.804 2.609 2.303 3.401 2.303 0.000 -2.408 -2.408 -2.408 -2.408 -2.408 -3.219</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    5: 5028.744 1.609 3.303 3.401 2.303 0.000 -2.408 -2.408 -2.408 -2.408 -2.408 -3.219</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    ... (omitted iterations) ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  711: -1845.290 1.601 2.313 3.403 2.285 0.024 -2.286 -2.234 -2.343 -2.263 -2.373 -3.235</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  712: -1845.290 1.601 2.313 3.403 2.285 0.024 -2.286 -2.234 -2.343 -2.263 -2.373 -3.235</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  713: -1845.290 1.601 2.313 3.403 2.285 0.024 -2.286 -2.234 -2.343 -2.263 -2.373 -3.235</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  714: -1845.290 1.601 2.313 3.403 2.285 0.024 -2.286 -2.234 -2.343 -2.263 -2.373 -3.235</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  715: -1845.290 1.601 2.313 3.403 2.285 0.024 -2.286 -2.234 -2.343 -2.263 -2.373 -3.235</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  704: -1845.290 1.601 2.313 3.403 2.285 0.024 -2.286 -2.238 -2.339 -2.267 -2.368 -3.235</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  705: -1845.290 1.601 2.313 3.403 2.285 0.024 -2.286 -2.238 -2.339 -2.267 -2.368 -3.235</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  706: -1845.290 1.601 2.313 3.403 2.285 0.024 -2.286 -2.238 -2.339 -2.267 -2.368 -3.235</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  707: -1845.290 1.601 2.313 3.403 2.285 0.024 -2.286 -2.238 -2.339 -2.267 -2.368 -3.235</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  708: -1845.290 1.601 2.313 3.403 2.285 0.024 -2.286 -2.238 -2.339 -2.267 -2.368 -3.235</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

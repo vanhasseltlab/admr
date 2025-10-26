@@ -118,15 +118,29 @@ until convergence or until the maximum number of iterations is reached.</p>
 <span class="r-in"><span>  <span class="fu">admr</span><span class="fu">::</span><span class="fu"><a href="meancov.html">meancov</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Define RxODE model</span></span></span>
-<span class="r-in"><span><span class="va">rxModel</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/rxode2.html" class="external-link">RxODE</a></span><span class="op">(</span><span class="op">{</span></span></span>
-<span class="r-in"><span>  <span class="va">cp</span> <span class="op">=</span> <span class="fu">linCmt</span><span class="op">(</span></span></span>
-<span class="r-in"><span>    <span class="va">cl</span>,           <span class="co"># Clearance</span></span></span>
-<span class="r-in"><span>    <span class="va">v1</span>,           <span class="co"># Volume of the central compartment</span></span></span>
-<span class="r-in"><span>    <span class="va">v2</span>,           <span class="co"># Volume of the peripheral compartment</span></span></span>
-<span class="r-in"><span>    <span class="va">q</span>,            <span class="co"># Inter-compartmental clearance</span></span></span>
-<span class="r-in"><span>    <span class="va">ka</span>            <span class="co"># Absorption rate constant</span></span></span>
-<span class="r-in"><span>  <span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">rxModel</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="op">)</span><span class="op">{</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/model.html" class="external-link">model</a></span><span class="op">(</span><span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="co"># Parameters</span></span></span>
+<span class="r-in"><span>  <span class="va">ke</span> <span class="op">=</span> <span class="va">cl</span> <span class="op">/</span> <span class="va">v1</span>             <span class="co"># Elimination rate constant</span></span></span>
+<span class="r-in"><span>  <span class="va">k12</span> <span class="op">=</span> <span class="va">q</span> <span class="op">/</span> <span class="va">v1</span>             <span class="co"># Rate constant for central to peripheral transfer</span></span></span>
+<span class="r-in"><span>  <span class="va">k21</span> <span class="op">=</span> <span class="va">q</span> <span class="op">/</span> <span class="va">v2</span>             <span class="co"># Rate constant for peripheral to central transfer</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span>  <span class="co"># Differential equations</span></span></span>
+<span class="r-in"><span>  <span class="va">d</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/stats/TDist.html" class="external-link">dt</a></span><span class="op">(</span><span class="va">depot</span><span class="op">)</span>    <span class="op">=</span> <span class="op">-</span><span class="va">ka</span> <span class="op">*</span> <span class="va">depot</span></span></span>
+<span class="r-in"><span>  <span class="va">d</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/stats/TDist.html" class="external-link">dt</a></span><span class="op">(</span><span class="va">central</span><span class="op">)</span>  <span class="op">=</span> <span class="va">ka</span> <span class="op">*</span> <span class="va">depot</span> <span class="op">-</span> <span class="va">ke</span> <span class="op">*</span> <span class="va">central</span> <span class="op">-</span> <span class="va">k12</span> <span class="op">*</span> <span class="va">central</span> <span class="op">+</span> <span class="va">k21</span> <span class="op">*</span> <span class="va">peripheral</span></span></span>
+<span class="r-in"><span>  <span class="va">d</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/stats/TDist.html" class="external-link">dt</a></span><span class="op">(</span><span class="va">peripheral</span><span class="op">)</span> <span class="op">=</span> <span class="va">k12</span> <span class="op">*</span> <span class="va">central</span> <span class="op">-</span> <span class="va">k21</span> <span class="op">*</span> <span class="va">peripheral</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span>  <span class="co"># Concentration in central compartment</span></span></span>
+<span class="r-in"><span>  <span class="va">cp</span> <span class="op">=</span> <span class="va">central</span> <span class="op">/</span> <span class="va">v1</span></span></span>
 <span class="r-in"><span><span class="op">}</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">rxModel</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/rxode2.html" class="external-link">rxode2</a></span><span class="op">(</span><span class="va">rxModel</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> parameter labels from comments are typically ignored in non-interactive mode</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Need to run with the source intact to parse comments</span>
+<span class="r-in"><span><span class="va">rxModel</span> <span class="op">&lt;-</span> <span class="va">rxModel</span><span class="op">$</span><span class="va">simulationModel</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>  </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>  </span>
 <span class="r-in"><span></span></span>
@@ -167,34 +181,34 @@ until convergence or until the maximum number of iterations is reached.</p>
 <span class="r-in"><span><span class="co"># Run optimization</span></span></span>
 <span class="r-in"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">timedbobyqa</span><span class="op">(</span><span class="va">opts</span><span class="op">$</span><span class="va">pt</span>, <span class="va">opts</span>, <span class="va">examplomycin_aggregated</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 50 - NLL: -1842.696 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 100 - NLL: -1844.712 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 150 - NLL: -1845.037 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 200 - NLL: -1845.198 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 250 - NLL: -1845.234 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 300 - NLL: -1845.25 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 350 - NLL: -1845.262 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 400 - NLL: -1845.267 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 450 - NLL: -1845.271 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 500 - NLL: -1845.28 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 550 - NLL: -1845.286 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 600 - NLL: -1845.288 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 100 - NLL: -1844.847 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 150 - NLL: -1845.222 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 200 - NLL: -1845.259 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 250 - NLL: -1845.269 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 300 - NLL: -1845.277 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 350 - NLL: -1845.286 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 400 - NLL: -1845.287 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 450 - NLL: -1845.288 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 500 - NLL: -1845.289 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 550 - NLL: -1845.289 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 600 - NLL: -1845.289 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 650 - NLL: -1845.29 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 700 - NLL: -1845.29 </span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 715 × 4</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 708 × 4</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    p             nll time                 iter</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dttm&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">840.</span> 2025-10-03 <span style="color: #949494;">10:32:21</span>     1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">840.</span> 2025-10-03 <span style="color: #949494;">10:32:21</span>     2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">840.</span> 2025-10-03 <span style="color: #949494;">10:32:21</span>     3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> <span style="text-decoration: underline;">14</span>057. 2025-10-03 <span style="color: #949494;">10:32:21</span>     4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span>  <span style="text-decoration: underline;">5</span>029. 2025-10-03 <span style="color: #949494;">10:32:21</span>     5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span>   227. 2025-10-03 <span style="color: #949494;">10:32:22</span>     6</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span>  -<span style="color: #BB0000;">417.</span> 2025-10-03 <span style="color: #949494;">10:32:22</span>     7</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span>  -<span style="color: #BB0000;">413.</span> 2025-10-03 <span style="color: #949494;">10:32:22</span>     8</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">779.</span> 2025-10-03 <span style="color: #949494;">10:32:22</span>     9</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">800.</span> 2025-10-03 <span style="color: #949494;">10:32:22</span>    10</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 705 more rows</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">840.</span> 2025-10-26 <span style="color: #949494;">18:04:16</span>     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">840.</span> 2025-10-26 <span style="color: #949494;">18:04:16</span>     2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">840.</span> 2025-10-26 <span style="color: #949494;">18:04:16</span>     3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> <span style="text-decoration: underline;">14</span>057. 2025-10-26 <span style="color: #949494;">18:04:17</span>     4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span>  <span style="text-decoration: underline;">5</span>029. 2025-10-26 <span style="color: #949494;">18:04:17</span>     5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span>   227. 2025-10-26 <span style="color: #949494;">18:04:17</span>     6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span>  -<span style="color: #BB0000;">417.</span> 2025-10-26 <span style="color: #949494;">18:04:17</span>     7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span>  -<span style="color: #BB0000;">413.</span> 2025-10-26 <span style="color: #949494;">18:04:17</span>     8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">779.</span> 2025-10-26 <span style="color: #949494;">18:04:18</span>     9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">800.</span> 2025-10-26 <span style="color: #949494;">18:04:18</span>    10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 698 more rows</span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
