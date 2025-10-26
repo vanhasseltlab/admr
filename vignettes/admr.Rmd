@@ -231,7 +231,7 @@ opts <- genopts(
   n = 500,      # Number of individuals
   fo_appr = F,  # Disable first-order approximation used in lower nsim
   omega_expansion = 1,  # Omega expansion factor
-  f = Cpp_predder    # Prediction function we defined earlier
+  f = predder    # Prediction function we defined earlier
 )
 ```
 
