@@ -3,7 +3,7 @@
 log-likelihood of the model given the observed data and current parameter estimates.
 The function handles both raw data and aggregate data (mean and covariance) formats."><meta property="og:description" content="genfitfunc generates a fitting function for optimization that computes the negative
 log-likelihood of the model given the observed data and current parameter estimates.
-The function handles both raw data and aggregate data (mean and covariance) formats."><meta property="og:image" content="https://hiddevandebeek.github.io/admr/logo.png"></head><body>
+The function handles both raw data and aggregate data (mean and covariance) formats."><meta property="og:image" content="https://vanhasseltlab.github.io/admr/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -30,7 +30,7 @@ The function handles both raw data and aggregate data (mean and covariance) form
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://github.com/hiddevandebeek/admr/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/vanhasseltlab/admr/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul></div>
 
 
@@ -39,7 +39,7 @@ The function handles both raw data and aggregate data (mean and covariance) form
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Generate a fitting function for optimization</h1>
-      <small class="dont-index">Source: <a href="https://github.com/hiddevandebeek/admr/blob/master/R/genfitfunc.R" class="external-link"><code>R/genfitfunc.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/vanhasseltlab/admr/blob/master/R/genfitfunc.R" class="external-link"><code>R/genfitfunc.R</code></a></small>
       <div class="d-none name"><code>genfitfunc.Rd</code></div>
     </div>
 
@@ -125,12 +125,25 @@ where:
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Load required libraries</span></span></span>
-<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://hiddevandebeek.github.io/admr">admr</a></span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://vanhasseltlab.github.io/admr">admr</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://nlmixr2.github.io/rxode2/" class="external-link">rxode2</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://nlmixr2.org/" class="external-link">nlmixr2</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyr.tidyverse.org" class="external-link">tidyr</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">mnorm</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Load and prepare data</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">examplomycin</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">examplomycin_wide</span> <span class="op">&lt;-</span> <span class="va">examplomycin</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">EVID</span> <span class="op">!=</span> <span class="fl">101</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">ID</span>, <span class="va">TIME</span>, <span class="va">DV</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_wider.html" class="external-link">pivot_wider</a></span><span class="op">(</span>names_from <span class="op">=</span> <span class="va">TIME</span>, values_from <span class="op">=</span> <span class="va">DV</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Create aggregated data</span></span></span>
+<span class="r-in"><span><span class="va">examplomycin_aggregated</span> <span class="op">&lt;-</span> <span class="va">examplomycin_wide</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu">admr</span><span class="fu">::</span><span class="fu"><a href="meancov.html">meancov</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Define RxODE model</span></span></span>
 <span class="r-in"><span><span class="va">rxModel</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="op">)</span><span class="op">{</span></span></span>
@@ -204,15 +217,11 @@ where:
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Generate objective function for optimization</span></span></span>
-<span class="r-in"><span><span class="va">objfun</span> <span class="op">&lt;-</span> <span class="fu">genfitfunc</span><span class="op">(</span><span class="va">opts</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in genfitfunc(opts):</span> argument "obs" is missing, with no default</span>
+<span class="r-in"><span><span class="va">objfun</span> <span class="op">&lt;-</span> <span class="fu">genfitfunc</span><span class="op">(</span><span class="va">opts</span>, <span class="va">examplomycin_aggregated</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Test the objective function with initial parameters</span></span></span>
-<span class="r-in"><span><span class="va">init_params</span> <span class="op">&lt;-</span> <span class="va">opts</span><span class="op">$</span><span class="va">p</span><span class="op">$</span><span class="va">beta</span></span></span>
+<span class="r-in"><span><span class="va">init_params</span> <span class="op">&lt;-</span> <span class="va">opts</span><span class="op">$</span><span class="va">p</span></span></span>
 <span class="r-in"><span><span class="va">nll</span> <span class="op">&lt;-</span> <span class="fu">objfun</span><span class="op">(</span><span class="va">init_params</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in objfun(init_params):</span> could not find function "objfun"</span>
-<span class="r-in"><span><span class="fu">expect_type</span><span class="op">(</span><span class="va">nll</span>, <span class="st">"double"</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in expect_type(nll, "double"):</span> could not find function "expect_type"</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
@@ -221,7 +230,7 @@ where:
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by H. van de Beek.</p>
+  <p>Developed by H. van de Beek, P.A.J. Välitalo, L.B. Zwep, J.G.C. van Hasselt.</p>
 </div>
 
 <div class="pkgdown-footer-right">

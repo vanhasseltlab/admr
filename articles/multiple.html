@@ -50,7 +50,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json">
 </form></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://github.com/hiddevandebeek/admr/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/vanhasseltlab/admr/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul>
 </div>
 
@@ -66,7 +66,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Combining multiple datasets with admr</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/hiddevandebeek/admr/blob/master/vignettes/multiple.Rmd" class="external-link"><code>vignettes/multiple.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/vanhasseltlab/admr/blob/master/vignettes/multiple.Rmd" class="external-link"><code>vignettes/multiple.Rmd</code></a></small>
       <div class="d-none name"><code>multiple.Rmd</code></div>
     </div>
 
@@ -90,13 +90,14 @@ approach for meta-analysis or model averaging.</p>
 <details><summary>
 Click here
 </summary><div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://hiddevandebeek.github.io/admr">admr</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://vanhasseltlab.github.io/admr">admr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://nlmixr2.github.io/rxode2/" class="external-link">rxode2</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://nlmixr2.org/" class="external-link">nlmixr2</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyr.tidyverse.org" class="external-link">tidyr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">mnorm</span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span>  <span class="co"># For visualization</span></span></code></pre></div>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span>  <span class="co"># For visualization</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-quantities.github.io/units/" class="external-link">units</a></span><span class="op">)</span></span></code></pre></div>
 </details>
 </div>
 <div class="section level3">
@@ -115,7 +116,7 @@ covariance) computed from raw data.</li>
 <strong>Aggregate Data with only means and variance</strong>: Mean
 and variance for each time point (no covariances).</li>
 </ol>
-<p>The vignette <a href="https://hiddevandebeek.github.io/admr/articles/variance.html">Variance-only
+<p>The vignette <a href="https://vanhasseltlab.github.io/admr/articles/variance.html">Variance-only
 based modelling</a> provides more details on the third option.</p>
 <p>Let’s look at the simulated examplomycin dataset, which we’ll use
 throughout this vignette:</p>
@@ -388,14 +389,14 @@ function fits the model using the IR-MC algorithm:</p>
 <span><span class="co">##   17: -1796.485    1.602    2.308    3.399    2.285    0.016   -2.271   -2.111   -2.330   -2.299   -2.502   -3.235</span></span>
 <span><span class="co">## Phase Precision Phase converged at iteration 17.</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 1 Complete: Final NLL = -1796.486, Time Elapsed = 32.86 seconds</span></span>
+<span><span class="co">## Chain 1 Complete: Final NLL = -1796.486, Time Elapsed = 31.17 seconds</span></span>
 <span><span class="co">##  </span></span>
 <span><span class="co">## Phase Wide Search Phase converged at iteration 11.</span></span>
 <span><span class="co">## Phase Focussed Search Phase converged at iteration 16.</span></span>
 <span><span class="co">## Phase Fine-Tuning Phase converged at iteration 21.</span></span>
 <span><span class="co">## Phase Precision Phase converged at iteration 23.</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 2 Complete: Final NLL = -1796.485, Time Elapsed = 36.11 seconds</span></span>
+<span><span class="co">## Chain 2 Complete: Final NLL = -1796.485, Time Elapsed = 34.45 seconds</span></span>
 <span><span class="co">## </span></span></code></pre>
 </div>
 </div>
@@ -419,10 +420,10 @@ fit:</p>
 <span><span class="co">## Condition#(Cor): 276.77</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## -- Timing Information --</span></span>
-<span><span class="co">##      Best Chain: 32.8610 seconds</span></span>
-<span><span class="co">##      All Chains: 68.9694 seconds</span></span>
-<span><span class="co">##      Covariance: 45.3721 seconds</span></span>
-<span><span class="co">##         Elapsed: 114.34 seconds</span></span>
+<span><span class="co">##      Best Chain: 31.1699 seconds</span></span>
+<span><span class="co">##      All Chains: 65.6223 seconds</span></span>
+<span><span class="co">##      Covariance: 39.8327 seconds</span></span>
+<span><span class="co">##         Elapsed: 105.45 seconds</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## -- Population Parameters --</span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 6 × 6</span></span></span>
@@ -706,7 +707,7 @@ vignettes.</p>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by H. van de Beek.</p>
+  <p>Developed by H. van de Beek, P.A.J. Välitalo, L.B. Zwep, J.G.C. van Hasselt.</p>
 </div>
 
 <div class="pkgdown-footer-right">

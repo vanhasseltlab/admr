@@ -5,7 +5,7 @@ Monte Carlo samples and updates the parameter values. This function is used to c
 performance of different implementations of aggregate data modeling."><meta property="og:description" content="fitMC implements the bobyqa algorithm for parameter estimation of aggregate data models,
 iterating over maximum likelihood updates with Monte Carlo updates. Each iteration creates new
 Monte Carlo samples and updates the parameter values. This function is used to compare the
-performance of different implementations of aggregate data modeling."><meta property="og:image" content="https://hiddevandebeek.github.io/admr/logo.png"></head><body>
+performance of different implementations of aggregate data modeling."><meta property="og:image" content="https://vanhasseltlab.github.io/admr/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -32,7 +32,7 @@ performance of different implementations of aggregate data modeling."><meta prop
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://github.com/hiddevandebeek/admr/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/vanhasseltlab/admr/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul></div>
 
 
@@ -41,7 +41,7 @@ performance of different implementations of aggregate data modeling."><meta prop
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Fit aggregate data using the bobyqa algorithm with Monte Carlo updates</h1>
-      <small class="dont-index">Source: <a href="https://github.com/hiddevandebeek/admr/blob/master/R/fitMC.R" class="external-link"><code>R/fitMC.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/vanhasseltlab/admr/blob/master/R/fitMC.R" class="external-link"><code>R/fitMC.R</code></a></small>
       <div class="d-none name"><code>fitMC.Rd</code></div>
     </div>
 
@@ -128,7 +128,7 @@ allowing flexibility in how the observed data is structured.</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Load required libraries</span></span></span>
-<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://hiddevandebeek.github.io/admr">admr</a></span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://vanhasseltlab.github.io/admr">admr</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://nlmixr2.github.io/rxode2/" class="external-link">rxode2</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://nlmixr2.org/" class="external-link">nlmixr2</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span></span>
@@ -226,7 +226,7 @@ allowing flexibility in how the observed data is structured.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 650 - NLL: -1845.29 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Iteration: 700 - NLL: -1845.29 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1 Complete: Final NLL = -1845.290, Time Elapsed = 148.70 seconds</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1 Complete: Final NLL = -1845.290, Time Elapsed = 129.77 seconds</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  </span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> -- FitIRMC Summary --</span>
@@ -239,10 +239,10 @@ allowing flexibility in how the observed data is structured.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Condition#(Cor): 363.36</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> -- Timing Information --</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Best Chain: 148.7027 seconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      All Chains: 148.7054 seconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Covariance: 37.4542 seconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         Elapsed: 186.16 seconds</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Best Chain: 129.7655 seconds</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      All Chains: 129.7682 seconds</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Covariance: 33.5994 seconds</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         Elapsed: 163.37 seconds</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> -- Population Parameters --</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 6 × 6</span></span>
@@ -278,7 +278,7 @@ allowing flexibility in how the observed data is structured.</p>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by H. van de Beek.</p>
+  <p>Developed by H. van de Beek, P.A.J. Välitalo, L.B. Zwep, J.G.C. van Hasselt.</p>
 </div>
 
 <div class="pkgdown-footer-right">

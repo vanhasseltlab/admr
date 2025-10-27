@@ -50,7 +50,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json">
 </form></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://github.com/hiddevandebeek/admr/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/vanhasseltlab/admr/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul>
 </div>
 
@@ -66,7 +66,7 @@
       <img src="../logo.png" class="logo" alt=""><h1>Variance-only based modelling with admr</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/hiddevandebeek/admr/blob/master/vignettes/variance.Rmd" class="external-link"><code>vignettes/variance.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/vanhasseltlab/admr/blob/master/vignettes/variance.Rmd" class="external-link"><code>vignettes/variance.Rmd</code></a></small>
       <div class="d-none name"><code>variance.Rmd</code></div>
     </div>
 
@@ -94,13 +94,14 @@ importance sampling.</p>
 <details><summary>
 Click here
 </summary><div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://hiddevandebeek.github.io/admr">admr</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://vanhasseltlab.github.io/admr">admr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://nlmixr2.github.io/rxode2/" class="external-link">rxode2</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://nlmixr2.org/" class="external-link">nlmixr2</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyr.tidyverse.org" class="external-link">tidyr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">mnorm</span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span>  <span class="co"># For visualization</span></span></code></pre></div>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span>  <span class="co"># For visualization</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-quantities.github.io/units/" class="external-link">units</a></span><span class="op">)</span></span></code></pre></div>
 </details>
 </div>
 <div class="section level3">
@@ -413,17 +414,17 @@ algorithm:</p>
 <span><span class="co">##   16: -1266.456    1.598    2.054    3.455    2.173   -0.242   -2.136   -2.669   -2.388   -5.480   -2.019   -3.358</span></span>
 <span><span class="co">## Phase Precision Phase converged at iteration 16.</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 1 Complete: Final NLL = -1266.456, Time Elapsed = 32.88 seconds</span></span>
+<span><span class="co">## Chain 1 Complete: Final NLL = -1266.456, Time Elapsed = 32.16 seconds</span></span>
 <span><span class="co">##  </span></span>
 <span><span class="co">## Phase Focussed Search Phase converged at iteration 120.</span></span>
 <span><span class="co">## Phase Fine-Tuning Phase converged at iteration 121.</span></span>
 <span><span class="co">## Phase Precision Phase converged at iteration 143.</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 2 Complete: Final NLL = -1266.456, Time Elapsed = 184.82 seconds</span></span>
+<span><span class="co">## Chain 2 Complete: Final NLL = -1266.456, Time Elapsed = 175.35 seconds</span></span>
 <span><span class="co">##  </span></span>
 <span><span class="co">## Phase Wide Search Phase converged at iteration 10.</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 3 Complete: Final NLL = -1266.107, Time Elapsed = 250.73 seconds</span></span>
+<span><span class="co">## Chain 3 Complete: Final NLL = -1266.107, Time Elapsed = 247.95 seconds</span></span>
 <span><span class="co">## </span></span></code></pre>
 <div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit.covar</span> <span class="op">&lt;-</span> <span class="fu">admr</span><span class="fu">::</span><span class="fu"><a href="../reference/fitIRMC.html">fitIRMC</a></span><span class="op">(</span></span>
@@ -465,21 +466,21 @@ algorithm:</p>
 <span><span class="co">##   17: -1845.354    1.601    2.318    3.401    2.285    0.027   -2.282   -2.216   -2.339   -2.236   -2.389   -3.235</span></span>
 <span><span class="co">## Phase Precision Phase converged at iteration 17.</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 1 Complete: Final NLL = -1845.355, Time Elapsed = 17.56 seconds</span></span>
+<span><span class="co">## Chain 1 Complete: Final NLL = -1845.355, Time Elapsed = 16.27 seconds</span></span>
 <span><span class="co">##  </span></span>
 <span><span class="co">## Phase Wide Search Phase converged at iteration 13.</span></span>
 <span><span class="co">## Phase Focussed Search Phase converged at iteration 15.</span></span>
 <span><span class="co">## Phase Fine-Tuning Phase converged at iteration 16.</span></span>
 <span><span class="co">## Phase Precision Phase converged at iteration 18.</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 2 Complete: Final NLL = -1845.354, Time Elapsed = 23.20 seconds</span></span>
+<span><span class="co">## Chain 2 Complete: Final NLL = -1845.354, Time Elapsed = 21.28 seconds</span></span>
 <span><span class="co">##  </span></span>
 <span><span class="co">## Phase Wide Search Phase converged at iteration 8.</span></span>
 <span><span class="co">## Phase Focussed Search Phase converged at iteration 10.</span></span>
 <span><span class="co">## Phase Fine-Tuning Phase converged at iteration 11.</span></span>
 <span><span class="co">## Phase Precision Phase converged at iteration 13.</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 3 Complete: Final NLL = -1845.354, Time Elapsed = 15.75 seconds</span></span>
+<span><span class="co">## Chain 3 Complete: Final NLL = -1845.354, Time Elapsed = 14.58 seconds</span></span>
 <span><span class="co">## </span></span></code></pre>
 </div>
 </div>
@@ -503,10 +504,10 @@ fit:</p>
 <span><span class="co">## Condition#(Cor): 695.66</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## -- Timing Information --</span></span>
-<span><span class="co">##      Best Chain: 32.8848 seconds</span></span>
-<span><span class="co">##      All Chains: 468.4331 seconds</span></span>
-<span><span class="co">##      Covariance: 29.1293 seconds</span></span>
-<span><span class="co">##         Elapsed: 497.56 seconds</span></span>
+<span><span class="co">##      Best Chain: 32.1625 seconds</span></span>
+<span><span class="co">##      All Chains: 455.4600 seconds</span></span>
+<span><span class="co">##      Covariance: 23.5891 seconds</span></span>
+<span><span class="co">##         Elapsed: 479.05 seconds</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## -- Population Parameters --</span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 6 × 6</span></span></span>
@@ -545,10 +546,10 @@ fit:</p>
 <span><span class="co">## Condition#(Cor): 216.91</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## -- Timing Information --</span></span>
-<span><span class="co">##      Best Chain: 17.5598 seconds</span></span>
-<span><span class="co">##      All Chains: 56.5131 seconds</span></span>
-<span><span class="co">##      Covariance: 28.9625 seconds</span></span>
-<span><span class="co">##         Elapsed: 85.48 seconds</span></span>
+<span><span class="co">##      Best Chain: 16.2714 seconds</span></span>
+<span><span class="co">##      All Chains: 52.1337 seconds</span></span>
+<span><span class="co">##      Covariance: 23.3626 seconds</span></span>
+<span><span class="co">##         Elapsed: 75.50 seconds</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## -- Population Parameters --</span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 6 × 6</span></span></span>
@@ -887,7 +888,7 @@ vignettes.</p>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by H. van de Beek.</p>
+  <p>Developed by H. van de Beek, P.A.J. Välitalo, L.B. Zwep, J.G.C. van Hasselt.</p>
 </div>
 
 <div class="pkgdown-footer-right">

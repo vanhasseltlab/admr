@@ -5,7 +5,7 @@ updates. This function uses nloptr instead of optimx for optimization and includ
 features like multiple chains and phase-based optimization."><meta property="og:description" content="fitIRMC implements the Iterative Reweighting (IRMC) algorithm for parameter estimation of
 aggregate data models, iterating over maximum likelihood updates with weighted Monte Carlo
 updates. This function uses nloptr instead of optimx for optimization and includes additional
-features like multiple chains and phase-based optimization."><meta property="og:image" content="https://hiddevandebeek.github.io/admr/logo.png"></head><body>
+features like multiple chains and phase-based optimization."><meta property="og:image" content="https://vanhasseltlab.github.io/admr/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -32,7 +32,7 @@ features like multiple chains and phase-based optimization."><meta property="og:
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://github.com/hiddevandebeek/admr/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/vanhasseltlab/admr/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul></div>
 
 
@@ -41,7 +41,7 @@ features like multiple chains and phase-based optimization."><meta property="og:
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Fit aggregate data using Iterative Reweighting with Monte Carlo updates</h1>
-      <small class="dont-index">Source: <a href="https://github.com/hiddevandebeek/admr/blob/master/R/fitIRMC.R" class="external-link"><code>R/fitIRMC.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/vanhasseltlab/admr/blob/master/R/fitIRMC.R" class="external-link"><code>R/fitIRMC.R</code></a></small>
       <div class="d-none name"><code>fitIRMC.Rd</code></div>
     </div>
 
@@ -143,9 +143,9 @@ settings. The algorithm can automatically skip phases if the optimization is not
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Load required libraries</span></span></span>
-<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://hiddevandebeek.github.io/admr">admr</a></span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://vanhasseltlab.github.io/admr">admr</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://nlmixr2.github.io/rxode2/" class="external-link">rxode2</a></span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> rxode2 4.1.1 using 1 threads (see ?getRxThreads)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> rxode2 4.1.1 using 2 threads (see ?getRxThreads)</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   no cache: create with `rxCreateCache()`</span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://nlmixr2.org/" class="external-link">nlmixr2</a></span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> ── <span style="font-weight: bold;">Attaching packages</span> ───────────────────────────────────────── nlmixr2 4.0.1 ──</span>
@@ -291,7 +291,7 @@ settings. The algorithm can automatically skip phases if the optimization is not
 <span class="r-out co"><span class="r-pr">#&gt;</span>   25: -1845.319    1.601    2.314    3.401    2.285    0.026   -2.273   -2.156   -2.333   -2.230   -2.451   -3.235</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Phase Precision Phase converged at iteration 25.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1 Complete: Final NLL = -1845.327, Time Elapsed = 14.56 seconds</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Chain 1 Complete: Final NLL = -1845.327, Time Elapsed = 13.56 seconds</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  </span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> -- FitIRMC Summary --</span>
@@ -304,10 +304,10 @@ settings. The algorithm can automatically skip phases if the optimization is not
 <span class="r-out co"><span class="r-pr">#&gt;</span> Condition#(Cor): 162.82</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> -- Timing Information --</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Best Chain: 14.5581 seconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      All Chains: 14.5610 seconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      Covariance: 18.8880 seconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         Elapsed: 33.45 seconds</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Best Chain: 13.5647 seconds</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      All Chains: 13.5675 seconds</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Covariance: 14.3362 seconds</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         Elapsed: 27.90 seconds</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> -- Population Parameters --</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 6 × 6</span></span>
@@ -343,7 +343,7 @@ settings. The algorithm can automatically skip phases if the optimization is not
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by H. van de Beek.</p>
+  <p>Developed by H. van de Beek, P.A.J. Välitalo, L.B. Zwep, J.G.C. van Hasselt.</p>
 </div>
 
 <div class="pkgdown-footer-right">
