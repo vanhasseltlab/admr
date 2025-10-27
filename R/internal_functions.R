@@ -336,7 +336,7 @@ p_transform_mat <- function(x) { # Transforms a matrix (typically representing v
             diag(Omega)[diag(Omega)==0] <- 1e-10
           biseqt %*% chol(Omega)
         }
-        c(jacobiann_richardson(gen_bi_here, 0))
+        c(jacobiann_vec_fast(gen_bi_here, 0))
       }
     })
   }

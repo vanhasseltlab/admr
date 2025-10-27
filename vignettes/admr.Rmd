@@ -42,6 +42,7 @@ library(tidyr)
 library(mnorm)
 library(ggplot2)  # For visualization
 library(randtoolbox)
+library(units)
 ```
 </details>
 
@@ -53,7 +54,7 @@ The `admr` package works with two types of data formats:
 2.  **Aggregate Data**: Summary statistics (mean and covariance) computed from raw data.
 3.  **Aggregate Data with only means and variance**: Mean and variance for each time point (no covariances).
 
-The vignette [Variance-only based modelling](https://hiddevandebeek.github.io/admr/articles/variance.html) provides more details on the third option.
+The vignette [Variance-only based modelling](https://vanhasseltlab.github.io/admr/articles/variance.html) provides more details on the third option.
 
 Let's look at the examplomycin dataset, which we'll use throughout this vignette:
 

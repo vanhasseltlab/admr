@@ -14,7 +14,7 @@
 #' @keywords internal
 "_PACKAGE"
 ## usethis namespace: start
-#' @importFrom stats coef cov.wt lm D qnorm cov2cor na.omit rnorm weights optimize
+#' @importFrom stats coef cov.wt lm D qnorm cov2cor na.omit rnorm weights optimize median
 #' @importFrom utils relist tail head
 #' @importFrom purrr map map2 map_dbl map_lgl
 #' @importFrom stringr str_extract

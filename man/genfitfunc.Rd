@@ -100,6 +100,19 @@ library(dplyr)
 library(tidyr)
 library(mnorm)
 
+
+# Load and prepare data
+data(examplomycin)
+examplomycin_wide <- examplomycin \%>\%
+  filter(EVID != 101) \%>\%
+  dplyr::select(ID, TIME, DV) \%>\%
+  pivot_wider(names_from = TIME, values_from = DV) \%>\%
+  dplyr::select(-c(1))
+
+# Create aggregated data
+examplomycin_aggregated <- examplomycin_wide \%>\%
+  admr::meancov()
+
 # Define RxODE model
 rxModel <- function(){
 model({
@@ -166,11 +179,10 @@ opts <- genopts(
 )
 
 # Generate objective function for optimization
-objfun <- genfitfunc(opts)
+objfun <- genfitfunc(opts, examplomycin_aggregated)
 
 # Test the objective function with initial parameters
-init_params <- opts$p$beta
+init_params <- opts$p
 nll <- objfun(init_params)
-expect_type(nll, "double")
 
 }

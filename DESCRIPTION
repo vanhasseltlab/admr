@@ -1,44 +1,50 @@
 Package: admr
 Type: Package
-Title: Aggregate data modelling in R
+Title: Aggregate Data Modelling in R
 Version: 0.1.0
-Author: H. van de Beek, P.A.J. Välitalo, L.B. Zwep, J.G.C van Hasselt
-Maintainer: H. van de Beek <h.van.de.beek@lacdr.leidenuniv.nl>
-Description: Aggregate data modelling in R.
+Authors@R: 
+    c(
+        person("H.", "van de Beek", email = "h.van.de.beek@lacdr.leidenuniv.nl", role = c("aut", "cre")),
+        person("P.A.J.", "Välitalo", role = "aut"),
+        person("L.B.", "Zwep", role = "aut"),
+        person("J.G.C.", "van Hasselt", role = "aut")
+    )
+Description: Provides tools for aggregate data modelling and simulation using pharmacometric models in R.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Imports:
-        purrr,
-        calculus,
-        rxode2,
-        MASS,
-        nlmixr2,
-        data.table,
-        dplyr,
-        randtoolbox,
-        optimx,
-        mnorm,
-        utils,
-        stats,
-        tibble,
-        stringr,
-        magrittr,
-        readr,
-        nloptr,
-        numDeriv,
-        ggplot2,
-        usethis,
-        tidyr
-Suggests: 
+    purrr,
+    calculus,
+    randtoolbox,
+    optimx,
+    mnorm,
+    utils,
+    stats,
+    tibble,
+    stringr,
+    magrittr,
+    readr,
+    nloptr,
+    numDeriv,
+    ggplot2
+Suggests:
+    MASS,
+    data.table,
+    dplyr,
+    nlmixr2,
+    rxode2,
+    tidyr,
+    units,
+    usethis,
     knitr,
     rmarkdown,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr
-URL: https://hiddevandebeek.github.io/admr, https://hiddevandebeek.github.io/admr/
-BugReports: https://github.com/hiddevandebeek/admr/issues
+URL: https://vanhasseltlab.github.io/admr, https://vanhasseltlab.github.io/admr/
+BugReports: https://github.com/vanhasseltlab/admr/issues
 Depends: 
-    R (>= 3.5)
+    R (>= 4.1.0)

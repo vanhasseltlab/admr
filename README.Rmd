@@ -14,6 +14,7 @@ knitr::opts_chunk$set(
 ```
 
 <!-- badges: start -->
+
 <!-- badges: end -->
 
 admr (Aggregate Data Modeling in R) is an open-source R package designed to facilitate pharmacometric modeling using summary-level data. It enables users to work with aggregate data, such as mean observations and variance-covariance matrices, to fit pharmacokinetic and pharmacodynamic (PK/PD) models efficiently. This package implements a newly developed Expectation-Maximization (EM) algorithm to enhance computational performance and provides tools for advanced modeling applications.
@@ -22,24 +23,24 @@ admr (Aggregate Data Modeling in R) is an open-source R package designed to faci
 
 The `admr` package provides a comprehensive framework for aggregate data modeling in pharmacometrics, offering several key advantages:
 
-- **Efficient Parameter Estimation**: Uses the Iterative Reweighting Monte Carlo (IRMC) algorithm for robust and fast parameter estimation.
-- **Flexible Data Integration**: Works with both individual-level and aggregate data, making it ideal for meta-analyses and literature-based modeling.
-- **Advanced Modeling Features**: Supports complex PK/PD models with various error structures and parameter transformations.
-- **Comprehensive Diagnostics**: Built-in tools for model assessment, convergence checking, and parameter stability analysis.
+-   **Efficient Parameter Estimation**: Uses the Iterative Reweighting Monte Carlo (IRMC) algorithm for robust and fast parameter estimation.
+-   **Flexible Data Integration**: Works with both individual-level and aggregate data, making it ideal for meta-analyses and literature-based modeling.
+-   **Advanced Modeling Features**: Supports complex PK/PD models with various error structures and parameter transformations.
+-   **Comprehensive Diagnostics**: Built-in tools for model assessment, convergence checking, and parameter stability analysis.
 
 ## Key Features
 
-- **Efficient Model Fitting**: Uses iterative reweighted Monte Carlo (IRMC) for robust parameter estimation, improving speed and scalability compared to traditional Monte Carlo methods.
+-   **Efficient Model Fitting**: Uses iterative reweighted Monte Carlo (IRMC) for robust parameter estimation, improving speed and scalability compared to traditional Monte Carlo methods.
 
-- **Flexible Data Formats**: Supports both raw and aggregate data formats, allowing for the integration of summary-level data from diverse sources, including published literature and simulated models.
+-   **Flexible Data Formats**: Supports both raw and aggregate data formats, allowing for the integration of summary-level data from diverse sources, including published literature and simulated models.
 
-- **Comprehensive Diagnostics**: Built-in tools for model assessment, convergence checking, and parameter stability analysis.
+-   **Comprehensive Diagnostics**: Built-in tools for model assessment, convergence checking, and parameter stability analysis.
 
-- **Meta-Analysis Support**: Facilitates model-based meta-analyses by enabling the combination of summary data across studies.
+-   **Meta-Analysis Support**: Facilitates model-based meta-analyses by enabling the combination of summary data across studies.
 
-- **R Integration**: Fully compatible with R, leveraging popular pharmacometric modeling libraries like rxode2.
+-   **R Integration**: Fully compatible with R, leveraging popular pharmacometric modeling libraries like rxode2.
 
-- **Open-Source**: Developed for accessibility and ease of use by the pharmacometric community.
+-   **Open-Source**: Developed for accessibility and ease of use by the pharmacometric community.
 
 ## Installation
 
@@ -47,9 +48,9 @@ This is an *R* package. [*R*](https://www.r-project.org/) is required, [*RStudio
 
 You can install the development version of admr from [GitHub](https://github.com/) with:
 
-``` r
+```r
 # install.packages("devtools")
-devtools::install_github("hiddevandebeek/admr")
+devtools::install_github("/admr")
 ```
 
 ## Quick Start
@@ -129,33 +130,33 @@ print(result)
 
 ## Documentation
 
-The package documentation is available at [https://hiddevandebeek.github.io/admr/](https://hiddevandebeek.github.io/admr/). Key documentation sections include:
+The package documentation is available at <https://vanhasseltlab.github.io/admr/>. Key documentation sections include:
 
-- [Getting Started](https://hiddevandebeek.github.io/admr/articles/getting_started.html)
-- [Other vignettes](https://hiddevandebeek.github.io/admr/articles/)
-- [Function Reference](https://hiddevandebeek.github.io/admr/reference/index.html)
-- [Examples](https://hiddevandebeek.github.io/admr/articles/examples.html)
+-   [Getting Started](https://vanhasseltlab.github.io/admr/articles/getting_started.html)
+-   [Other vignettes](https://vanhasseltlab.github.io/admr/articles/)
+-   [Function Reference](https://vanhasseltlab.github.io/admr/reference/index.html)
+-   [Examples](https://vanhasseltlab.github.io/admr/articles/examples.html)
 
 ## Use Cases
 
 The `admr` package is particularly useful for:
 
-- **Meta-Analysis**: Combining data from multiple studies where individual-level data is not available
-- **Literature-Based Modeling**: Fitting models to published summary statistics
-- **Simulation Studies**: Evaluating model performance with aggregate data
-- **Population PK/PD**: Fitting complex models to summary-level data
+-   **Meta-Analysis**: Combining data from multiple studies where individual-level data is not available
+-   **Literature-Based Modeling**: Fitting models to published summary statistics
+-   **Simulation Studies**: Evaluating model performance with aggregate data
+-   **Population PK/PD**: Fitting complex models to summary-level data
 
 ## Getting Help
 
-- Check the [documentation](https://hiddevandebeek.github.io/admr/)
-- Browse [GitHub issues](https://github.com/hiddevandebeek/admr/issues)
-- Create a new issue with a reproducible example
+-   Check the [documentation](https://vanhasseltlab.github.io/admr/)
+-   Browse [GitHub issues](https://github.com/vanhasseltlab/admr/issues)
+-   Create a new issue with a reproducible example
 
 ## Citation
 
 If you use `admr` in your research, please cite it as:
 
-```r
+``` r
 citation("admr")
 ```
 

@@ -11,9 +11,9 @@ A novel method to aggregate data and model it using a non-linear estimation tech
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://hiddevandebeek.github.io/admr}
-  \item \url{https://hiddevandebeek.github.io/admr/}
-  \item Report bugs at \url{https://github.com/hiddevandebeek/admr/issues}
+  \item \url{https://vanhasseltlab.github.io/admr}
+  \item \url{https://vanhasseltlab.github.io/admr/}
+  \item Report bugs at \url{https://github.com/vanhasseltlab/admr/issues}
 }
 
 }

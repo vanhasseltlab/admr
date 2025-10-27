@@ -1,3 +1,3 @@
 # admr 0.1.0
 
-* Initial CRAN submission.
+* Initial Github submission.

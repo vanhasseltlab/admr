@@ -91,7 +91,7 @@ test_that("fitIRMC basic functionality works with examplomycin data", {
   expect_s3_class(result, "fit_admr_result")
   expect_named(result, c("final_params", "transformed_params", "param_df",
                         "covariance_matrix", "convergence_info", "diagnostics",
-                        "chain_results", "iteration_history", "data"))
+                        "chain_results", "iteration_history", "data", "settings"))
 
   # Check parameter estimates are reasonable
   expect_true(all(!is.na(result$final_params)))
@@ -110,7 +110,7 @@ test_that("fitIRMC handles multiple chains correctly with examplomycin data", {
     obs = test_data$obs,
     maxiter = 10,
     chains = 3,
-    pertubation = 0.1
+    perturbation = 0.1
   )
 
   # Check chain results

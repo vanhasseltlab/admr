@@ -126,7 +126,6 @@
 #'
 #' # Generate a dataset with 100 individuals
 #' dataset <- gendataset(opts, n = 100)
-#' expect_named(dataset, c("time", "value", "id"))
 #'
 #' @export
 gendataset <- function(opts, seed = 1, reserr = TRUE, nlmixrform = FALSE) {

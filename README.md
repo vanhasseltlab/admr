@@ -62,7 +62,7 @@ You can install the development version of admr from
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("hiddevandebeek/admr")
+devtools::install_github("/admr")
 ```
 
 ## Quick Start
@@ -192,14 +192,14 @@ result <- fitIRMC(opts = opts, obs = examplomycin_aggregated, chains = 2)
 #>   14: -1845.280    1.601    2.307    3.405    2.285    0.018   -2.286   -2.201   -2.343   -2.265   -2.410   -3.235
 #> Phase Precision Phase converged at iteration 14.
 #> 
-#> Chain 1 Complete: Final NLL = -1845.280, Time Elapsed = 5.38 seconds
+#> Chain 1 Complete: Final NLL = -1845.280, Time Elapsed = 5.34 seconds
 #>  
 #> Phase Wide Search Phase converged at iteration 6.
 #> Phase Focussed Search Phase converged at iteration 12.
 #> Phase Fine-Tuning Phase converged at iteration 14.
 #> Phase Precision Phase converged at iteration 16.
 #> 
-#> Chain 2 Complete: Final NLL = -1845.281, Time Elapsed = 7.06 seconds
+#> Chain 2 Complete: Final NLL = -1845.281, Time Elapsed = 6.99 seconds
 #> 
 print(result)
 #> -- FitIRMC Summary --
@@ -212,10 +212,10 @@ print(result)
 #> Condition#(Cor): 203.03
 #> 
 #> -- Timing Information --
-#>      Best Chain: 7.0634 seconds
-#>      All Chains: 12.4428 seconds
-#>      Covariance: 29.8336 seconds
-#>         Elapsed: 42.28 seconds
+#>      Best Chain: 6.9939 seconds
+#>      All Chains: 12.3353 seconds
+#>      Covariance: 30.2940 seconds
+#>         Elapsed: 42.63 seconds
 #> 
 #> -- Population Parameters --
 #> # A tibble: 6 × 6
@@ -247,15 +247,15 @@ print(result)
 ## Documentation
 
 The package documentation is available at
-<https://hiddevandebeek.github.io/admr/>. Key documentation sections
+<https://vanhasseltlab.github.io/admr/>. Key documentation sections
 include:
 
 - [Getting
-  Started](https://hiddevandebeek.github.io/admr/articles/getting_started.html)
-- [Other vignettes](https://hiddevandebeek.github.io/admr/articles/)
+  Started](https://vanhasseltlab.github.io/admr/articles/getting_started.html)
+- [Other vignettes](https://vanhasseltlab.github.io/admr/articles/)
 - [Function
-  Reference](https://hiddevandebeek.github.io/admr/reference/index.html)
-- [Examples](https://hiddevandebeek.github.io/admr/articles/examples.html)
+  Reference](https://vanhasseltlab.github.io/admr/reference/index.html)
+- [Examples](https://vanhasseltlab.github.io/admr/articles/examples.html)
 
 ## Use Cases
 
@@ -271,8 +271,8 @@ The `admr` package is particularly useful for:
 
 ## Getting Help
 
-- Check the [documentation](https://hiddevandebeek.github.io/admr/)
-- Browse [GitHub issues](https://github.com/hiddevandebeek/admr/issues)
+- Check the [documentation](https://vanhasseltlab.github.io/admr/)
+- Browse [GitHub issues](https://github.com/vanhasseltlab/admr/issues)
 - Create a new issue with a reproducible example
 
 ## Citation
@@ -285,5 +285,5 @@ citation("admr")
 
 ## License
 
-This project is licensed under the GPL-2 License - see the
-[LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the
+[LICENSE](LICENSE.md) file for details.

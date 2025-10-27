@@ -39,6 +39,7 @@
 #'                 multivariate normal density.
 #' @param g Function to transform population parameters to individual parameters. Default is
 #'          exponential transformation.
+#' @param no_cov Logical indicating whether to ignore covariance in the error model. Default is FALSE.
 #'
 #' @returns A list containing:
 #' \itemize{
@@ -63,6 +64,7 @@
 #'   \item `d_g_d_bi`: Derivative of g with respect to random effects
 #'   \item `d_bi_d_omega`: Derivative of random effects with respect to Omega
 #'   \item `d_omega_d_Omega`: Derivative of transformed Omega with respect to untransformed
+#'   \item `no_cov`: Logical indicating whether to ignore covariance
 #' }
 #'
 #' @details
