@@ -62,7 +62,7 @@ You can install the development version of admr from
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("/admr")
+devtools::install_github("vanhasseltlab/admr")
 ```
 
 ## Quick Start
