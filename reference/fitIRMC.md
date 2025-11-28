@@ -323,7 +323,7 @@ result <- fitIRMC(opts, examplomycin_aggregated)
 #>   83: -1786.108    1.635    2.367    2.391    3.316    0.067   -2.363  -27.130  -19.068   -2.041   -1.604   -3.143
 #>   84: -1786.116    1.634    2.367    2.391    3.315    0.066   -2.363  -27.139  -19.068   -2.041   -1.604   -3.143
 #> 
-#> Chain 1 Complete: Final NLL = -1786.124, Time Elapsed = 92.85 seconds
+#> Chain 1 Complete: Final NLL = -1786.124, Time Elapsed = 90.18 seconds
 #>  
 print(result)
 #> -- FitIRMC Summary --
@@ -336,10 +336,10 @@ print(result)
 #> Condition#(Cor): 35.43
 #> 
 #> -- Timing Information --
-#>      Best Chain: 92.8549 seconds
-#>      All Chains: 92.8574 seconds
-#>      Covariance: 13.4225 seconds
-#>         Elapsed: 106.28 seconds
+#>      Best Chain: 90.1788 seconds
+#>      All Chains: 90.1811 seconds
+#>      Covariance: 13.0886 seconds
+#>         Elapsed: 103.27 seconds
 #> 
 #> -- Population Parameters --
 #> # A tibble: 6 × 6
