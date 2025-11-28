@@ -231,7 +231,8 @@ fit.admr <- fitIRMC(
   obs = examplomycin_aggregated,
   chains = 2,  # Number of parallel chains
   maxiter = 2000,  # Maximum iterations
-  single_dataframe = FALSE  # Use separate data frames for each dataset
+  single_dataframe = FALSE,  # Use separate data frames for each dataset
+  use_grad = TRUE  
 )
 ```
 
@@ -347,7 +348,7 @@ rxModel_multiple <- rxModel_multiple$simulationModel
 
 Now that we have defined both models, we can simulate the dosing regimen and plot the results:
 ```{r}
-time_points <- seq(0, 12, by = 0.1)  # Dense time points for smooth curves
+time_points <- seq(0, 12, by = 0.05)  # Dense time points for smooth curves
 ev <- eventTable(amount.units="mg", time.units="hours")
 ev$add.dosing(dose = 100, nbr.doses = 2, dosing.interval = 6)
 ev$add.sampling(time_points)

@@ -24,6 +24,7 @@
 #' @param perturbation Perturbation factor for the initial parameter values of each chain.
 #'                    Default is 0.1.
 #' @param seed Random seed for reproducibility. Default is 1.
+#' @param use_grad Logical indicating whether to use gradient information in optimization.
 #'
 #' @returns An object of class `fit_admr_result` containing:
 #' \itemize{
@@ -132,7 +133,7 @@
 #' @export
 fitIRMC <- function(opts, obs, maxiter = 100, convcrit_nll = 1e-05,
                     single_dataframe = TRUE, phase_fractions = c(0.2, 0.4, 0.2, 0.2),
-                    max_worse_iterations = 10, chains = 1, perturbation = 0.1, seed = 1) {
+                    max_worse_iterations = 10, chains = 1, perturbation = 0.1, seed = 1, use_grad = FALSE) {
 
   # Set random seed for reproducibility
   set.seed(seed)
@@ -166,7 +167,8 @@ fitIRMC <- function(opts, obs, maxiter = 100, convcrit_nll = 1e-05,
       convcrit_nll = convcrit_nll,
       max_worse_iterations = max_worse_iterations,
       perturbation = perturbation,
-      nomap = nomap
+      nomap = nomap,
+      use_grad = use_grad
     )
   }
 

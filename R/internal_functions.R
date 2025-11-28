@@ -38,63 +38,36 @@ derivtransfunchooser <- function(fs) { # Returns appropriate back-transformation
   }
 
 #' @noRd
-foceapprEV_single <- function(opts,bi,biseq # Uses the First-Order Conditional Estimation (FOCE) method to approximate expected values for a single individual.
-) {
-  if (missing(bi)) bi <- matrix(0,1,ncol(opts$p$Omega))
-  theta_i <- g_iter(opts,bi)
-  Eind <- opts$f(opts$time,theta_i)
-  Etyp <- opts$f(opts$time,opts$p$beta)
-  d_f_d_bi <- jacobiann_vec_fast(function(et) opts$f(opts$time,g_iter(opts,et)),bi)
+foceapprEV_single <- function(opts, bi, biseq) {
+  if (missing(bi)) bi <- matrix(0, 1, ncol(opts$p$Omega))
+  theta_i <- g_iter(opts, bi)
+  Eind <- opts$f(opts$time, theta_i)
+  Etyp <- opts$f(opts$time, opts$p$beta)
 
-  E <- t(c(Eind)-d_f_d_bi %*% t(bi))
-  V <- d_f_d_bi %*% opts$p$Omega %*% t(d_f_d_bi)
-  if (opts$interact) V <- opts$h(list(V=V,E=Eind),opts$p)$V else V <- opts$h(list(V=V,E=Etyp),opts$p)$V
-  res <- list(E=E,V=V,Etyp=Etyp,Eind=Eind,d_f_d_bi=d_f_d_bi,weights=weights)
-  res
+  d_f_d_bi <- jacobiann_vec_fast_cpp(function(et) opts$f(opts$time, g_iter(opts, et)), bi)
+
+  E <- t(c(Eind) - d_f_d_bi %*% t(bi))
+  V <- compute_variance_cpp(d_f_d_bi, opts$p$Omega)
+
+  if (opts$interact) {
+    V <- opts$h(list(V = V, E = Eind), opts$p)$V
+  } else {
+    V <- opts$h(list(V = V, E = Etyp), opts$p)$V
+  }
+
+  list(E = E, V = V, Etyp = Etyp, Eind = Eind, d_f_d_bi = d_f_d_bi)
 }
 
-jacobiann_vec_fast <- function(f, bi, eps = 1e-8) {
-  bi <- as.vector(bi)
-  n <- length(bi)
-
-  # Baseline evaluation
-  f0 <- as.vector(f(bi))
-  m <- length(f0)
-
-  # Create matrix of perturbed bi values
-  BI <- matrix(rep(bi, n), ncol = n)
-  diag(BI) <- diag(BI) + eps   # add eps to each parameter in turn
-
-  # Evaluate all perturbations in one vectorized call
-  # Assumes f can take a matrix and return each column as a case
-  F_all <- sapply(seq_len(n), function(j) f(BI[, j]))
-
-  # Compute differences
-  J <- (F_all - f0) / eps
-
-  # Return as m × n Jacobian
-  matrix(J, nrow = m, ncol = n)
-}
 
 #' @noRd
 grad <- function(f,var) gradient(f,unname(var)) # Gradient of a function without names.
 
-
-#' @noRd
-g_iter2 <- function(opts,bi) { # Applies the model g to generate individual-specific parameter values theta_i based on random effects bi.
-  if (!is.matrix(bi)) {
-    opts$g(opts$p$beta,bi,opts$ai)
-  } else {
-    t(apply(bi,1,function(i) opts$g(opts$p$beta,i,opts$ai)))
-  }
-}
-
 #' @noRd
 g_iter <- function(opts, bi) {
   if (!is.matrix(bi)) {
-    opts$g(opts$p$beta, bi, opts$ai[1])  # single individual
+    opts$g(opts$p$beta, bi, opts$ai[1])
   } else {
-    t(sapply(seq_len(nrow(bi)), function(j) opts$g(opts$p$beta, bi[j,], opts$ai[j,1])))
+    g_iter_generic_cpp(opts$g, opts$p$beta, bi, opts$ai[, 1])
   }
 }
 
@@ -109,9 +82,7 @@ gen_bi <- function(opts,expanded=TRUE) { # Generates random effects bi based on 
 #' @noRd
 gen_bi2 <- function(Omega,biseq) { # Generates random effects bi based on the covariance matrix in the options, with optional expansion.
   ## error handling for the  special case of zero omegas
-  if (any(diag(Omega)==0))
-    diag(Omega)[diag(Omega)==0] <- 1e-10
-  biseq %*% chol(Omega)
+  gen_bi2_cpp(Omega, biseq)
 }
 
 
@@ -133,9 +104,8 @@ list_to_mat <- function(l) { # Converts a list of values into a matrix by organi
 
 #' @noRd
 logdens2wt <- function(x) { # Converts log-densities into normalized weights for importance sampling.
-  x2 <- exp(x-max(x)) ## standardize to avoid floating point errors
-  x2[!is.finite(x2)] <- max(x2[is.finite(x2)])
-  x2/sum(x2)
+  # Use C++ version for better performance
+  as.vector(logdens2wt_cpp(x))
 }
 
 #' @noRd
@@ -165,7 +135,7 @@ mat_to_list <- function(x) { # Converts a matrix back into a list, extracting di
 }
 
 #' @noRd
-maxfunc <- function(opts) {
+maxfunc_old <- function(opts) {
   bi <- gen_bi(opts)
   origbeta <- opts$p$beta
   rawpreds <- opts$f(opts$time,g_iter(opts,bi))
@@ -196,42 +166,68 @@ maxfunc <- function(opts) {
 }
 
 #' @noRd
-MCapprEV <- function(opts) { # Performs a Monte Carlo approximation to compute the expected values (mean and covariance) of the model outputs based on random effects.
+maxfunc <- function(opts) {
+  bi <- gen_bi(opts)
+  origbeta <- opts$p$beta
+  rawpreds <- opts$f(opts$time,g_iter(opts,bi))
+  NAfilters <- apply(rawpreds,1,function(i) !any(is.na(i)))
+  adjust <- !any(is.na(opts$single_betas))
+  #adjust = F
+  propdens <- mnorm::dmnorm(bi,mean=rep(0,nrow(opts$p$Omega)),sigma=opts$p$Omega*opts$omega_expansion,log=TRUE)$den
+
+  function(pnew) {
+    pneww <- opts$ptrans(pnew)
+    newdens <- opts$p_thetai(pneww,origbeta,bi)
+    wttot <- logdens2wt(newdens[NAfilters]-propdens[NAfilters])
+    EVnow <- with(cov.wt(rawpreds[NAfilters,],wttot,method="ML"),list(E=center,V=cov))
+    EVnow <- opts$h(EVnow,pneww)
+    if (adjust) {
+      kappa <- opts$f(opts$time, t(as.matrix(opts$g(ifelse(opts$single_betas, pneww$beta, origbeta))))) - rawpreds[1,]
+      EVnow$E <- EVnow$E + kappa
+    }
+    if  (opts$no_cov) {
+      nllfun_var(opts$obs, EVnow, n = opts$n)
+    } else {
+      nllfun(opts$obs, EVnow, n = opts$n)
+    }
+  }
+}
+
+#' @noRd
+MCapprEV <- function(opts) {
   p <- opts$p
   ## p is normal-scale parameters
   bi <- gen_bi(opts)
-  theta_i <- g_iter(opts,bi)
-  m <- opts$f(opts$time,theta_i)
-  if (opts$omega_expansion==1) {
-    r <- meancov(m)
+  theta_i <- g_iter(opts, bi)
+  m <- opts$f(opts$time, theta_i)
+
+  if (opts$omega_expansion == 1) {
+    # Uniform weights if no expansion
+    w <- rep(1, nrow(m))
+    r <- meancov_cpp(m, w)
   } else {
-    wt <- samplogdensfun(bi,p,opts$omega_expansion)
-    r <- meancov(m,logdens2wt(wt))
+    # Weighted case
+    wt <- samplogdensfun_cpp(bi, p, opts$omega_expansion)
+    r <- meancov_cpp(m, logdens2wt(wt))
   }
-  opts$h(r,opts$p)
+
+  opts$h(r, opts$p)
 }
+
 
 
 #' @noRd
 nllfun <- function(obsEV,predEV,invpredV,n=1) {   # Computes the negative log-likelihood given observed and predicted expected values and their covariance.
-  if (missing(invpredV)) invpredV <- solve(predEV$V)
-  resids <- c(obsEV$E-predEV$E) ## force to simple vector
-  c(1/2*n*(log(det(predEV$V))+sum(diag(obsEV$V %*% invpredV))+t(resids) %*% invpredV %*% resids))
+  # Use C++ version for better performance
+  nllfun_cpp(obsEV$E, obsEV$V, predEV$E, predEV$V, n)
 }
 
 #' @noRd
 nllfun_var <- function(obsEV,predEV,n=1) {   # Computes the negative log-likelihood given observed and predicted expected values and their covariance.
-  obs_mean <- obsEV$E
-  obs_var  <- diag(obsEV$V)
-  pred_mean <- predEV$E
-  pred_var  <- diag(predEV$V)
-
-  ll_components <- (obs_var / pred_var) +
-    ((obs_mean - pred_mean)^2 / pred_var) +
-    log(pred_var)
-  total_ll <- -n * sum(ll_components)
-  return(-total_ll)  # Return negative log-likelihood
+  # Use C++ version for better performance
+  nllfun_var_cpp(obsEV$E, diag(obsEV$V), predEV$E, diag(predEV$V), n)
 }
+
 
 #' @noRd
 numtransfun <- function(origfun) # Creates a back-transformation function numerically based on an original transformation function.
@@ -336,7 +332,7 @@ p_transform_mat <- function(x) { # Transforms a matrix (typically representing v
             diag(Omega)[diag(Omega)==0] <- 1e-10
           biseqt %*% chol(Omega)
         }
-        c(jacobiann_vec_fast(gen_bi_here, 0))
+        c(jacobiann_vec_fast_cpp(gen_bi_here, 0))
       }
     })
   }
@@ -402,15 +398,6 @@ p2opts <- function(opts,pp) {
 }
 
 #' @noRd
-samplogdensfun <- function(bi,p,omega_expansion) { # Computes the log-density of random effects bi under an expanded and unexpanded covariance matrix.
-  map_dbl(1:nrow(bi),function(i) {
-    proposal <- dmnorm(bi[i,],mean=rep(0,nrow(p$Omega)),sigma=p$Omega*omega_expansion,log=TRUE)$den
-    true <- dmnorm(bi[i,],mean=rep(0,nrow(p$Omega)),sigma=p$Omega,log=TRUE)$den
-    true-proposal
-  })
-}
-
-#' @noRd
 upd_opts <- function(opts0,optslist) { # Initializes and generates core options and settings for modeling and optimization, including random effects, simulation settings, and likelihood approximations.
   ## note: this function always resets biseq and adist, and takes away obs!!
   if (!all(names(optslist) %in% names(formals(genopts))))
@@ -473,7 +460,7 @@ compute_nll <- function(opts, params, nomap) {
 
 #' @noRd
 run_chain <- function(chain, opts, obs, init, maxiter, phase_fractions, convcrit_nll,
-                      max_worse_iterations, perturbation, nomap) {
+                      max_worse_iterations, perturbation, nomap, use_grad) {
   chain_start_time <- Sys.time()  # Start time for the chain
   chain_init <- if (chain == 1) init else perturb_init(init, perturbation)
 
@@ -547,7 +534,8 @@ run_chain <- function(chain, opts, obs, init, maxiter, phase_fractions, convcrit
       max_worse_iterations = max_worse_iterations,
       res = res,
       maxiter = maxiter,
-      chain = chain  # Pass the chain index for printing control
+      chain = chain,  # Pass the chain index for printing control
+      use_grad = use_grad
     )
 
     # Update variables for the next phase
@@ -571,7 +559,7 @@ run_chain <- function(chain, opts, obs, init, maxiter, phase_fractions, convcrit
 }
 
 #' @noRd
-run_chainMC <- function(chain, opts, obs, init, maxiter, convcrit_nll, perturbation, nomap) {
+run_chainMC_old <- function(chain, opts, obs, init, maxiter, convcrit_nll, perturbation, nomap) {
   chain_start_time <- Sys.time()  # Start time for the chain
   chain_init <- if (chain == 1) init else perturb_init(init, perturbation)
 
@@ -639,8 +627,120 @@ run_chainMC <- function(chain, opts, obs, init, maxiter, convcrit_nll, perturbat
   return(list(res = res, best_nll = best_nll, best_params = best_params, time = chain_time))
 }
 
+run_chainMC <- function(chain, opts, obs, init, maxiter, convcrit_nll, perturbation, nomap, use_grad) {
+
+  chain_start_time <- Sys.time()  # Start time for the chain
+  chain_init <- if (chain == 1) init else perturb_init(init, perturbation)
+  n_params <- length(chain_init)
+
+  # Precompute opts for this chain
+
+  if (nomap) {
+    opts_chain <- opts %>% p2opts(chain_init) %>% obs2opts(obs)
+  } else {
+    opts_chain <- map(seq_along(opts), function(i) opts[[i]] %>% p2opts(chain_init) %>% obs2opts(obs[[i]]))
+  }
+
+  # Precompute fit function
+
+  if (nomap) {
+    fitfun <- genfitfunc(opts_chain, obs)
+  } else {
+    fitfuns <- map(seq_along(opts_chain), ~ genfitfunc(opts_chain[[.x]], obs[[.x]]))
+    fitfun <- function(p) Reduce('+', map(fitfuns, ~ .(p)))
+  }
+
+  # Gradient factory function
+
+
+
+  if (use_grad) {
+    gradfun <- make_gradfun_mc(fitfun)
+  } else {
+    gradfun <- NULL
+  }
+
+  # Preallocate storage
+
+  res_params <- matrix(NA_real_, nrow = maxiter, ncol = n_params)
+  res_nll <- numeric(maxiter)
+  res_time <- numeric(maxiter)
+
+  i <- 1
+  iter_start_time <- Sys.time()
+
+  # Wrapper to track optimization progress
+
+  fitfun2 <- function(p) {
+    nllNow <- fitfun(p)
+    res_params[i, ] <<- p
+    res_nll[i] <<- nllNow
+    res_time[i] <<- as.numeric(difftime(Sys.time(), iter_start_time, units = "secs"))
+    print_freq <- if (use_grad) 5 else 50
+    if (i %% print_freq == 0) {
+      cat("Iteration:", i, "- NLL:", nllNow, "\n")
+    }
+    i <<- i + 1
+    nllNow
+  }
+
+  # Choose algorithm
+
+  algo <- if (use_grad) "NLOPT_LD_LBFGS" else "NLOPT_LN_BOBYQA"
+
+  # Run optimization
+
+  est <- nloptr::nloptr(
+    x0 = chain_init,
+    eval_f = fitfun2,
+    eval_grad_f = if (use_grad) gradfun else NULL,
+    lb = chain_init - 2,
+    ub = chain_init + 2,
+    opts = list(
+      algorithm = algo,
+      ftol_rel = .Machine$double.eps^2,
+      maxeval = maxiter,
+      check_derivatives = FALSE
+    )
+  )
+
+  best_params <- est$solution
+  best_nll <- fitfun(best_params)
+
+  # Build tibble result
+
+  res <- tibble(
+    iter = seq_len(i-1),
+    parameters = split(res_params[1:(i-1), , drop = FALSE], seq_len(i-1)),
+    nll = res_nll[1:(i-1)],
+    iteration_time = res_time[1:(i-1)]
+  )
+
+  chain_time <- as.numeric(difftime(Sys.time(), chain_start_time, units = "secs"))
+
+  cat(sprintf("\nChain %d Complete: Final NLL = %.3f, Time Elapsed = %.2f seconds\n\n",
+              chain, best_nll, chain_time))
+
+  return(list(res = res, best_nll = best_nll, best_params = best_params, time = chain_time))
+}
+
+
 #' @noRd
-handle_phase <- function(current_phase, opts, chain_init, best_params, best_nll, current_iter, phase_end_iter,
+gradfun <- function(p) {
+  eps <- 1e-6
+  f0 <- fitfun(p)
+  g <- numeric(length(p))
+  for (k in seq_along(p)) {
+    p_eps <- p
+    p_eps[k] <- p_eps[k] + eps
+    g[k] <- (fitfun(p_eps) - f0) / eps
+  }
+  g
+}
+
+
+#' @noRd
+handle_phase_old <- function(current_phase, opts, chain_init, best_params, best_nll, current_iter, phase_end_iter,
                          nomap, convcrit_nll, max_worse_iterations, res, maxiter, chain) {
   phase_converged <- FALSE
   worse_counter <- 0
@@ -716,6 +816,94 @@ handle_phase <- function(current_phase, opts, chain_init, best_params, best_nll,
   ))
 }
 
+handle_phase <- function(current_phase, opts, chain_init, best_params, best_nll, current_iter, phase_end_iter,
+                         nomap, convcrit_nll, max_worse_iterations, res, maxiter, chain,
+                         use_grad) {
+
+  phase_converged <- FALSE
+  worse_counter <- 0
+
+  for (i in current_iter:phase_end_iter) {
+    if (current_iter > maxiter) {
+      cat("Maximum iterations reached. Terminating optimization.\n")
+      break
+    }
+
+    iter_start_time <- Sys.time()
+
+    # Build objective function
+    if (nomap) {
+      ff <- maxfunc(p2opts(opts, chain_init))
+    } else {
+      ffs <- map(opts, ~ maxfunc(p2opts(., chain_init)))
+      ff <- function(p) Reduce('+', map(ffs, ~ .(p)))
+    }
+
+    # Only define gradient once
+    if (use_grad) gradfun <- make_gradfun_irmc(ff)
+
+    # Choose algorithm
+    algo <- if (use_grad) "NLOPT_LD_LBFGS" else "NLOPT_LN_BOBYQA"
+
+    m0 <- nloptr::nloptr(
+      x0 = chain_init,
+      eval_f = ff,
+      eval_grad_f = if (use_grad) gradfun else NULL,
+      lb = chain_init - current_phase$bounds,
+      ub = chain_init + current_phase$bounds,
+      opts = list(
+        algorithm = algo,
+        ftol_rel = .Machine$double.eps,
+        maxeval = current_phase$maxeval,
+        check_derivatives = FALSE
+      )
+    )
+
+    # Optimization step
+    chain_init <- m0$solution
+    res$parameters[[current_iter]] <- chain_init
+    res$nll[current_iter] <- compute_nll(opts, chain_init, nomap)
+    res$approx_nll[current_iter] <- m0$objective
+    res$iteration_time[current_iter] <- as.numeric(difftime(Sys.time(), iter_start_time, units = "secs"))
+
+    # Update best parameters if a better NLL is found
+    if (res$nll[current_iter] < best_nll) {
+      best_nll <- res$nll[current_iter]
+      best_params <- chain_init
+    }
+
+    # Printing live updates (same as original)
+    if (chain == 1) {
+      cat(sprintf("%4d: %s\n", current_iter,
+                  paste(sprintf("%8.3f", c(res$nll[current_iter], chain_init)), collapse = " ")))
+    }
+
+    # Convergence check
+    if (abs(res$nll[current_iter] - res$approx_nll[current_iter]) < convcrit_nll) {
+      phase_converged <- TRUE
+      current_iter <- current_iter + 1
+      break
+    }
+
+    # Early termination due to worse counter
+    worse_counter <- if (res$nll[current_iter] > best_nll) worse_counter + 1 else 0
+    if (worse_counter >= max_worse_iterations) {
+      current_iter <- current_iter + 1
+      break
+    }
+
+    current_iter <- current_iter + 1
+  }
+
+  return(list(
+    best_params = best_params,
+    best_nll = best_nll,
+    res = res,
+    phase_converged = phase_converged,
+    current_iter = current_iter
+  ))
+}
+
 #' @noRd
 prepare_boxplot_df <- function(E, V, time_points) { # Function to convert E and V to plot-ready data frame
   mu <- as.numeric(E)
@@ -752,4 +940,32 @@ prepare_V_df <- function(V, label, time_points) {
     time2 = time_points
   ) |>
     transform(value = as.vector(V_mat), source = label)
+}
+
+#' @noRd
+make_gradfun_irmc <- function(ff, eps = 1e-6) {
+  function(p) {
+    f0 <- ff(p)
+    g <- numeric(length(p))
+    for (k in seq_along(p)) {
+      p_eps <- p
+      p_eps[k] <- p_eps[k] + eps
+      g[k] <- (ff(p_eps) - f0) / eps
+    }
+    g
+  }
+}
+
+#' @noRd
+make_gradfun_mc <- function(fitfun, eps = 1e-6) {
+  function(p) {
+    f0 <- fitfun(p)
+    g <- numeric(length(p))
+    for (k in seq_along(p)) {
+      p_eps <- p
+      p_eps[k] <- p_eps[k] + eps
+      g[k] <- (fitfun(p_eps) - f0) / eps
+    }
+    g
+  }
 }

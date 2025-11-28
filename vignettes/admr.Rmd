@@ -261,7 +261,8 @@ fit.admrMC <- fitMC(
   opts = opts,
   obs = examplomycin_aggregated,
   chains = 1,  # Number of chains
-  maxiter = 2000  # Maximum iterations
+  maxiter = 2000,  # Maximum iterations
+  use_grad = T
 )
 ```
 
@@ -273,7 +274,8 @@ fit.admr <- admr::fitIRMC(
   opts = opts,
   obs = examplomycin_aggregated,
   chains = 1,  # Number of chains
-  maxiter = 200  # Maximum iterations
+  maxiter = 200,  # Maximum iterations
+  use_grad = T
 )
 ```
 
@@ -284,7 +286,7 @@ fit.admr <- admr::fitIRMC(
 The `print` method provides a summary of the model fit:
 
 ```{r}
-print(fit.admrMC)
+print(fit.admr)
 ```
 
 ### Convergence Assessment

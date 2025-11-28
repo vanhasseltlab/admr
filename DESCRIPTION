@@ -29,7 +29,11 @@ Imports:
     readr,
     nloptr,
     numDeriv,
-    ggplot2
+    ggplot2,
+    Rcpp
+LinkingTo:
+    Rcpp,
+    RcppEigen
 Suggests:
     MASS,
     data.table,

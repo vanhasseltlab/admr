@@ -20,6 +20,7 @@
 #' @param perturbation Perturbation factor for the initial parameter values of each chain.
 #'                    Default is 0.1.
 #' @param seed Random seed for reproducibility. Default is 1.
+#' @param use_grad Logical indicating whether to use gradient information in optimization.
 #'
 #' @returns An object of class `fit_admr_result` containing:
 #' \itemize{
@@ -119,7 +120,8 @@
 #'
 #' @export
 fitMC <- function(opts, obs, maxiter = 5000, convcrit_nll = 1e-05,
-                  single_dataframe = TRUE, chains = 1, perturbation = 0.1, seed = 1) {
+                  single_dataframe = TRUE, chains = 1, perturbation = 0.1, seed = 1,
+                  use_grad = FALSE) {
 
   # Set random seed for reproducibility
   set.seed(seed)
@@ -153,7 +155,8 @@ fitMC <- function(opts, obs, maxiter = 5000, convcrit_nll = 1e-05,
       maxiter = maxiter,
       convcrit_nll = convcrit_nll,
       perturbation = perturbation,
-      nomap = nomap
+      nomap = nomap,
+      use_grad = use_grad
     )
   }
 

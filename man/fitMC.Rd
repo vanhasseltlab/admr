@@ -12,7 +12,8 @@ fitMC(
   single_dataframe = TRUE,
   chains = 1,
   perturbation = 0.1,
-  seed = 1
+  seed = 1,
+  use_grad = FALSE
 )
 }
 \arguments{
@@ -37,6 +38,8 @@ data frames (FALSE). Default is TRUE.}
 Default is 0.1.}
 
 \item{seed}{Random seed for reproducibility. Default is 1.}
+
+\item{use_grad}{Logical indicating whether to use gradient information in optimization.}
 }
 \value{
 An object of class \code{fit_admr_result} containing:

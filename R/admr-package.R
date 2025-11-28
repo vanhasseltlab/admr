@@ -14,20 +14,22 @@
 #' @keywords internal
 "_PACKAGE"
 ## usethis namespace: start
-#' @importFrom stats coef cov.wt lm D qnorm cov2cor na.omit rnorm weights optimize median
-#' @importFrom utils relist tail head
-#' @importFrom purrr map map2 map_dbl map_lgl
-#' @importFrom stringr str_extract
-#' @importFrom tibble tibble
+#' @import ggplot2
+#' @importFrom calculus gradient jacobian
 #' @importFrom magrittr %>%
 #' @importFrom mnorm dmnorm
-#' @importFrom randtoolbox sobol
-#' @importFrom calculus gradient jacobian
-#' @importFrom stringr str_detect
-#' @importFrom readr parse_number
 #' @importFrom nloptr nloptr
-#' @importFrom optimx optimx
 #' @importFrom numDeriv hessian
-#' @import ggplot2
+#' @importFrom optimx optimx
+#' @importFrom purrr map map2 map_dbl map_lgl
+#' @importFrom randtoolbox sobol
+#' @importFrom Rcpp sourceCpp
+#' @importFrom readr parse_number
+#' @importFrom stats coef cov.wt lm D qnorm cov2cor na.omit rnorm weights optimize median
+#' @importFrom stringr str_detect
+#' @importFrom stringr str_extract
+#' @importFrom tibble tibble
+#' @importFrom utils relist tail head
+#' @useDynLib admr, .registration = TRUE
 ## usethis namespace: end
 NULL
