@@ -1,7 +1,7 @@
 Package: admr
 Type: Package
 Title: Aggregate Data Modelling in R
-Version: 0.2.0
+Version: 0.2.1
 Authors@R: 
     c(
         person("H.", "van de Beek", email = "h.van.de.beek@lacdr.leidenuniv.nl", role = c("aut", "cre")),
