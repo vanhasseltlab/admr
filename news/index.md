@@ -2,6 +2,10 @@
 
 ## admr 0.2.1
 
+- Added gradient descent optimization method
+
+- Improved efficieny with C++ source code integration
+
 ## admr 0.2.0
 
 - Initial release of the admr package for preprint and submission

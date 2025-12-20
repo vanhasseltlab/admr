@@ -143,7 +143,6 @@ rxModel <- rxode2(rxModel)
 rxModel <- rxModel$simulationModel
 #>  
 #>  
-#> using C compiler: ‘gcc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0’
 
 # Define prediction function
 predder <- function(time, theta_i, dose = 100) {

@@ -122,14 +122,14 @@ phases if the optimization is not progressing.
 # Load required libraries
 library(admr)
 library(rxode2)
-#> rxode2 4.1.1 using 2 threads (see ?getRxThreads)
+#> rxode2 5.0.1 using 2 threads (see ?getRxThreads)
 #>   no cache: create with `rxCreateCache()`
 library(nlmixr2)
-#> ── Attaching packages ───────────────────────────────────────── nlmixr2 4.0.1 ──
-#> ✔ lotri        1.0.2     ✔ nlmixr2extra 3.0.2
-#> ✔ nlmixr2data  2.0.9     ✔ nlmixr2plot  3.0.3
-#> ✔ nlmixr2est   4.1.1     
-#> ── Optional Packages Loaded/Ignored ─────────────────────────── nlmixr2 4.0.1 ──
+#> ── Attaching packages ───────────────────────────────────────── nlmixr2 5.0.0 ──
+#> ✔ lotri        1.0.2     ✔ nlmixr2extra 5.0.0
+#> ✔ nlmixr2data  2.0.9     ✔ nlmixr2plot  5.0.0
+#> ✔ nlmixr2est   5.0.2     
+#> ── Optional Packages Loaded/Ignored ─────────────────────────── nlmixr2 5.0.0 ──
 #> ✖ babelmixr2     ✖ nonmem2rx
 #> ✖ ggPMX     ✖ posologyr
 #> ✖ monolix2rx     ✖ shinyMixR
@@ -188,7 +188,6 @@ rxModel <- rxode2(rxModel)
 rxModel <- rxModel$simulationModel
 #>  
 #>  
-#> using C compiler: ‘gcc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0’
 
 
 # Define prediction function
@@ -323,7 +322,7 @@ result <- fitIRMC(opts, examplomycin_aggregated)
 #>   83: -1786.108    1.635    2.367    2.391    3.316    0.067   -2.363  -27.130  -19.068   -2.041   -1.604   -3.143
 #>   84: -1786.116    1.634    2.367    2.391    3.315    0.066   -2.363  -27.139  -19.068   -2.041   -1.604   -3.143
 #> 
-#> Chain 1 Complete: Final NLL = -1786.124, Time Elapsed = 90.18 seconds
+#> Chain 1 Complete: Final NLL = -1786.124, Time Elapsed = 94.79 seconds
 #>  
 print(result)
 #> -- FitIRMC Summary --
@@ -336,10 +335,10 @@ print(result)
 #> Condition#(Cor): 35.43
 #> 
 #> -- Timing Information --
-#>      Best Chain: 90.1788 seconds
-#>      All Chains: 90.1811 seconds
-#>      Covariance: 13.0886 seconds
-#>         Elapsed: 103.27 seconds
+#>      Best Chain: 94.7915 seconds
+#>      All Chains: 94.7940 seconds
+#>      Covariance: 15.2627 seconds
+#>         Elapsed: 110.06 seconds
 #> 
 #> -- Population Parameters --
 #> # A tibble: 6 × 6

@@ -386,7 +386,7 @@ algorithm:</p>
 <span><span class="co">## Iteration: 35 - NLL: -1845.355 </span></span>
 <span><span class="co">## Iteration: 40 - NLL: -1845.357 </span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 1 Complete: Final NLL = -1845.357, Time Elapsed = 62.50 seconds</span></span></code></pre>
+<span><span class="co">## Chain 1 Complete: Final NLL = -1845.357, Time Elapsed = 73.06 seconds</span></span></code></pre>
 <p>The <code>fitIRMC</code> function fits the model using the IRMC
 algorithm, which is more efficient for aggregate data:</p>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
@@ -441,7 +441,7 @@ algorithm, which is more efficient for aggregate data:</p>
 <span><span class="co">##   28: -1845.353    1.601    2.317    3.401    2.285    0.026   -2.282   -2.211   -2.338   -2.236   -2.395   -3.235</span></span>
 <span><span class="co">## Phase Precision Phase converged at iteration 28.</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 1 Complete: Final NLL = -1845.353, Time Elapsed = 16.92 seconds</span></span>
+<span><span class="co">## Chain 1 Complete: Final NLL = -1845.353, Time Elapsed = 20.24 seconds</span></span>
 <span><span class="co">## </span></span></code></pre>
 </div>
 </div>
@@ -465,10 +465,10 @@ fit:</p>
 <span><span class="co">## Condition#(Cor): 214.64</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## -- Timing Information --</span></span>
-<span><span class="co">##      Best Chain: 16.9177 seconds</span></span>
-<span><span class="co">##      All Chains: 16.9201 seconds</span></span>
-<span><span class="co">##      Covariance: 20.5840 seconds</span></span>
-<span><span class="co">##         Elapsed: 37.50 seconds</span></span>
+<span><span class="co">##      Best Chain: 20.2372 seconds</span></span>
+<span><span class="co">##      All Chains: 20.2397 seconds</span></span>
+<span><span class="co">##      Covariance: 23.4712 seconds</span></span>
+<span><span class="co">##         Elapsed: 43.71 seconds</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## -- Population Parameters --</span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 6 × 6</span></span></span>
@@ -635,14 +635,12 @@ Click here
 <span><span class="op">}</span></span>
 <span></span>
 <span><span class="va">rxModel_true</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/rxode2.html" class="external-link">rxode2</a></span><span class="op">(</span><span class="fu">rxModel_true</span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">rxModel_true</span> <span class="op">&lt;-</span> <span class="va">rxModel_true</span><span class="op">$</span><span class="va">simulationModel</span></span></code></pre></div>
-<pre><code><span><span class="co">## using C compiler: ‘gcc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0’</span></span></code></pre>
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">rxModel_covar</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/rxode2.html" class="external-link">rxode2</a></span><span class="op">(</span><span class="fu">rxModel_covar</span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">rxModel_true</span> <span class="op">&lt;-</span> <span class="va">rxModel_true</span><span class="op">$</span><span class="va">simulationModel</span></span>
+<span><span class="va">rxModel_covar</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/rxode2.html" class="external-link">rxode2</a></span><span class="op">(</span><span class="fu">rxModel_covar</span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">rxModel_covar</span> <span class="op">&lt;-</span> <span class="va">rxModel_covar</span><span class="op">$</span><span class="va">simulationModel</span></span></code></pre></div>
 </details><p>Now, let’s simulate both models over a dosing regimen and plot the
 results with confidence intervals:</p>
-<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">time_points</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">12</span>, by <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span>  <span class="co"># Dense time points for smooth curves</span></span>
 <span><span class="va">ev</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://nlmixr2.github.io/rxode2/reference/eventTable.html" class="external-link">eventTable</a></span><span class="op">(</span>amount.units<span class="op">=</span><span class="st">"mg"</span>, time.units<span class="op">=</span><span class="st">"hours"</span><span class="op">)</span></span>
 <span><span class="va">ev</span><span class="op">$</span><span class="fu">add.dosing</span><span class="op">(</span>dose <span class="op">=</span> <span class="fl">100</span>, nbr.doses <span class="op">=</span> <span class="fl">2</span>, dosing.interval <span class="op">=</span> <span class="fl">6</span><span class="op">)</span></span>
@@ -655,11 +653,11 @@ results with confidence intervals:</p>
 <span><span class="va">ci_true</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">sim_true</span>, <span class="st">"cp"</span>, level<span class="op">=</span><span class="fl">0.95</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>Model <span class="op">=</span> <span class="st">"True parameters"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## summarizing data...done</span></span></code></pre>
-<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ci_covar</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">sim_covar</span>, <span class="st">"cp"</span>, level<span class="op">=</span><span class="fl">0.95</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>Model <span class="op">=</span> <span class="st">"Estimated model"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## summarizing data...done</span></span></code></pre>
-<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Bind them together</span></span>
 <span><span class="va">ci_all</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind_rows.html" class="external-link">bind_rows</a></span><span class="op">(</span><span class="va">ci_true</span>, <span class="va">ci_covar</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
