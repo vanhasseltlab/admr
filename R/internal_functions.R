@@ -63,13 +63,52 @@ foceapprEV_single <- function(opts, bi, biseq) {
 grad <- function(f,var) gradient(f,unname(var)) # Gradient of a function without names.
 
 #' @noRd
-g_iter <- function(opts, bi) {
+g_ite_old <- function(opts, bi) {
   if (!is.matrix(bi)) {
     opts$g(opts$p$beta, bi, opts$ai[1])
   } else {
     g_iter_generic_cpp(opts$g, opts$p$beta, bi, opts$ai[, 1])
   }
 }
+
+#' @noRd
+g_iter <- function(opts, bi) {
+
+  # helper: get per-individual covariates as a vector
+  get_ai_row <- function(i) {
+    if (is.null(opts$ai)) return(NULL)
+
+    if (is.matrix(opts$ai)) {
+      return(as.numeric(opts$ai[min(i, nrow(opts$ai)), , drop = TRUE]))
+    } else {
+      # scalar ai
+      return(opts$ai[min(i, length(opts$ai))])
+    }
+  }
+
+  # single individual
+  if (!is.matrix(bi)) {
+    ai <- get_ai_row(1)
+    return(opts$g(opts$p$beta, bi, ai))
+  }
+
+  # multiple individuals: evaluate row-by-row so ai can be a vector
+  n <- nrow(bi)
+
+  # determine output length
+  th1 <- opts$g(opts$p$beta, bi[1, ], get_ai_row(1))
+  out <- matrix(NA_real_, n, length(th1))
+  out[1, ] <- th1
+
+  if (n > 1) {
+    for (i in 2:n) {
+      out[i, ] <- opts$g(opts$p$beta, bi[i, ], get_ai_row(i))
+    }
+  }
+
+  out
+}
+
 
 #' @noRd
 gen_bi <- function(opts,expanded=TRUE) { # Generates random effects bi based on the covariance matrix in the options, with optional expansion.

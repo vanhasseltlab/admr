@@ -15,7 +15,7 @@ double nllfun_cpp(
     const Eigen::MatrixXd& obs_V,
     const Eigen::VectorXd& pred_E,
     const Eigen::MatrixXd& pred_V,
-    int n = 1
+    double n = 1
 ) {
   Eigen::MatrixXd inv_pred_V = pred_V.inverse();
   Eigen::VectorXd resids = obs_E - pred_E;
