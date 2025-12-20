@@ -153,7 +153,7 @@ gen_pop_EV <- function(opts) {
 
     # Compute importance sampling weights for random effects
     # logweights = log density of samples under target distribution
-    logweights <- samplogdensfun(bi, opts$p, opts$omega_expansion)
+    logweights <- samplogdensfun_cpp(bi, opts$p, opts$omega_expansion)
     weights <- logweights %>% logdens2wt()  # Convert to normalized weights
 
     # Compute FOCE approximation for each individual

@@ -12,7 +12,7 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // nllfun_cpp
-double nllfun_cpp(const Eigen::VectorXd& obs_E, const Eigen::MatrixXd& obs_V, const Eigen::VectorXd& pred_E, const Eigen::MatrixXd& pred_V, int n);
+double nllfun_cpp(const Eigen::VectorXd& obs_E, const Eigen::MatrixXd& obs_V, const Eigen::VectorXd& pred_E, const Eigen::MatrixXd& pred_V, double n);
 RcppExport SEXP _admr_nllfun_cpp(SEXP obs_ESEXP, SEXP obs_VSEXP, SEXP pred_ESEXP, SEXP pred_VSEXP, SEXP nSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -21,7 +21,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type obs_V(obs_VSEXP);
     Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type pred_E(pred_ESEXP);
     Rcpp::traits::input_parameter< const Eigen::MatrixXd& >::type pred_V(pred_VSEXP);
-    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< double >::type n(nSEXP);
     rcpp_result_gen = Rcpp::wrap(nllfun_cpp(obs_E, obs_V, pred_E, pred_V, n));
     return rcpp_result_gen;
 END_RCPP
