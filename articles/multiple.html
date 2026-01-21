@@ -220,7 +220,7 @@ still handle this situation effectively.</p>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_fill_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Absorption"</span> <span class="op">=</span> <span class="st">"blue"</span>, <span class="st">"Elimination"</span> <span class="op">=</span> <span class="st">"red"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="multiple_files/figure-html/unnamed-chunk-4-1.png" class="r-plt" width="700"></p>
+<p><img src="multiple_files/figure-html/unnamed-chunk-4-1.png" class="r-plt" alt="" width="700"></p>
 </div>
 </div>
 <div class="section level3">
@@ -395,14 +395,14 @@ function fits the model using the IR-MC algorithm:</p>
 <span><span class="co">##   22: -1796.484    1.602    2.306    3.400    2.285    0.014   -2.271   -2.105   -2.326   -2.305   -2.508   -3.235</span></span>
 <span><span class="co">## Phase Precision Phase converged at iteration 22.</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 1 Complete: Final NLL = -1796.484, Time Elapsed = 22.24 seconds</span></span>
+<span><span class="co">## Chain 1 Complete: Final NLL = -1796.484, Time Elapsed = 23.35 seconds</span></span>
 <span><span class="co">##  </span></span>
 <span><span class="co">## Phase Wide Search Phase converged at iteration 18.</span></span>
 <span><span class="co">## Phase Focussed Search Phase converged at iteration 21.</span></span>
 <span><span class="co">## Phase Fine-Tuning Phase converged at iteration 22.</span></span>
 <span><span class="co">## Phase Precision Phase converged at iteration 23.</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Chain 2 Complete: Final NLL = -1796.484, Time Elapsed = 26.30 seconds</span></span>
+<span><span class="co">## Chain 2 Complete: Final NLL = -1796.484, Time Elapsed = 27.78 seconds</span></span>
 <span><span class="co">## </span></span></code></pre>
 </div>
 </div>
@@ -426,10 +426,10 @@ fit:</p>
 <span><span class="co">## Condition#(Cor): 271.29</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## -- Timing Information --</span></span>
-<span><span class="co">##      Best Chain: 22.2414 seconds</span></span>
-<span><span class="co">##      All Chains: 48.5486 seconds</span></span>
-<span><span class="co">##      Covariance: 35.3047 seconds</span></span>
-<span><span class="co">##         Elapsed: 83.85 seconds</span></span>
+<span><span class="co">##      Best Chain: 23.3462 seconds</span></span>
+<span><span class="co">##      All Chains: 51.1295 seconds</span></span>
+<span><span class="co">##      Covariance: 39.2481 seconds</span></span>
+<span><span class="co">##         Elapsed: 90.38 seconds</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## -- Population Parameters --</span></span>
 <span><span class="co">## <span style="color: #949494;"># A tibble: 6 × 6</span></span></span>
@@ -464,7 +464,7 @@ fit:</p>
 fit:</p>
 <div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">fit.admr</span><span class="op">)</span></span></code></pre></div>
-<p><img src="multiple_files/figure-html/unnamed-chunk-10-1.png" class="r-plt" width="700"><img src="multiple_files/figure-html/unnamed-chunk-10-2.png" class="r-plt" width="700"><img src="multiple_files/figure-html/unnamed-chunk-10-3.png" class="r-plt" width="700"><img src="multiple_files/figure-html/unnamed-chunk-10-4.png" class="r-plt" width="700"><img src="multiple_files/figure-html/unnamed-chunk-10-5.png" class="r-plt" width="700"><img src="multiple_files/figure-html/unnamed-chunk-10-6.png" class="r-plt" width="700"><img src="multiple_files/figure-html/unnamed-chunk-10-7.png" class="r-plt" width="700"><img src="multiple_files/figure-html/unnamed-chunk-10-8.png" class="r-plt" width="700">
+<p><img src="multiple_files/figure-html/unnamed-chunk-10-1.png" class="r-plt" alt="" width="700"><img src="multiple_files/figure-html/unnamed-chunk-10-2.png" class="r-plt" alt="" width="700"><img src="multiple_files/figure-html/unnamed-chunk-10-3.png" class="r-plt" alt="" width="700"><img src="multiple_files/figure-html/unnamed-chunk-10-4.png" class="r-plt" alt="" width="700"><img src="multiple_files/figure-html/unnamed-chunk-10-5.png" class="r-plt" alt="" width="700"><img src="multiple_files/figure-html/unnamed-chunk-10-6.png" class="r-plt" alt="" width="700"><img src="multiple_files/figure-html/unnamed-chunk-10-7.png" class="r-plt" alt="" width="700"><img src="multiple_files/figure-html/unnamed-chunk-10-8.png" class="r-plt" alt="" width="700">
 Upon inspection of the convergence plots, you should look for: good
 chain convergence, overlapping predicted and observed summary plots, and
 similar final observed vs predicted matrices for mean and covariance. We
@@ -648,10 +648,10 @@ regimen and plot the results:</p>
 <span>                               <span class="st">"Estimated model"</span> <span class="op">=</span> <span class="st">"red"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.</span></span>
 <span><span class="co">## <span style="color: #00BBBB;">ℹ</span> Please use `linewidth` instead.</span></span>
-<span><span class="co">## <span style="color: #555555;">This warning is displayed once every 8 hours.</span></span></span>
+<span><span class="co">## <span style="color: #555555;">This warning is displayed once per session.</span></span></span>
 <span><span class="co">## <span style="color: #555555;">Call `lifecycle::last_lifecycle_warnings()` to see where this warning was</span></span></span>
 <span><span class="co">## <span style="color: #555555;">generated.</span></span></span></code></pre>
-<p><img src="multiple_files/figure-html/unnamed-chunk-13-1.png" class="r-plt" width="700"></p>
+<p><img src="multiple_files/figure-html/unnamed-chunk-13-1.png" class="r-plt" alt="" width="700"></p>
 <p>The combined dataset model (red) closely follows the true parameter
 model (blue). The median line of the estimated model almost perfectly
 overlaps with the true model, indicating that the estimated model.

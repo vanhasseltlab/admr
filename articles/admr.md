@@ -328,7 +328,7 @@ fit.admrMC <- fitMC(
     ## Iteration: 35 - NLL: -1845.355 
     ## Iteration: 40 - NLL: -1845.357 
     ## 
-    ## Chain 1 Complete: Final NLL = -1845.357, Time Elapsed = 73.06 seconds
+    ## Chain 1 Complete: Final NLL = -1845.357, Time Elapsed = 73.25 seconds
 
 The `fitIRMC` function fits the model using the IRMC algorithm, which is
 more efficient for aggregate data:
@@ -387,7 +387,7 @@ fit.admr <- admr::fitIRMC(
     ##   28: -1845.353    1.601    2.317    3.401    2.285    0.026   -2.282   -2.211   -2.338   -2.236   -2.395   -3.235
     ## Phase Precision Phase converged at iteration 28.
     ## 
-    ## Chain 1 Complete: Final NLL = -1845.353, Time Elapsed = 20.24 seconds
+    ## Chain 1 Complete: Final NLL = -1845.353, Time Elapsed = 18.58 seconds
     ## 
 
 ### Model Diagnostics
@@ -410,10 +410,10 @@ print(fit.admr)
     ## Condition#(Cor): 214.64
     ## 
     ## -- Timing Information --
-    ##      Best Chain: 20.2372 seconds
-    ##      All Chains: 20.2397 seconds
-    ##      Covariance: 23.4712 seconds
-    ##         Elapsed: 43.71 seconds
+    ##      Best Chain: 18.5842 seconds
+    ##      All Chains: 18.5869 seconds
+    ##      Covariance: 24.6966 seconds
+    ##         Elapsed: 43.28 seconds
     ## 
     ## -- Population Parameters --
     ## # A tibble: 6 × 6
@@ -650,7 +650,7 @@ ggplot(ci_all, aes(x = time, group = interaction(Model, Percentile))) +
 
     ## Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
     ## ℹ Please use `linewidth` instead.
-    ## This warning is displayed once every 8 hours.
+    ## This warning is displayed once per session.
     ## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
     ## generated.
 
