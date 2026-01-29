@@ -221,7 +221,9 @@ maxfunc <- function(opts) {
     EVnow <- with(cov.wt(rawpreds[NAfilters,],wttot,method="ML"),list(E=center,V=cov))
     EVnow <- opts$h(EVnow,pneww)
     if (adjust) {
-      kappa <- opts$f(opts$time, t(as.matrix(opts$g(ifelse(opts$single_betas, pneww$beta, origbeta))))) - rawpreds[1,]
+      beta_use <- origbeta
+      beta_use[opts$single_betas] <- pneww$beta[opts$single_betas]
+      kappa <- opts$f(opts$time, t(as.matrix(opts$g(beta_use)))) - rawpreds[1,]
       EVnow$E <- EVnow$E + kappa
     }
     if  (opts$no_cov) {

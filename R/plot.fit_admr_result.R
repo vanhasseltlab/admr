@@ -29,6 +29,13 @@ plot.fit_admr_result <- function(x, ...) {
 
   # Extract parameter names from the first iteration of the first chain
   param_names <- names(chain_results[[1]]$res$parameters[[1]])
+  if (is.null(param_names)) {
+    param_names <- names(x$data$opts$pt)
+  }
+  if (is.null(param_names)) {
+    param_names <- names(x$data$opts[[1]]$pt)
+  }
+
 
   # Prepare data for parameter convergence
   param_data <- do.call(rbind, lapply(seq_along(chain_results), function(chain) {
