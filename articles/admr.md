@@ -328,7 +328,7 @@ fit.admrMC <- fitMC(
     ## Iteration: 35 - NLL: -1845.355 
     ## Iteration: 40 - NLL: -1845.357 
     ## 
-    ## Chain 1 Complete: Final NLL = -1845.357, Time Elapsed = 73.25 seconds
+    ## Chain 1 Complete: Final NLL = -1845.357, Time Elapsed = 71.11 seconds
 
 The `fitIRMC` function fits the model using the IRMC algorithm, which is
 more efficient for aggregate data:
@@ -387,7 +387,7 @@ fit.admr <- admr::fitIRMC(
     ##   28: -1845.353    1.601    2.317    3.401    2.285    0.026   -2.282   -2.211   -2.338   -2.236   -2.395   -3.235
     ## Phase Precision Phase converged at iteration 28.
     ## 
-    ## Chain 1 Complete: Final NLL = -1845.353, Time Elapsed = 18.58 seconds
+    ## Chain 1 Complete: Final NLL = -1845.353, Time Elapsed = 17.95 seconds
     ## 
 
 ### Model Diagnostics
@@ -410,10 +410,10 @@ print(fit.admr)
     ## Condition#(Cor): 214.64
     ## 
     ## -- Timing Information --
-    ##      Best Chain: 18.5842 seconds
-    ##      All Chains: 18.5869 seconds
-    ##      Covariance: 24.6966 seconds
-    ##         Elapsed: 43.28 seconds
+    ##      Best Chain: 17.9518 seconds
+    ##      All Chains: 17.9542 seconds
+    ##      Covariance: 23.7759 seconds
+    ##         Elapsed: 41.73 seconds
     ## 
     ## -- Population Parameters --
     ## # A tibble: 6 × 6

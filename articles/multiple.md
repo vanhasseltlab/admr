@@ -345,14 +345,14 @@ fit.admr <- fitIRMC(
     ##   22: -1796.484    1.602    2.306    3.400    2.285    0.014   -2.271   -2.105   -2.326   -2.305   -2.508   -3.235
     ## Phase Precision Phase converged at iteration 22.
     ## 
-    ## Chain 1 Complete: Final NLL = -1796.484, Time Elapsed = 23.35 seconds
+    ## Chain 1 Complete: Final NLL = -1796.484, Time Elapsed = 22.65 seconds
     ##  
     ## Phase Wide Search Phase converged at iteration 18.
     ## Phase Focussed Search Phase converged at iteration 21.
     ## Phase Fine-Tuning Phase converged at iteration 22.
     ## Phase Precision Phase converged at iteration 23.
     ## 
-    ## Chain 2 Complete: Final NLL = -1796.484, Time Elapsed = 27.78 seconds
+    ## Chain 2 Complete: Final NLL = -1796.484, Time Elapsed = 26.80 seconds
     ## 
 
 ### Model Diagnostics
@@ -375,10 +375,10 @@ print(fit.admr)
     ## Condition#(Cor): 271.29
     ## 
     ## -- Timing Information --
-    ##      Best Chain: 23.3462 seconds
-    ##      All Chains: 51.1295 seconds
-    ##      Covariance: 39.2481 seconds
-    ##         Elapsed: 90.38 seconds
+    ##      Best Chain: 22.6466 seconds
+    ##      All Chains: 49.4485 seconds
+    ##      Covariance: 38.3167 seconds
+    ##         Elapsed: 87.77 seconds
     ## 
     ## -- Population Parameters --
     ## # A tibble: 6 × 6
