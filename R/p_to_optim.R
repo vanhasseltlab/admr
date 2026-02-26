@@ -97,17 +97,9 @@
 #'
 #' @export
 p_to_optim <- function(p) {
-  # Handle legacy exponential error specification
-  if (any(names(p) == "Sigma_exp")) {
-    message("Message from p_to_optim:\n Sigma_exp will be transformed to Sigma_prop!")
-    if (any(names(p) == "Sigma_prop")) {
-      # Combine exponential and proportional error if both present
-      p$Sigma_prop <- p$Sigma_prop + p$Sigma_exp
-    } else {
-      # Convert exponential to proportional error
-      p$Sigma_prop <- p$Sigma_exp
-    }
-    p$Sigma_exp <- NULL
+  # If both Sigma_prop and Sigma_exp are provided, warn (or choose a policy).
+  if (!is.null(p$Sigma_exp) && !is.null(p$Sigma_prop)) {
+    message("Message from p_to_optim:\n Both Sigma_prop and Sigma_exp are set; h() will add both unless you remove one.")
   }
 
   # Transform parameters while preserving structure

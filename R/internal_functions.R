@@ -312,25 +312,60 @@ p_transform_mat <- function(x) { # Transforms a matrix (typically representing v
   matmapping <- list_to_mat(matmapping)
   parlocs <- which(grepl("p",c(matmapping)) & !duplicated(c(matmapping)))
   transformlist <- rep("log",length(parlocs))
-  for (i in 2:length(transformlist)) {
-    matind <- which(matmapping==paste0("p",i),arr.ind=TRUE)[1,]
-    if (diff(matind)!=0) ## if non-diagonal
-      transformlist[i] <- "covlogit"
+
+
+  # for (i in 2:length(transformlist)) {
+  #   matind <- which(matmapping==paste0("p",i),arr.ind=TRUE)[1,]
+  #   if (diff(matind)!=0) ## if non-diagonal
+  #     transformlist[i] <- "covlogit"
+  # }
+
+  ## ---- FIX 1: guard the loop for 1x1 (or any length < 2) ----
+  if (length(transformlist) >= 2) {
+    for (i in 2:length(transformlist)) {
+      matind <- which(matmapping == paste0("p", i), arr.ind = TRUE)[1, ]
+      if (diff(matind) != 0)
+        transformlist[i] <- "covlogit"
+    }
   }
+
+
   values <- map_dbl(seq_along(parlocs),~do.call(transformlist[.],
                                                 list(as.numeric(x3[parlocs[.]]))))
+  # backtransformfunc <- function(p) {
+  #   if (missing(p)) p <- values
+  #   res <- x2
+  #   backfuns <- backtransfunchooser(transformlist)
+  #   seqnow <- seq_along(p)
+  #   pfill <- map_dbl(seqnow,~backfuns[[.]](p[.]))
+  #   for (i in seqnow)
+  #     res[paste0("p",i) ==matmapping] <- pfill[i]
+  #   sdmat <- diag(sqrt(diag(res)))
+  #   cormat <- res;diag(cormat) <- 1
+  #   res2 <- sdmat %*% cormat %*% sdmat
+  #   fixedvals <- grepl("fix",matmapping)
+  #   res2[fixedvals] <- x2[fixedvals]
+  #   res2
+  # }
   backtransformfunc <- function(p) {
     if (missing(p)) p <- values
-    res <- x2
+
+    res <- matrix(x2, nrow = nrow(x2), ncol = ncol(x2))  # keep matrix
     backfuns <- backtransfunchooser(transformlist)
     seqnow <- seq_along(p)
-    pfill <- map_dbl(seqnow,~backfuns[[.]](p[.]))
-    for (i in seqnow)
-      res[paste0("p",i) ==matmapping] <- pfill[i]
-    sdmat <- diag(sqrt(diag(res)))
-    cormat <- res;diag(cormat) <- 1
+    pfill <- map_dbl(seqnow, ~backfuns[[.]](p[.]))
+
+    for (i in seqnow) {
+      res[paste0("p", i) == matmapping] <- pfill[i]
+    }
+
+    res <- as.matrix(res)
+    sdmat <- diag(sqrt(diag(res)), nrow(res), ncol(res))
+    cormat <- res
+    diag(cormat) <- 1
     res2 <- sdmat %*% cormat %*% sdmat
-    fixedvals <- grepl("fix",matmapping)
+
+    fixedvals <- grepl("fix", matmapping)
     res2[fixedvals] <- x2[fixedvals]
     res2
   }

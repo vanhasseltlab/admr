@@ -168,13 +168,23 @@ genopts <- function(f, time, p, h, nsim = 1, n = 30, adist = NULL,
 
   # Set up default error function if not provided
   if (missing(h)) {
-    h <- function(EV,p) {
-      # Add additive error if specified
-      if (!is.null(p$Sigma_add))
-        diag(EV$V) <- diag(EV$V)+p$Sigma_add
-      # Add proportional error if specified
-      if (!is.null(p$Sigma_prop))
-        diag(EV$V) <- diag(EV$V)+p$Sigma_prop*EV$E^2
+    h <- function(EV, p) {
+
+      if (!is.null(p$Sigma_add)) {
+        diag(EV$V) <- diag(EV$V) + p$Sigma_add
+      }
+
+      if (!is.null(p$Sigma_prop)) {
+        diag(EV$V) <- diag(EV$V) + p$Sigma_prop * EV$E^2
+      }
+
+      # Log-normal multiplicative residual:
+      # log(Y) = log(E) + eps, eps ~ N(0, Sigma_exp)
+      # => Var(Y|E) = E^2 * (exp(Sigma_exp) - 1)
+      if (!is.null(p$Sigma_exp)) {
+        diag(EV$V) <- diag(EV$V) + (exp(p$Sigma_exp) - 1) * EV$E^2
+      }
+
       EV
     }
   }

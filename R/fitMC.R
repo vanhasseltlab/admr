@@ -236,9 +236,31 @@ fitMC <- function(opts, obs, maxiter = 5000, convcrit_nll = 1e-05,
   # Parameters with BSV are those not marked fixed
   has_bsv <- !single_betas
 
-  # Only calculate BSV for parameters that actually have it
   bsv_vals <- rep(NA_real_, length(beta_params))
-  bsv_vals[has_bsv] <- calculate_bsv(back_transformed_params[has_bsv])
+
+  # Only proceed if any BSV parameters exist
+  if (any(has_bsv)) {
+    Omega_bt <- back_transformed_params$Omega
+
+    # Defensive: ensure Omega exists and has the right dimension
+    if (is.null(Omega_bt) || !is.matrix(Omega_bt)) {
+      bsv_vals[has_bsv] <- NA_real_
+    } else {
+      # Map omega diagonal to BSV(CV%) for each BSV parameter, in order
+      # Assumption: the order of ETAs corresponds to the order of beta parameters with BSV
+      omega_diag <- diag(Omega_bt)
+
+      # BSV(CV%) = sqrt(variance) * 100
+      bsv_cv <- sqrt(omega_diag) * 100
+
+      # Fill (recycle only if lengths match; otherwise NA to avoid silent bugs)
+      if (length(bsv_cv) >= sum(has_bsv)) {
+        bsv_vals[has_bsv] <- bsv_cv[seq_len(sum(has_bsv))]
+      } else {
+        bsv_vals[has_bsv] <- NA_real_
+      }
+    }
+  }
 
   # Generate comprehensive output object
   output <- list(
