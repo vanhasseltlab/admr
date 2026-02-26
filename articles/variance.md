@@ -350,41 +350,41 @@ fit.var <- admr::fitIRMC(
     ##   10: -1266.411    1.598    2.054    3.457    2.173   -0.243   -2.128   -2.762   -2.351   -4.408   -1.967   -3.420
     ## Phase Precision Phase converged at iteration 10.
     ## 
-    ## Chain 1 Complete: Final NLL = -1266.411, Time Elapsed = 9.47 seconds
+    ## Chain 1 Complete: Final NLL = -1266.411, Time Elapsed = 11.27 seconds
     ##  
     ## Phase Wide Search Phase converged at iteration 5.
     ## Phase Focussed Search Phase converged at iteration 6.
     ## Phase Fine-Tuning Phase converged at iteration 7.
     ## Phase Precision Phase converged at iteration 8.
     ## 
-    ## Chain 2 Complete: Final NLL = -1266.426, Time Elapsed = 11.36 seconds
+    ## Chain 2 Complete: Final NLL = -1266.426, Time Elapsed = 13.60 seconds
     ##  
     ## Phase Wide Search Phase converged at iteration 7.
     ## Phase Focussed Search Phase converged at iteration 9.
     ## Phase Fine-Tuning Phase converged at iteration 11.
     ## Phase Precision Phase converged at iteration 13.
     ## 
-    ## Chain 3 Complete: Final NLL = -1266.157, Time Elapsed = 9.74 seconds
+    ## Chain 3 Complete: Final NLL = -1266.157, Time Elapsed = 11.32 seconds
     ##  
     ## Phase Wide Search Phase converged at iteration 5.
     ## Phase Focussed Search Phase converged at iteration 6.
     ## Phase Fine-Tuning Phase converged at iteration 10.
     ## Phase Precision Phase converged at iteration 11.
     ## 
-    ## Chain 4 Complete: Final NLL = -1266.431, Time Elapsed = 13.09 seconds
+    ## Chain 4 Complete: Final NLL = -1266.431, Time Elapsed = 15.70 seconds
     ##  
     ## Phase Wide Search Phase converged at iteration 5.
     ## Phase Focussed Search Phase converged at iteration 7.
     ## Phase Fine-Tuning Phase converged at iteration 9.
     ## Phase Precision Phase converged at iteration 11.
     ## 
-    ## Chain 5 Complete: Final NLL = -1266.439, Time Elapsed = 13.11 seconds
+    ## Chain 5 Complete: Final NLL = -1266.439, Time Elapsed = 15.45 seconds
     ##  
     ## Phase Focussed Search Phase converged at iteration 17.
     ## Phase Fine-Tuning Phase converged at iteration 18.
     ## Phase Precision Phase converged at iteration 19.
     ## 
-    ## Chain 6 Complete: Final NLL = -1266.379, Time Elapsed = 43.61 seconds
+    ## Chain 6 Complete: Final NLL = -1266.379, Time Elapsed = 51.29 seconds
     ## 
 
 ``` r
@@ -432,14 +432,14 @@ fit.covar <- admr::fitIRMC(
     ##   19: -1845.355    1.601    2.317    3.401    2.285    0.026   -2.282   -2.218   -2.338   -2.239   -2.387   -3.235
     ## Phase Precision Phase converged at iteration 19.
     ## 
-    ## Chain 1 Complete: Final NLL = -1845.355, Time Elapsed = 12.43 seconds
+    ## Chain 1 Complete: Final NLL = -1845.355, Time Elapsed = 15.41 seconds
     ##  
     ## Phase Wide Search Phase converged at iteration 20.
     ## Phase Focussed Search Phase converged at iteration 21.
     ## Phase Fine-Tuning Phase converged at iteration 24.
     ## Phase Precision Phase converged at iteration 32.
     ## 
-    ## Chain 2 Complete: Final NLL = -1845.353, Time Elapsed = 26.73 seconds
+    ## Chain 2 Complete: Final NLL = -1845.353, Time Elapsed = 32.84 seconds
     ## 
 
 Convergence speeds up a lot for the variance fit when using gradients,
@@ -468,10 +468,10 @@ print(fit.var)
     ## Condition#(Cor): 737.47
     ## 
     ## -- Timing Information --
-    ##      Best Chain: 13.1071 seconds
-    ##      All Chains: 100.3899 seconds
-    ##      Covariance: 23.4098 seconds
-    ##         Elapsed: 123.80 seconds
+    ##      Best Chain: 15.4522 seconds
+    ##      All Chains: 118.6369 seconds
+    ##      Covariance: 28.3723 seconds
+    ##         Elapsed: 147.01 seconds
     ## 
     ## -- Population Parameters --
     ## # A tibble: 6 × 6
@@ -513,10 +513,10 @@ print(fit.covar)
     ## Condition#(Cor): 216.85
     ## 
     ## -- Timing Information --
-    ##      Best Chain: 12.4350 seconds
-    ##      All Chains: 39.1673 seconds
-    ##      Covariance: 23.1810 seconds
-    ##         Elapsed: 62.35 seconds
+    ##      Best Chain: 15.4126 seconds
+    ##      All Chains: 48.2556 seconds
+    ##      Covariance: 28.5415 seconds
+    ##         Elapsed: 76.80 seconds
     ## 
     ## -- Population Parameters --
     ## # A tibble: 6 × 6
