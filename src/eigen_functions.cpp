@@ -41,8 +41,8 @@ double nllfun_var_cpp(
     (obs_var.array() / pred_var.array()) +
     ((obs_mean - pred_mean).array().square() / pred_var.array()) +
     pred_var.array().log();
-  double total_ll = -n * ll_components.sum();
-  return -total_ll;
+  double total_ll = 0.5 * n * ll_components.sum();
+  return total_ll;
 }
 
 // ===========================
