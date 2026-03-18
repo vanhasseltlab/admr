@@ -1,5 +1,9 @@
 # Changelog
 
+## admr 0.2.2
+
+- Corrected Likelihood function for variance only
+
 ## admr 0.2.1
 
 - Added gradient descent optimization method

@@ -327,64 +327,63 @@ fit.var <- admr::fitIRMC(
     ## Chain 1:
     ## Iter | NLL and Parameters (11 values)
     ## --------------------------------------------------------------------------------
-    ##    1: -1242.386    1.609    2.303    3.401    2.303    0.000   -2.408   -2.408   -2.408   -2.408   -2.408   -3.219
+    ##    1: -621.193    1.609    2.303    3.401    2.303    0.000   -2.408   -2.408   -2.408   -2.408   -2.408   -3.219
     ## 
     ## ### Wide Search Phase ###
-    ##    2: -1261.578    1.593    2.057    3.463    2.177   -0.260   -2.086   -2.749   -2.349   -4.408   -1.914   -3.388
-    ##    3: -1266.407    1.598    2.055    3.456    2.172   -0.243   -2.126   -2.762   -2.352   -4.408   -1.966   -3.423
-    ##    4: -1266.408    1.598    2.054    3.456    2.173   -0.243   -2.126   -2.762   -2.352   -4.408   -1.966   -3.423
-    ##    5: -1266.409    1.598    2.054    3.456    2.173   -0.243   -2.127   -2.762   -2.351   -4.408   -1.966   -3.422
-    ## Phase Wide Search Phase converged at iteration 5.
+    ##    2: -630.789    1.593    2.057    3.463    2.177   -0.260   -2.086   -2.749   -2.349   -4.408   -1.914   -3.388
+    ##    3: -633.204    1.598    2.055    3.456    2.172   -0.243   -2.126   -2.762   -2.352   -4.408   -1.966   -3.423
+    ##    4: -633.204    1.598    2.055    3.456    2.172   -0.243   -2.126   -2.762   -2.352   -4.408   -1.966   -3.423
+    ## Phase Wide Search Phase converged at iteration 4.
     ## 
     ## ### Focussed Search Phase ###
-    ##    6: -1266.409    1.598    2.054    3.456    2.173   -0.243   -2.127   -2.762   -2.351   -4.408   -1.967   -3.422
-    ## Phase Focussed Search Phase converged at iteration 6.
+    ##    5: -633.204    1.598    2.054    3.456    2.173   -0.243   -2.126   -2.762   -2.352   -4.408   -1.966   -3.423
+    ## Phase Focussed Search Phase converged at iteration 5.
     ## 
     ## ### Fine-Tuning Phase ###
-    ##    7: -1266.409    1.598    2.054    3.456    2.173   -0.243   -2.127   -2.762   -2.351   -4.408   -1.967   -3.422
-    ##    8: -1266.410    1.598    2.054    3.456    2.173   -0.243   -2.127   -2.762   -2.351   -4.408   -1.967   -3.421
-    ## Phase Fine-Tuning Phase converged at iteration 8.
+    ##    6: -633.206    1.598    2.054    3.456    2.173   -0.243   -2.128   -2.761   -2.350   -4.408   -1.967   -3.418
+    ##    7: -633.206    1.598    2.054    3.457    2.173   -0.243   -2.129   -2.761   -2.350   -4.408   -1.968   -3.418
+    ## Phase Fine-Tuning Phase converged at iteration 7.
     ## 
     ## ### Precision Phase ###
-    ##    9: -1266.410    1.598    2.054    3.456    2.173   -0.243   -2.127   -2.762   -2.351   -4.408   -1.967   -3.421
-    ##   10: -1266.411    1.598    2.054    3.457    2.173   -0.243   -2.128   -2.762   -2.351   -4.408   -1.967   -3.420
-    ## Phase Precision Phase converged at iteration 10.
+    ##    8: -633.206    1.597    2.054    3.457    2.173   -0.243   -2.129   -2.761   -2.350   -4.408   -1.968   -3.418
+    ## Phase Precision Phase converged at iteration 8.
     ## 
-    ## Chain 1 Complete: Final NLL = -1266.411, Time Elapsed = 11.27 seconds
+    ## Chain 1 Complete: Final NLL = -633.206, Time Elapsed = 8.21 seconds
     ##  
     ## Phase Wide Search Phase converged at iteration 5.
     ## Phase Focussed Search Phase converged at iteration 6.
     ## Phase Fine-Tuning Phase converged at iteration 7.
     ## Phase Precision Phase converged at iteration 8.
     ## 
-    ## Chain 2 Complete: Final NLL = -1266.426, Time Elapsed = 13.60 seconds
-    ##  
-    ## Phase Wide Search Phase converged at iteration 7.
-    ## Phase Focussed Search Phase converged at iteration 9.
-    ## Phase Fine-Tuning Phase converged at iteration 11.
-    ## Phase Precision Phase converged at iteration 13.
-    ## 
-    ## Chain 3 Complete: Final NLL = -1266.157, Time Elapsed = 11.32 seconds
-    ##  
-    ## Phase Wide Search Phase converged at iteration 5.
-    ## Phase Focussed Search Phase converged at iteration 6.
-    ## Phase Fine-Tuning Phase converged at iteration 10.
-    ## Phase Precision Phase converged at iteration 11.
-    ## 
-    ## Chain 4 Complete: Final NLL = -1266.431, Time Elapsed = 15.70 seconds
+    ## Chain 2 Complete: Final NLL = -633.201, Time Elapsed = 10.03 seconds
     ##  
     ## Phase Wide Search Phase converged at iteration 5.
     ## Phase Focussed Search Phase converged at iteration 7.
-    ## Phase Fine-Tuning Phase converged at iteration 9.
-    ## Phase Precision Phase converged at iteration 11.
+    ## Phase Fine-Tuning Phase converged at iteration 8.
+    ## Phase Precision Phase converged at iteration 10.
     ## 
-    ## Chain 5 Complete: Final NLL = -1266.439, Time Elapsed = 15.45 seconds
+    ## Chain 3 Complete: Final NLL = -633.212, Time Elapsed = 15.08 seconds
     ##  
-    ## Phase Focussed Search Phase converged at iteration 17.
-    ## Phase Fine-Tuning Phase converged at iteration 18.
-    ## Phase Precision Phase converged at iteration 19.
+    ## Phase Wide Search Phase converged at iteration 5.
+    ## Phase Focussed Search Phase converged at iteration 6.
+    ## Phase Fine-Tuning Phase converged at iteration 7.
+    ## Phase Precision Phase converged at iteration 8.
     ## 
-    ## Chain 6 Complete: Final NLL = -1266.379, Time Elapsed = 51.29 seconds
+    ## Chain 4 Complete: Final NLL = -633.193, Time Elapsed = 9.11 seconds
+    ##  
+    ## Phase Wide Search Phase converged at iteration 4.
+    ## Phase Focussed Search Phase converged at iteration 5.
+    ## Phase Fine-Tuning Phase converged at iteration 7.
+    ## Phase Precision Phase converged at iteration 8.
+    ## 
+    ## Chain 5 Complete: Final NLL = -633.222, Time Elapsed = 8.52 seconds
+    ##  
+    ## Phase Wide Search Phase converged at iteration 5.
+    ## Phase Focussed Search Phase converged at iteration 6.
+    ## Phase Fine-Tuning Phase converged at iteration 7.
+    ## Phase Precision Phase converged at iteration 8.
+    ## 
+    ## Chain 6 Complete: Final NLL = -633.220, Time Elapsed = 11.34 seconds
     ## 
 
 ``` r
@@ -432,14 +431,14 @@ fit.covar <- admr::fitIRMC(
     ##   19: -1845.355    1.601    2.317    3.401    2.285    0.026   -2.282   -2.218   -2.338   -2.239   -2.387   -3.235
     ## Phase Precision Phase converged at iteration 19.
     ## 
-    ## Chain 1 Complete: Final NLL = -1845.355, Time Elapsed = 15.41 seconds
+    ## Chain 1 Complete: Final NLL = -1845.355, Time Elapsed = 12.49 seconds
     ##  
     ## Phase Wide Search Phase converged at iteration 20.
     ## Phase Focussed Search Phase converged at iteration 21.
     ## Phase Fine-Tuning Phase converged at iteration 24.
     ## Phase Precision Phase converged at iteration 32.
     ## 
-    ## Chain 2 Complete: Final NLL = -1845.353, Time Elapsed = 32.84 seconds
+    ## Chain 2 Complete: Final NLL = -1845.353, Time Elapsed = 26.72 seconds
     ## 
 
 Convergence speeds up a lot for the variance fit when using gradients,
@@ -461,43 +460,40 @@ print(fit.var)
     ## -- FitIRMC Summary --
     ## 
     ## -- Objective Function and Information Criteria --
-    ##  Log-likelihood: -1266.4385
-    ##             AIC: 2543.88
-    ##             BIC: 2601.24
-    ## Condition#(Cov): 514.83
-    ## Condition#(Cor): 737.47
+    ##  Log-likelihood: -633.2219
+    ##             AIC: 1277.44
+    ##             BIC: 1334.80
+    ## Condition#(Cov): 478.58
+    ## Condition#(Cor): 679.51
     ## 
     ## -- Timing Information --
-    ##      Best Chain: 15.4522 seconds
-    ##      All Chains: 118.6369 seconds
-    ##      Covariance: 28.3723 seconds
-    ##         Elapsed: 147.01 seconds
+    ##      Best Chain: 8.5227 seconds
+    ##      All Chains: 62.2939 seconds
+    ##      Covariance: 24.4574 seconds
+    ##         Elapsed: 86.75 seconds
     ## 
     ## -- Population Parameters --
     ## # A tibble: 6 × 6
     ##   Parameter         Est.      SE `%RSE` `Back-transformed(95%CI)` `BSV(CV%)`
     ##   <chr>            <dbl>   <dbl>  <dbl> <chr>                          <dbl>
-    ## 1 cl              1.60    0.0159  0.995 4.94 (4.79, 5.10)              34.3 
-    ## 2 v1              2.06    0.0819  3.97  7.86 (6.70, 9.23)              27.3 
-    ## 3 v2              3.46    0.0397  1.15  31.68 (29.31, 34.25)           30.3 
-    ## 4 q               2.18    0.0286  1.31  8.82 (8.34, 9.33)               8.09
-    ## 5 ka             -0.234   0.0758 32.4   0.79 (0.68, 0.92)              35.9 
-    ## 6 Residual Error  0.0351 NA      NA     0.0351                         NA   
+    ## 1 cl              1.60    0.0221   1.38 4.94 (4.73, 5.16)              34.4 
+    ## 2 v1              2.06    0.111    5.39 7.83 (6.30, 9.74)              26.1 
+    ## 3 v2              3.45    0.0545   1.58 31.63 (28.43, 35.20)           30.3 
+    ## 4 q               2.18    0.0394   1.81 8.80 (8.15, 9.51)               9.17
+    ## 5 ka             -0.238   0.103   43.3  0.79 (0.64, 0.96)              36.7 
+    ## 6 Residual Error  0.0342 NA       NA    0.0342                         NA   
     ## 
     ## -- Iteration Diagnostics --
     ##  Iter | NLL and Parameters
     ## --------------------------------------------------------------------------------
-    ##    1: -937.937 1.682 2.298 3.293 2.089 0.000 -2.766 -2.667 -2.167 -2.558 -2.741 -2.617
-    ##    2: -1209.506 1.576 2.086 3.474 2.210 -0.244 -1.967 -3.194 -1.904 -3.030 -1.917 -3.571
-    ##    3: -1266.274 1.597 2.056 3.454 2.174 -0.241 -2.141 -2.574 -2.386 -5.030 -2.038 -3.361
-    ##    4: -1266.427 1.597 2.060 3.456 2.175 -0.237 -2.133 -2.583 -2.385 -5.030 -2.054 -3.362
-    ##    5: -1266.428 1.597 2.060 3.456 2.175 -0.237 -2.133 -2.584 -2.385 -5.030 -2.054 -3.361
-    ##    ... (omitted iterations) ...
-    ##    7: -1266.431 1.597 2.060 3.457 2.175 -0.237 -2.133 -2.586 -2.385 -5.030 -2.053 -3.358
-    ##    8: -1266.432 1.597 2.060 3.457 2.175 -0.237 -2.134 -2.586 -2.385 -5.030 -2.053 -3.358
-    ##    9: -1266.432 1.597 2.060 3.457 2.175 -0.236 -2.134 -2.586 -2.385 -5.030 -2.053 -3.358
-    ##   10: -1266.438 1.597 2.062 3.456 2.177 -0.234 -2.139 -2.596 -2.385 -5.030 -2.051 -3.351
-    ##   11: -1266.439 1.597 2.062 3.456 2.177 -0.234 -2.139 -2.596 -2.385 -5.030 -2.051 -3.351
+    ##    1: -530.654 1.598 2.294 3.169 2.228 0.000 -2.393 -2.550 -2.280 -2.774 -2.334 -3.713
+    ##    2: -630.291 1.593 2.058 3.463 2.172 -0.266 -2.093 -2.698 -2.459 -4.774 -1.926 -3.355
+    ##    3: -633.217 1.600 2.071 3.448 2.180 -0.226 -2.142 -2.699 -2.394 -4.777 -2.002 -3.365
+    ##    4: -633.217 1.600 2.071 3.448 2.180 -0.226 -2.142 -2.699 -2.394 -4.777 -2.002 -3.365
+    ##    5: -633.217 1.600 2.071 3.448 2.180 -0.226 -2.141 -2.699 -2.394 -4.777 -2.002 -3.365
+    ##    6: -633.221 1.598 2.058 3.454 2.175 -0.238 -2.133 -2.688 -2.387 -4.778 -2.007 -3.376
+    ##    7: -633.222 1.598 2.058 3.454 2.175 -0.238 -2.133 -2.688 -2.387 -4.778 -2.007 -3.376
+    ##    8: -633.222 1.598 2.058 3.454 2.175 -0.238 -2.134 -2.688 -2.387 -4.778 -2.007 -3.376
 
 ``` r
 print(fit.covar)
@@ -513,10 +509,10 @@ print(fit.covar)
     ## Condition#(Cor): 216.85
     ## 
     ## -- Timing Information --
-    ##      Best Chain: 15.4126 seconds
-    ##      All Chains: 48.2556 seconds
-    ##      Covariance: 28.5415 seconds
-    ##         Elapsed: 76.80 seconds
+    ##      Best Chain: 12.4886 seconds
+    ##      All Chains: 39.2144 seconds
+    ##      Covariance: 24.3917 seconds
+    ##         Elapsed: 63.61 seconds
     ## 
     ## -- Population Parameters --
     ## # A tibble: 6 × 6
@@ -617,18 +613,18 @@ print(fit.var$transformed_params)
 
     ## $beta
     ##         cl         v1         v2          q         ka 
-    ##  4.9395278  7.8628171 31.6804687  8.8216025  0.7913313 
+    ##  4.9444180  7.8333135 31.6305244  8.8036416  0.7882075 
     ## 
     ## $Omega
-    ##           [,1]       [,2]       [,3]        [,4]      [,5]
-    ## [1,] 0.1177831 0.00000000 0.00000000 0.000000000 0.0000000
-    ## [2,] 0.0000000 0.07456556 0.00000000 0.000000000 0.0000000
-    ## [3,] 0.0000000 0.00000000 0.09204889 0.000000000 0.0000000
-    ## [4,] 0.0000000 0.00000000 0.00000000 0.006541875 0.0000000
-    ## [5,] 0.0000000 0.00000000 0.00000000 0.000000000 0.1285627
+    ##           [,1]      [,2]       [,3]        [,4]      [,5]
+    ## [1,] 0.1184117 0.0000000 0.00000000 0.000000000 0.0000000
+    ## [2,] 0.0000000 0.0680192 0.00000000 0.000000000 0.0000000
+    ## [3,] 0.0000000 0.0000000 0.09195023 0.000000000 0.0000000
+    ## [4,] 0.0000000 0.0000000 0.00000000 0.008414513 0.0000000
+    ## [5,] 0.0000000 0.0000000 0.00000000 0.000000000 0.1344076
     ## 
     ## $Sigma_prop
-    ## [1] 0.03506213
+    ## [1] 0.0341747
 
 We observe that both methods recover the true parameters reasonably
 well, but the mean and covariance method provides more accurate
