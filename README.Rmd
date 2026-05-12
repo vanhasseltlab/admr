@@ -15,7 +15,14 @@ knitr::opts_chunk$set(
 
 <!-- badges: start -->
 
+[![Lifecycle: deprecated](https://img.shields.io/badge/lifecycle-deprecated-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#deprecated)
+
 <!-- badges: end -->
+
+> **&#9888; Deprecated:** `admr` is no longer maintained. Please use the successor package [**admixr2**](https://github.com/LeidenPharmacology/admixr2) instead.
+> Install with: `devtools::install_github("LeidenPharmacology/admixr2")`
+
+<a href="https://github.com/LeidenPharmacology/admixr2" class="btn btn-warning btn-lg" role="button">&#9888; Go to admixr2 (successor package)</a>
 
 admr (Aggregate Data Modeling in R) is an open-source R package designed to facilitate pharmacometric modeling using summary-level data. It enables users to work with aggregate data, such as mean observations and variance-covariance matrices, to fit pharmacokinetic and pharmacodynamic (PK/PD) models efficiently. This package implements a newly developed Expectation-Maximization (EM) algorithm to enhance computational performance and provides tools for advanced modeling applications.
 
@@ -57,7 +64,7 @@ devtools::install_github("/admr")
 
 Below is a complete example of how to use admr to fit a pharmacokinetic model to aggregate data:
 
-```{r example}
+```{r example, eval=FALSE}
 # Load required libraries
 library(admr)
 library(rxode2)

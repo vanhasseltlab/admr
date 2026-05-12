@@ -3,3 +3,8 @@ template:
   bootstrap: 5
   params:
     bootswatch: flatly
+
+announcement: >
+  <strong>&#9888; This package is deprecated and no longer maintained.</strong>
+  Please use the successor package
+  <a href="https://github.com/LeidenPharmacology/admixr2" class="alert-link"><strong>admixr2</strong></a> instead.

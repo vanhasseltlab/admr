@@ -6,7 +6,7 @@
 
 -   Added gradient descent optimization method
 
--   Improved efficieny with C++ source code integration
+-   Improved efficiency with C++ source code integration
 
 # admr 0.2.0
 
