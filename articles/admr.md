@@ -32,6 +32,7 @@ The first step is to load the necessary packages:
 Click here
 
 ``` r
+
 library(admr)
 library(rxode2)
 library(nlmixr2)
@@ -62,6 +63,7 @@ Let’s look at the examplomycin dataset, which we’ll use throughout this
 vignette:
 
 ``` r
+
 # Load the dataset
 data(examplomycin)
 head(examplomycin)
@@ -76,6 +78,7 @@ head(examplomycin)
     ## 6 460 2.00 4.003   0    0   2
 
 ``` r
+
 # Basic dataset information
 cat("Number of subjects:", length(unique(examplomycin$ID)), "\n")
 ```
@@ -83,12 +86,14 @@ cat("Number of subjects:", length(unique(examplomycin$ID)), "\n")
     ## Number of subjects: 500
 
 ``` r
+
 cat("Number of time points:", length(unique(examplomycin$TIME)), "\n")
 ```
 
     ## Number of time points: 10
 
 ``` r
+
 cat("Time points:", paste(sort(unique(examplomycin$TIME)), collapse = ", "), "\n")
 ```
 
@@ -105,6 +110,7 @@ information. But for this example, we’ll compute the mean and covariance
 from the `examplomycin` dataset. Here’s how to do it:
 
 ``` r
+
 # Convert to wide format
 examplomycin_wide <- examplomycin %>%
   filter(EVID != 101) %>%  # Remove dosing events
@@ -141,6 +147,7 @@ matrix.
 Before fitting the model, it’s helpful to visualize the aggregate data:
 
 ``` r
+
 # Boxplot to visualize variability
 ggplot(examplomycin, aes(x = TIME, y = DV, group = TIME)) +
   geom_boxplot(aes(group = TIME), width = 0.2) +
@@ -169,6 +176,7 @@ two ways to specify this:
 Click here
 
 ``` r
+
 rxModel <- function(){
   model({
   # Parameters
@@ -195,6 +203,7 @@ rxModel <- rxModel$simulationModel
 Click here
 
 ``` r
+
 # Define RxODE model
 rxModel <- function(){
   model({
@@ -223,12 +232,14 @@ Constructs the event table for dosing and sampling - Solves the rxode2
 model - Returns predicted concentrations in the required format
 
 ``` r
+
 rxode2::rxSetSilentErr(1) # does not print iteration messages in vignette
 ```
 
     ## [1] TRUE
 
 ``` r
+
 predder <- function(time, theta_i, dose = 100) {
     n_individuals <- nrow(theta_i)
     
@@ -267,6 +278,7 @@ The `genopts` function creates an options object that controls the model
 fitting process:
 
 ``` r
+
 opts <- genopts(
   time = c(.1, .25, .5, 1, 2, 3, 5, 8, 12),  # Observation times
   p = list(
@@ -310,6 +322,7 @@ In this `opts` object:
 The `fitMC` function fits the model using a traditional MC algorithm:
 
 ``` r
+
 fit.admrMC <- fitMC(
   opts = opts,
   obs = examplomycin_aggregated,
@@ -328,12 +341,13 @@ fit.admrMC <- fitMC(
     ## Iteration: 35 - NLL: -1845.355 
     ## Iteration: 40 - NLL: -1845.357 
     ## 
-    ## Chain 1 Complete: Final NLL = -1845.357, Time Elapsed = 74.57 seconds
+    ## Chain 1 Complete: Final NLL = -1845.357, Time Elapsed = 85.58 seconds
 
 The `fitIRMC` function fits the model using the IRMC algorithm, which is
 more efficient for aggregate data:
 
 ``` r
+
 fit.admr <- admr::fitIRMC(
   opts = opts,
   obs = examplomycin_aggregated,
@@ -387,7 +401,7 @@ fit.admr <- admr::fitIRMC(
     ##   28: -1845.353    1.601    2.317    3.401    2.285    0.026   -2.282   -2.211   -2.338   -2.236   -2.395   -3.235
     ## Phase Precision Phase converged at iteration 28.
     ## 
-    ## Chain 1 Complete: Final NLL = -1845.353, Time Elapsed = 17.86 seconds
+    ## Chain 1 Complete: Final NLL = -1845.353, Time Elapsed = 23.10 seconds
     ## 
 
 ### Model Diagnostics
@@ -397,6 +411,7 @@ fit.admr <- admr::fitIRMC(
 The `print` method provides a summary of the model fit:
 
 ``` r
+
 print(fit.admr)
 ```
 
@@ -410,10 +425,10 @@ print(fit.admr)
     ## Condition#(Cor): 214.64
     ## 
     ## -- Timing Information --
-    ##      Best Chain: 17.8649 seconds
-    ##      All Chains: 17.8674 seconds
-    ##      Covariance: 24.6270 seconds
-    ##         Elapsed: 42.49 seconds
+    ##      Best Chain: 23.0995 seconds
+    ##      All Chains: 23.1026 seconds
+    ##      Covariance: 27.4730 seconds
+    ##         Elapsed: 50.58 seconds
     ## 
     ## -- Population Parameters --
     ## # A tibble: 6 × 6
@@ -446,6 +461,7 @@ print(fit.admr)
 The `plot` method visualizes the convergence of the model fit:
 
 ``` r
+
 plot(fit.admr)
 ```
 
@@ -464,6 +480,7 @@ pharmacokinetic behavior effectively.
 Let’s examine the parameter estimates:
 
 ``` r
+
 # Extract parameter estimates
 params <- fit.admr$transformed_params
 cat("Final parameter estimates:\n")
@@ -472,6 +489,7 @@ cat("Final parameter estimates:\n")
     ## Final parameter estimates:
 
 ``` r
+
 print(params)
 ```
 
@@ -491,6 +509,7 @@ print(params)
     ## [1] 0.03935747
 
 ``` r
+
 params.true <- list(
   beta = c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1),
   Omega = diag(rep(0.09, 5)),
@@ -503,6 +522,7 @@ cat("True parameter values:\n")
     ## True parameter values:
 
 ``` r
+
 print(params.true)
 ```
 
@@ -536,6 +556,7 @@ another with the estimated parameters from the `fit.admr` object.
 Click here
 
 ``` r
+
 params.true <- list(
   beta = c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1),
   Omega = diag(rep(0.09, 5)),
@@ -601,6 +622,7 @@ Now, let’s simulate both models over a dosing regimen and plot the
 results with confidence intervals:
 
 ``` r
+
 time_points <- seq(0, 12, by = 0.1)  # Dense time points for smooth curves
 ev <- eventTable(amount.units="mg", time.units="hours")
 ev$add.dosing(dose = 100, nbr.doses = 2, dosing.interval = 6)
@@ -617,6 +639,7 @@ ci_true <- as.data.frame(confint(sim_true, "cp", level=0.95)) %>%
     ## summarizing data...done
 
 ``` r
+
 ci_covar <- as.data.frame(confint(sim_covar, "cp", level=0.95)) %>%
   mutate(Model = "Estimated model")
 ```
@@ -624,6 +647,7 @@ ci_covar <- as.data.frame(confint(sim_covar, "cp", level=0.95)) %>%
     ## summarizing data...done
 
 ``` r
+
 # Bind them together
 ci_all <- bind_rows(ci_true, ci_covar) %>%
   mutate(

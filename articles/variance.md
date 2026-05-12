@@ -22,6 +22,7 @@ First, we need to load the necessary packages:
 Click here
 
 ``` r
+
 library(admr)
 library(rxode2)
 library(nlmixr2)
@@ -47,6 +48,7 @@ Let’s look at the examplomycin dataset, which we’ll use throughout this
 vignette:
 
 ``` r
+
 # Load the dataset
 data(examplomycin)
 head(examplomycin)
@@ -61,6 +63,7 @@ head(examplomycin)
     ## 6 460 2.00 4.003   0    0   2
 
 ``` r
+
 # Basic dataset information
 cat("Number of subjects:", length(unique(examplomycin$ID)), "\n")
 ```
@@ -68,12 +71,14 @@ cat("Number of subjects:", length(unique(examplomycin$ID)), "\n")
     ## Number of subjects: 500
 
 ``` r
+
 cat("Number of time points:", length(unique(examplomycin$TIME)), "\n")
 ```
 
     ## Number of time points: 10
 
 ``` r
+
 cat("Time points:", paste(sort(unique(examplomycin$TIME)), collapse = ", "), "\n")
 ```
 
@@ -92,6 +97,7 @@ step is included here for demonstration purposes.
 Click here
 
 ``` r
+
 # Convert to wide format
 examplomycin_wide <- examplomycin %>%
   filter(EVID != 101) %>%  # Remove dosing events
@@ -136,6 +142,7 @@ examplomycin_aggregated
     ## 12    0.061332530  0.057621124  0.057988752
 
 ``` r
+
 # Transform into mean and variance only format
 examplomycin_aggregated_var <- examplomycin_aggregated
 examplomycin_aggregated_var$V <- diag(diag(examplomycin_aggregated_var$V))
@@ -177,6 +184,7 @@ examplomycin_aggregated_var
 Before fitting the model, it’s helpful to visualize the data:
 
 ``` r
+
 # Boxplot to visualize variability
 ggplot(examplomycin, aes(x = TIME, y = DV, group = TIME)) +
   geom_boxplot(aes(group = TIME), width = 0.2) +
@@ -199,6 +207,7 @@ We’ll use a solved two-compartment model with first-order absorption:
 Click here
 
 ``` r
+
 # Define RxODE model
 rxModel <- function(){
   model({
@@ -222,12 +231,14 @@ Constructs the event table for dosing and sampling - Solves the RxODE
 model - Returns predicted concentrations in the required format
 
 ``` r
+
 rxode2::rxSetSilentErr(1)
 ```
 
     ## [1] TRUE
 
 ``` r
+
 predder <- function(time, theta_i, dose = 100) {
     n_individuals <- nrow(theta_i)
     
@@ -266,6 +277,7 @@ and once for mean and variance only data.
 Click here
 
 ``` r
+
 opts_covar <- genopts(
   time = c(.1, .25, .5, 1, 2, 3, 5, 8, 12),  # Observation times
   p = list(
@@ -315,6 +327,7 @@ covariance data.
 The `fitIRMC` function fits the model using the IRMC algorithm:
 
 ``` r
+
 fit.var <- admr::fitIRMC(
   opts = opts_var,
   obs = examplomycin_aggregated_var,
@@ -348,45 +361,46 @@ fit.var <- admr::fitIRMC(
     ##    8: -633.206    1.597    2.054    3.457    2.173   -0.243   -2.129   -2.761   -2.350   -4.408   -1.968   -3.418
     ## Phase Precision Phase converged at iteration 8.
     ## 
-    ## Chain 1 Complete: Final NLL = -633.206, Time Elapsed = 8.21 seconds
+    ## Chain 1 Complete: Final NLL = -633.206, Time Elapsed = 9.51 seconds
     ##  
     ## Phase Wide Search Phase converged at iteration 5.
     ## Phase Focussed Search Phase converged at iteration 6.
     ## Phase Fine-Tuning Phase converged at iteration 7.
     ## Phase Precision Phase converged at iteration 8.
     ## 
-    ## Chain 2 Complete: Final NLL = -633.201, Time Elapsed = 10.03 seconds
+    ## Chain 2 Complete: Final NLL = -633.201, Time Elapsed = 12.01 seconds
     ##  
     ## Phase Wide Search Phase converged at iteration 5.
     ## Phase Focussed Search Phase converged at iteration 7.
     ## Phase Fine-Tuning Phase converged at iteration 8.
     ## Phase Precision Phase converged at iteration 10.
     ## 
-    ## Chain 3 Complete: Final NLL = -633.212, Time Elapsed = 15.08 seconds
+    ## Chain 3 Complete: Final NLL = -633.212, Time Elapsed = 17.47 seconds
     ##  
     ## Phase Wide Search Phase converged at iteration 5.
     ## Phase Focussed Search Phase converged at iteration 6.
     ## Phase Fine-Tuning Phase converged at iteration 7.
     ## Phase Precision Phase converged at iteration 8.
     ## 
-    ## Chain 4 Complete: Final NLL = -633.193, Time Elapsed = 9.11 seconds
+    ## Chain 4 Complete: Final NLL = -633.193, Time Elapsed = 10.84 seconds
     ##  
     ## Phase Wide Search Phase converged at iteration 4.
     ## Phase Focussed Search Phase converged at iteration 5.
     ## Phase Fine-Tuning Phase converged at iteration 7.
     ## Phase Precision Phase converged at iteration 8.
     ## 
-    ## Chain 5 Complete: Final NLL = -633.222, Time Elapsed = 8.52 seconds
+    ## Chain 5 Complete: Final NLL = -633.222, Time Elapsed = 10.26 seconds
     ##  
     ## Phase Wide Search Phase converged at iteration 5.
     ## Phase Focussed Search Phase converged at iteration 6.
     ## Phase Fine-Tuning Phase converged at iteration 7.
     ## Phase Precision Phase converged at iteration 8.
     ## 
-    ## Chain 6 Complete: Final NLL = -633.220, Time Elapsed = 11.34 seconds
+    ## Chain 6 Complete: Final NLL = -633.220, Time Elapsed = 13.51 seconds
     ## 
 
 ``` r
+
 fit.covar <- admr::fitIRMC(
   opts = opts_covar,
   obs = examplomycin_aggregated,
@@ -431,14 +445,14 @@ fit.covar <- admr::fitIRMC(
     ##   19: -1845.355    1.601    2.317    3.401    2.285    0.026   -2.282   -2.218   -2.338   -2.239   -2.387   -3.235
     ## Phase Precision Phase converged at iteration 19.
     ## 
-    ## Chain 1 Complete: Final NLL = -1845.355, Time Elapsed = 12.49 seconds
+    ## Chain 1 Complete: Final NLL = -1845.355, Time Elapsed = 14.95 seconds
     ##  
     ## Phase Wide Search Phase converged at iteration 20.
     ## Phase Focussed Search Phase converged at iteration 21.
     ## Phase Fine-Tuning Phase converged at iteration 24.
     ## Phase Precision Phase converged at iteration 32.
     ## 
-    ## Chain 2 Complete: Final NLL = -1845.353, Time Elapsed = 26.72 seconds
+    ## Chain 2 Complete: Final NLL = -1845.353, Time Elapsed = 32.28 seconds
     ## 
 
 Convergence speeds up a lot for the variance fit when using gradients,
@@ -454,6 +468,7 @@ larger MC samples, or more iterations.
 The `print` method provides a summary of the model fit:
 
 ``` r
+
 print(fit.var)
 ```
 
@@ -467,10 +482,10 @@ print(fit.var)
     ## Condition#(Cor): 679.51
     ## 
     ## -- Timing Information --
-    ##      Best Chain: 8.5227 seconds
-    ##      All Chains: 62.2939 seconds
-    ##      Covariance: 24.4574 seconds
-    ##         Elapsed: 86.75 seconds
+    ##      Best Chain: 10.2578 seconds
+    ##      All Chains: 73.6033 seconds
+    ##      Covariance: 26.5050 seconds
+    ##         Elapsed: 100.11 seconds
     ## 
     ## -- Population Parameters --
     ## # A tibble: 6 × 6
@@ -496,6 +511,7 @@ print(fit.var)
     ##    8: -633.222 1.598 2.058 3.454 2.175 -0.238 -2.134 -2.688 -2.387 -4.778 -2.007 -3.376
 
 ``` r
+
 print(fit.covar)
 ```
 
@@ -509,10 +525,10 @@ print(fit.covar)
     ## Condition#(Cor): 216.85
     ## 
     ## -- Timing Information --
-    ##      Best Chain: 12.4886 seconds
-    ##      All Chains: 39.2144 seconds
-    ##      Covariance: 24.3917 seconds
-    ##         Elapsed: 63.61 seconds
+    ##      Best Chain: 14.9454 seconds
+    ##      All Chains: 47.2259 seconds
+    ##      Covariance: 26.2549 seconds
+    ##         Elapsed: 73.48 seconds
     ## 
     ## -- Population Parameters --
     ## # A tibble: 6 × 6
@@ -545,6 +561,7 @@ print(fit.covar)
 The `plot` method visualizes the convergence of the model fit:
 
 ``` r
+
 plot(fit.var)
 ```
 
@@ -556,6 +573,7 @@ showing more variability across chains.
 Now we plot the mean and covariance data fit:
 
 ``` r
+
 plot(fit.covar)
 ```
 
@@ -572,6 +590,7 @@ Given that true parameter estimates are known, we can compare the
 estimated parameters to the true values:
 
 ``` r
+
 params.true <- list(
   beta = c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1),
   Omega = diag(rep(0.09, 5)),
@@ -583,6 +602,7 @@ cat("True parameter values:\n")
     ## True parameter values:
 
 ``` r
+
 print(params.true)
 ```
 
@@ -602,12 +622,14 @@ print(params.true)
     ## [1] 0.04
 
 ``` r
+
 cat("Estimated parameters (mean and variance only):\n")
 ```
 
     ## Estimated parameters (mean and variance only):
 
 ``` r
+
 print(fit.var$transformed_params)
 ```
 
@@ -647,6 +669,7 @@ parameters and the estimated parameters from both methods:
 Click here
 
 ``` r
+
 params.true <- list(
   beta = c(cl = 5, v1 = 10, v2 = 30, q = 10, ka = 1),
   Omega = diag(rep(0.09, 5)),
@@ -738,6 +761,7 @@ Now we can simulate the concentration-time profiles and plot the
 results:
 
 ``` r
+
 time_points <- seq(0, 12, by = 0.01)  # Dense time points for smooth curves
 ev <- eventTable(amount.units="mg", time.units="hours")
 ev$add.dosing(dose = 100, nbr.doses = 2, dosing.interval = 6)
@@ -756,6 +780,7 @@ ci_true <- as.data.frame(confint(sim_true, "cp", level=0.95)) %>%
     ## summarizing data...done
 
 ``` r
+
 ci_covar <- as.data.frame(confint(sim_covar, "cp", level=0.95)) %>%
   mutate(Model = "Covariance fit")
 ```
@@ -763,6 +788,7 @@ ci_covar <- as.data.frame(confint(sim_covar, "cp", level=0.95)) %>%
     ## summarizing data...done
 
 ``` r
+
 ci_var <- as.data.frame(confint(sim_var, "cp", level=0.95)) %>%
   mutate(Model = "Variance fit")
 ```
@@ -770,6 +796,7 @@ ci_var <- as.data.frame(confint(sim_var, "cp", level=0.95)) %>%
     ## summarizing data...done
 
 ``` r
+
 # Bind them together
 ci_true_covar <- bind_rows(ci_true, ci_covar) %>%
   mutate(
@@ -811,6 +838,7 @@ ggplot(ci_true_covar, aes(x = time, group = interaction(Model, Percentile))) +
 ![](variance_files/figure-html/unnamed-chunk-13-1.png)
 
 ``` r
+
 ggplot(ci_true_var, aes(x = time, group = interaction(Model, Percentile))) +
   geom_ribbon(aes(ymin = p2.5, ymax = p97.5, fill = Model),
               alpha = 0.2, colour = NA) +

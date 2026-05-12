@@ -106,6 +106,7 @@ The choice between methods depends on:
 ## Examples
 
 ``` r
+
 # Load required libraries
 library(admr)
 library(rxode2)

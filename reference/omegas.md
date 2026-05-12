@@ -72,6 +72,7 @@ Mathematical details:
 ## Examples
 
 ``` r
+
 # Load required libraries
 library(admr)
 library(rxode2)

@@ -23,6 +23,7 @@ below:
 Show code
 
 ``` r
+
 library(rxode2)
 library(MASS)
 library(ggplot2)
@@ -52,6 +53,7 @@ following features:
 Show code
 
 ``` r
+
 generate_data <- function(n, times, seed = 1) {
   set.seed(seed)
   
@@ -149,6 +151,7 @@ points (0.1, 0.25, 0.5, 1, 2, 3, 5, 8, 12 hours) - Random seed for
 reproducibility
 
 ``` r
+
 examplomycin <- generate_data(
   n = 500,  # Number of subjects
   times = c(.1, .25, .5, 1, 2, 3, 5, 8, 12),  # Sampling times
@@ -161,6 +164,7 @@ examplomycin <- generate_data(
     ## ℹ Need to run with the source intact to parse comments
 
 ``` r
+
 head(examplomycin)
 ```
 
@@ -182,6 +186,7 @@ and examples:
 We’ll create a concentration-time plot to visualize the simulated data:
 
 ``` r
+
 # Create concentration-time plot
 ggplot(examplomycin, aes(x = TIME, y = DV, color = factor(ID))) +
   geom_line(alpha = 0.7) +    # Connect points with lines
