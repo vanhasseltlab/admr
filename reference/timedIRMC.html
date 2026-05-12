@@ -191,39 +191,121 @@ number of iterations is reached.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Run optimization</span></span></span>
 <span class="r-in"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">timedIRMC</span><span class="op">(</span><span class="va">opts</span><span class="op">$</span><span class="va">pt</span>, <span class="va">opts</span>, <span class="va">examplomycin_aggregated</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 1, nll=58.6588992213695</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 2, nll=10120.0652052777</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 3, nll=976.217989450599</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 4, nll=1902.74575614608</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 5, nll=4.37702663109096</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 6, nll=-1281.31566755092</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 7, nll=-1737.5996228288</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 8, nll=-1834.58029289539</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 9, nll=-1845.11490679444</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 10, nll=-1845.11667765342</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 11, nll=-1845.15311166459</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 12, nll=-1845.13996335289</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 13, nll=-1845.14145074914</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 14, nll=-1845.14150897451</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> should break now due to no difference between OFV and appr OFV</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 1, nll=58.6588992213684</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 2, nll=10341.9586364684</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 3, nll=1104.31075202197</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 4, nll=-12.8879833023205</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 5, nll=-11.1290017827658</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 6, nll=941.446282903728</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 7, nll=-1497.18579116154</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 8, nll=-425.295334234436</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 9, nll=-1803.27581241957</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 10, nll=-1772.07716346781</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 11, nll=-1805.65893830117</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 12, nll=-1695.98638682688</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 13, nll=-1687.15231781426</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 14, nll=-1774.45676507279</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 15, nll=-1657.14784765482</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 16, nll=-1654.3274504209</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 17, nll=-1771.86754016153</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 18, nll=-1807.20356452465</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 19, nll=-1796.9824537236</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 20, nll=-1805.9461080557</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 21, nll=-1797.86193034384</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 22, nll=-1332.83140729753</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 23, nll=-1820.23600566369</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 24, nll=-1760.42766177474</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 25, nll=-1812.87532092798</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 26, nll=-1801.10305598602</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 27, nll=-1812.78849000454</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 28, nll=-1809.16525922786</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 29, nll=-1814.44512088359</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 30, nll=-1810.43611676214</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 31, nll=-1813.29835082529</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 32, nll=-1810.34994102804</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 33, nll=-1810.03804737302</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 34, nll=-1802.39632253627</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 35, nll=-1791.98919997279</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 36, nll=-1826.68306452637</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 37, nll=-1826.64004789598</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 38, nll=-1828.02645106082</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 39, nll=-1828.1015691943</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 40, nll=-1828.21733884237</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 41, nll=-1828.29043358985</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 42, nll=-1828.44630045947</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 43, nll=-1828.52426667595</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 44, nll=-1828.64309559905</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 45, nll=-1828.77199824666</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 46, nll=-1828.88151152219</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 47, nll=-1828.96717041834</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 48, nll=-1829.06479909718</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 49, nll=-1829.14000602857</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 50, nll=-1829.22270378688</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 51, nll=-1829.25557059339</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 52, nll=-1829.33992073968</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 53, nll=-1829.48659386701</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 54, nll=-1829.53881070554</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 55, nll=-1829.53681982548</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 56, nll=-1829.72367426162</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 57, nll=-1829.82025173375</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 58, nll=-1829.88672323276</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 59, nll=-1829.91980634316</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 60, nll=-1829.96005167663</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 61, nll=-1830.03947850286</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 62, nll=-1830.19538473418</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 63, nll=-1830.31680112044</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 64, nll=-1830.33140127361</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 65, nll=-1830.40141998097</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 66, nll=-1830.5092702487</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 67, nll=-1830.54928922228</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 68, nll=-1830.62370089206</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 69, nll=-1830.68989605196</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 70, nll=-1830.73164624016</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 71, nll=-1830.7835222873</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 72, nll=-1830.80648194059</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 73, nll=-1830.87018239345</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 74, nll=-1830.92154655952</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 75, nll=-1830.95604335502</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 76, nll=-1830.94050292191</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 77, nll=-1831.07436299337</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 78, nll=-1831.15161948981</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 79, nll=-1831.16870560674</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 80, nll=-1831.20777823348</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 81, nll=-1831.25249882516</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 82, nll=-1831.26704499517</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 83, nll=-1831.32825642844</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 84, nll=-1831.3632171053</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 85, nll=-1831.38392812226</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 86, nll=-1831.39019071963</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 87, nll=-1831.49687469327</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 88, nll=-1831.53713087251</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 89, nll=-1831.50479980111</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 90, nll=-1831.64977659356</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 91, nll=-1831.680880796</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 92, nll=-1831.68124454047</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 93, nll=-1831.67403573028</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 94, nll=-1831.73332085079</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 95, nll=-1831.79286658929</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 96, nll=-1831.78278321779</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 97, nll=-1831.84328660927</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 98, nll=-1831.82439428197</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 99, nll=-1831.83631387991</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> iteration 100, nll=-1831.95775584878</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 14 × 5</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    p               nll appr_nll time                 iter</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dttm&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span>    58.7      58.7 2026-05-12 <span style="color: #949494;">14:25:24</span>     1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> <span style="text-decoration: underline;">10</span>120.    -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">498.</span>  2026-05-12 <span style="color: #949494;">14:25:27</span>     2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span>   976.     -<span style="color: #BB0000;">773.</span>  2026-05-12 <span style="color: #949494;">14:25:29</span>     3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span>  <span style="text-decoration: underline;">1</span>903.    -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">679.</span>  2026-05-12 <span style="color: #949494;">14:25:36</span>     4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span>     4.38  -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">780.</span>  2026-05-12 <span style="color: #949494;">14:25:40</span>     5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">281.</span>    -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">806.</span>  2026-05-12 <span style="color: #949494;">14:25:43</span>     6</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">738.</span>    -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">825.</span>  2026-05-12 <span style="color: #949494;">14:25:44</span>     7</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">835.</span>    -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">841.</span>  2026-05-12 <span style="color: #949494;">14:25:45</span>     8</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">845.</span>    -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">845.</span>  2026-05-12 <span style="color: #949494;">14:25:47</span>     9</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">845.</span>    -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">845.</span>  2026-05-12 <span style="color: #949494;">14:25:48</span>    10</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">11</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">845.</span>    -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">845.</span>  2026-05-12 <span style="color: #949494;">14:25:49</span>    11</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">12</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">845.</span>    -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">845.</span>  2026-05-12 <span style="color: #949494;">14:25:50</span>    12</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">13</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">845.</span>    -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">845.</span>  2026-05-12 <span style="color: #949494;">14:25:50</span>    13</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">14</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">845.</span>    -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">845.</span>  2026-05-12 <span style="color: #949494;">14:25:51</span>    14</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 100 × 5</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    p              nll appr_nll time                 iter</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;list&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dttm&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span>    58.7     58.7 2026-05-12 <span style="color: #949494;">14:52:58</span>     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> <span style="text-decoration: underline;">10</span>342.   -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">498.</span>  2026-05-12 <span style="color: #949494;">14:53:01</span>     2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span>  <span style="text-decoration: underline;">1</span>104.    -<span style="color: #BB0000;">726.</span>  2026-05-12 <span style="color: #949494;">14:53:03</span>     3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span>   -<span style="color: #BB0000;">12.9</span>  -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">673.</span>  2026-05-12 <span style="color: #949494;">14:53:06</span>     4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span>   -<span style="color: #BB0000;">11.1</span>  -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">771.</span>  2026-05-12 <span style="color: #949494;">14:53:13</span>     5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span>   941.   -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">796.</span>  2026-05-12 <span style="color: #949494;">14:53:19</span>     6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">497.</span>   -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">813.</span>  2026-05-12 <span style="color: #949494;">14:53:25</span>     7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span>  -<span style="color: #BB0000;">425.</span>   -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">816.</span>  2026-05-12 <span style="color: #949494;">14:53:31</span>     8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">803.</span>   -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">810.</span>  2026-05-12 <span style="color: #949494;">14:53:37</span>     9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> <span style="color: #949494;">&lt;dbl [11]&gt;</span> -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">772.</span>   -<span style="color: #BB0000; text-decoration: underline;">1</span><span style="color: #BB0000;">808.</span>  2026-05-12 <span style="color: #949494;">14:53:40</span>    10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 90 more rows</span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
